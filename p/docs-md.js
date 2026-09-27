@@ -180,10 +180,13 @@ function esc(s) {
 /**
  * 标题 slug：与 p/docs-md.js 完全一致，保证旧锚点链接不失效。
  * 重复标题从 -2 开始编号。
+ *
+ * 注意：计数是闭包状态，**同一实例渲染多篇文档时必须重置**，
+ * 否则第二篇的标题会莫名其妙带上 -2、-3 后缀。
  */
 function createSlugger() {
-  const counts = {};
-  return function slugify(text) {
+  let counts = {};
+  const slugify = (text) => {
     let s = String(text || '').toLowerCase().trim();
     s = s.replace(/[\s\u3000]+/g, '-');
     s = s.replace(/[^\w\u4e00-\u9fa5-]/g, '');
@@ -192,6 +195,8 @@ function createSlugger() {
     const n = (counts[s] = (counts[s] || 0) + 1);
     return n > 1 ? `${s}-${n}` : s;
   };
+  slugify.reset = () => { counts = {}; };
+  return slugify;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -347,7 +352,16 @@ function fenceRule(md, useHljs) {
     if (wrap) code = wrapLines(code, hlSet);
 
     const cls = `hljs${lang ? ` language-${lang}` : ''}${wrap ? ' with-lines' : ''}${showNumbers ? ' show-lines' : ''}`;
-    return `<pre${wrap ? ' class="with-lines"' : ''}><code class="${cls}">${code}</code></pre>\n`;
+    const pre = `<pre${wrap ? ' class="with-lines"' : ''}><code class="${cls}">${code}</code></pre>\n`;
+
+    /* 代码组里的面板：各自包一层，面板文字挂在 data-label 上，
+       标签行由客户端按真实面板数生成 */
+    const meta = token.meta || {};
+    if (meta.cgId != null){
+      const label = esc(meta.cgLabel || '');
+      return '<div class="cg-panel" data-label="' + label + '">' + pre + '</div>';
+    }
+    return pre;
   };
 }
 
@@ -560,6 +574,107 @@ function mathDelimAdapter(md) {
   });
 }
 
+/**
+ * 代码组：::: code-group
+ * ---------------------------------------------------
+ *   ::: code-group
+ *   ```js
+ *   const a = 1;
+ *   ```
+ *   ```python
+ *   a = 1
+ *   ```
+ *   :::
+ *
+ * 渲染成一组标签页，每页一个代码块。
+ * 标签文字优先取围栏上的 [label]，没有就用语言名。
+ *
+ * 为什么不用 markdown-it-code-group：那个包是 0.0.10，
+ * peer 锁死 markdown-it ^14（我们用的是 15），而且语法不是 :::。
+ * 这里用 container 收容器 + core 规则把里面的围栏组装成 HTML。
+ */
+
+/** 从一个围栏的 info 里读出标签文字 */
+function fenceLabel(info){
+  const s = String(info || '').trim();
+  if (!s) return '代码';
+
+  /* [标签] 优先，支持 [标签]js 或 js [标签] 两种写法 */
+  const bracketed = /\[([^\]]+)\]/.exec(s);
+  if (bracketed) return bracketed[1].trim();
+
+  /* 否则用第一个词当语言名 */
+  const lang = /^[a-zA-Z0-9#+._-]+/.exec(s);
+  if (!lang) return '代码';
+
+  const map = {
+    js: 'JavaScript', javascript: 'JavaScript', ts: 'TypeScript', typescript: 'TypeScript',
+    py: 'Python', python: 'Python', sh: 'Shell', bash: 'Bash', shell: 'Shell',
+    html: 'HTML', css: 'CSS', json: 'JSON', yaml: 'YAML', yml: 'YAML',
+    md: 'Markdown', markdown: 'Markdown', text: 'Text', plaintext: 'Text',
+    c: 'C', cpp: 'C++', java: 'Java', go: 'Go', rust: 'Rust', php: 'PHP',
+    sql: 'SQL', xml: 'XML', diff: 'Diff', ini: 'INI',
+  };
+  return map[lang[0].toLowerCase()] || lang[0];
+}
+
+/**
+ * container 插件会以 (tokens, idx) 调这里。
+ * 标签行留空，由客户端按**真实存在的面板**生成 —— 这样标签数和面板数
+ * 永远对得上（预渲染稿/平台渲染稿万一不一致也不会错位）。
+ */
+function buildFence(tokens, idx){
+  const token = tokens[idx];
+  if (token.nesting !== 1) return '</div></div>\n';
+  return '<div class="code-group">' +
+         '<div class="cg-tabs" role="tablist"></div>' +
+         '<div class="cg-body">';
+}
+
+function codeGroupAdapter(md){
+  /* 先用 container 把 ::: code-group 收成容器 token，
+     再由 core 规则把容器里的围栏组装成标签页。 */
+  md.use(container, 'code-group', { render: buildFence });
+
+  md.core.ruler.after('block', 'docs-code-group', (state) => {
+    const tokens = state.tokens;
+    let idx = 0;
+
+    for (let i = 0; i < tokens.length; i++){
+      if (tokens[i].type !== 'container_code-group_open') continue;
+
+      /* 找到配对的结束标记 */
+      let end = i + 1;
+      while (end < tokens.length && tokens[end].type !== 'container_code-group_close') end++;
+
+      /* 收集里面的围栏 */
+      const fences = [];
+      for (let k = i + 1; k < end; k++){
+        if (tokens[k].type === 'fence') fences.push(tokens[k]);
+      }
+
+      /* 一个都没有：整块丢掉，别在页面上留个空壳 */
+      if (!fences.length){
+        tokens.splice(i, end - i + 1);
+        i--;
+        continue;
+      }
+
+      const tabs = fences.map((f) => fenceLabel(f.info));
+      /* 给每个围栏打标记，并把标签文字挂在 data-label 上 */
+      fences.forEach((f, n) => {
+        f.meta = f.meta || {};
+        f.meta.cgFirst = (n === 0);
+        f.meta.cgId = idx;
+        f.meta.cgLabel = tabs[n];
+      });
+
+      idx++;
+      i = end;
+    }
+  });
+}
+
 /** 行内扩展适配 */
 function inlineAdapter(md) {
   md.core.ruler.after('inline', 'docs-inline-extra', (state) => {
@@ -702,6 +817,9 @@ function createRenderer(opts) {
     md.use(DocsCard.plugin);
   }
 
+  /* 代码组 ::: code-group（内部会 md.use(container)） */
+  codeGroupAdapter(md);
+
   alertAdapter(md);
   tocAdapter(md);
   spoilerBlockAdapter(md);
@@ -726,6 +844,9 @@ function createRenderer(opts) {
         : self.renderToken(tokens, idx, options);
     };
   }
+
+  /* 把 slugger 挂出来，给 renderMarkdown 的单例复用做重置用 */
+  md.__slugify = slugify;
 
   return md;
 }
@@ -756,6 +877,10 @@ function ensureEngines() {
 function renderMarkdown(src) {
   ensureEngines();
   if (!shared) shared = createRenderer();
+  /* 单例复用：每次渲染前把标题计数清掉，否则标题会累积成 xxx-2、xxx-3 */
+  if (shared.__slugify && typeof shared.__slugify.reset === 'function') {
+    shared.__slugify.reset();
+  }
   return shared.render(String(src == null ? '' : src), {});
 }
 

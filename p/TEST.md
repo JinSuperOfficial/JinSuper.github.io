@@ -399,7 +399,75 @@ cond(no)->op
 
 !! 样式化文本 !!
 
-## 8. 总结
+## 8. 站点扩展语法
+
+### 8.1 卡片 card
+
+单张卡片，只有标题：
+
+<card link="idea/1.归途且慢.md">归途，且慢</card>
+
+带日期的卡片：
+
+<card link="idea/1.归途且慢.md" date="2026.9.27">归途，且慢</card>
+
+一行里放两张，彼此独立：<card link="a.md">甲</card><card link="b.md" date="9.27">乙</card>
+
+外链卡片原样跳转：<card link="https://example.com/?a=1&b=2">外链卡片</card>
+
+没写 link 的应当原样保留：<card>这张不该变成卡片</card>
+
+### 8.2 代码组 code-group
+
+两个语言切换：
+
+::: code-group
+
+```js
+const a = 1;
+console.log(a);
+```
+
+```python
+a = 1
+print(a)
+```
+
+:::
+
+用 `[标签]` 指定标签文字，而不是用语言名：
+
+::: code-group
+
+```js [配置文件]
+export default {
+  name: 'demo',
+};
+```
+
+```json
+{ "name": "demo" }
+```
+
+:::
+
+单个代码块的代码组（标签行没有意义，应当隐藏）：
+
+::: code-group
+
+```bash
+npm run build
+```
+
+:::
+
+代码组外面还是普通代码块：
+
+```js
+const outside = true;
+```
+
+## 9. 总结
 
 本文档覆盖了 CommonMark、GFM 及常见 Markdown 扩展语法。  
 使用不同解析器时，请根据实际支持的插件启用相应功能。

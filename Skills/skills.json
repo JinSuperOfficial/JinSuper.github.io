@@ -1,6 +1,12 @@
 {
 	"items": [
 		{
+			"file": "docs/docs.html",
+			"title": "文档站",
+			"desc": "查看文档",
+			"kind": "doc"
+		},
+		{
 			"file": "standalone/function.html",
 			"title": "函数显示器",
 			"desc": "画函数、隐式、极坐标、参数方程，两点定直线画笔，网格吸附，六套配色，全套 JSON 导入导出",
@@ -17,12 +23,6 @@
 			"title": "课程表",
 			"desc": "让我看看有什么课程",
 			"kind": "demo"
-		},
-		{
-			"file": "docs/docs.html",
-			"title": "文档站",
-			"desc": "查看文档",
-			"kind": "doc"
 		},
 		{
 			"file": "docs/docs-static.html",
