@@ -1,0 +1,64 @@
+{
+	"items": [
+		{
+			"file": "standalone/function.html",
+			"title": "函数显示器",
+			"desc": "画函数、隐式、极坐标、参数方程，两点定直线画笔，网格吸附，六套配色，全套 JSON 导入导出",
+			"kind": "canvas"
+		},
+		{
+			"file": "idea/moont.html",
+			"title": "月相演示器",
+			"desc": "三个视角看懂月球的阴影变化：太阳系、地球视角、地面观察",
+			"kind": "canvas"
+		},
+		{
+			"file": "demo/classtable.html",
+			"title": "课程表",
+			"desc": "让我看看有什么课程",
+			"kind": "demo"
+		},
+		{
+			"file": "docs/docs.html",
+			"title": "文档站",
+			"desc": "查看文档",
+			"kind": "doc"
+		},
+		{
+			"file": "docs/docs-static.html",
+			"title": "文档站（静态）",
+			"desc": "同样能读文档，但不依赖云函数，纯静态也能跑",
+			"kind": "doc"
+		},
+		{
+			"file": "docs/blog.html",
+			"title": "BLOG",
+			"desc": "那些奇妙的文章",
+			"kind": "doc"
+		},
+		{
+			"file": "tools/homework.html",
+			"title": "美味的作业",
+			"desc": "查看今天的作业",
+			"kind": "tool"
+		},
+		{
+			"file": "tools/htmlview.html",
+			"title": "HTML 在线运行",
+			"desc": "三栏编辑器，HTML / CSS / JS 分标签编写，实时预览，带控制台和错误提示，支持导入导出 HTML",
+			"kind": "tool"
+		},
+		{
+			"file": "tools/speedtest.html",
+			"title": "服务器性能",
+			"desc": "测试你的性能与网络浏览",
+			"kind": "tool"
+		},
+		{
+			"file": "tools/test_html_20260919_d04d4f.html",
+			"title": "单摆计算",
+			"desc": "单摆周期与角度的计算演示",
+			"kind": "tool"
+		}
+	]
+}

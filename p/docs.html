@@ -1,0 +1,2842 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="obsidian" data-glass="mica" data-outline="docked">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="JinSuper 网站文档栏目，读取 sk.json 清单，集中阅读 Markdown、HTML 与文本资料。">
+<title>文档 · JinSuper</title>
+
+<!-- Markdown 渲染：markdown-it + 插件 + KaTeX，均为外部文件 -->
+
+<link rel="stylesheet" href="./docs-md.css?v=3">
+
+<script>
+(function(){
+  try{
+    var t = localStorage.getItem('docs.theme');
+    var d = document.documentElement;
+    if (t) d.setAttribute('data-theme', t);
+    var g = localStorage.getItem('docs.glass');
+    if (g) d.setAttribute('data-glass', g);
+    var o = localStorage.getItem('docs.outline');
+    if (o) d.setAttribute('data-outline', o);
+    var a = parseInt(localStorage.getItem('docs.barOpacity'), 10);
+    if (a) d.style.setProperty('--bar-alpha', a + '%');
+    if (localStorage.getItem('docs.sideCollapsed') === 'true') d.classList.add('side-collapsed');
+  }catch(e){}
+})();
+</script>
+
+<!-- __DOCS_PAGE_CSS__ 页面布局样式。单文件版会把 docs-md.css 合并到这里 -->
+<style>
+*,*::before,*::after{box-sizing:border-box}
+
+:root{
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --ease:cubic-bezier(.2,.7,.2,1);
+
+  --sidebar-w:280px;
+  --bar-h:52px;
+  --fs-md:15px;
+
+  /* 顶栏半透明：不透明度 + 光学参数，各效果在 html[data-glass] 里覆盖 */
+  --bar-alpha:78%;
+  --glass-blur:14px;
+  --glass-sat:160%;
+  --glass-bright:100%;
+  --glass-sheen:none;
+  --glass-size:auto;
+  --glass-blend:normal;
+}
+
+/* ═══════════ 主题定义（12 套） ═══════════ */
+
+/* 1. 曜石 — 深色暖调 */
+[data-theme="obsidian"]{
+  --bg:#0E1214; --panel:#13181B; --raised:#191F23;
+  --line:#232C31; --line-soft:#1A2226;
+  --ink:#E7E9E6; --dim:#7E8A90; --faint:#566168;
+  --accent:#D97757;
+  --accent-soft:rgba(215,119,87,.12);
+  --accent-line:rgba(215,119,87,.36);
+  --md-ink:#DCE0DE; --md-dim:#8E999F;
+  --md-code-bg:#0A0D0F; --md-code-inline:#1C2429;
+  --bar-bg:rgba(19,24,27,.78);
+  --shadow:0 20px 50px -28px rgba(0,0,0,.72), 0 2px 10px -6px rgba(0,0,0,.5);
+}
+
+/* 2. 云舞者 — 浅色中性 */
+[data-theme="cloud"]{
+  --bg:#F2F0EB; --panel:#FBFAF7; --raised:#F6F4EF;
+  --line:#DCD7CD; --line-soft:#E9E5DD;
+  --ink:#1F1D1A; --dim:#6B6862; --faint:#9A968D;
+  --accent:#A8482A;
+  --accent-soft:rgba(168,72,42,.09);
+  --accent-line:rgba(168,72,42,.30);
+  --md-ink:#2A2622; --md-dim:#7A756B;
+  --md-code-bg:#EAE6DE; --md-code-inline:#E0DACF;
+  --bar-bg:rgba(251,250,247,.78);
+  --shadow:0 20px 50px -30px rgba(60,50,40,.36), 0 2px 10px -6px rgba(60,50,40,.16);
+}
+
+/* 3. 暖米 — 浅色大地 */
+[data-theme="linen"]{
+  --bg:#F8F3EC; --panel:#FFFDF9; --raised:#FBF6EE;
+  --line:#E3DACB; --line-soft:#EEE7DB;
+  --ink:#2A241D; --dim:#7A6E60; --faint:#A79A8A;
+  --accent:#5F6B3A;
+  --accent-soft:rgba(95,107,58,.11);
+  --accent-line:rgba(95,107,58,.34);
+  --md-ink:#33302B; --md-dim:#8A7F6E;
+  --md-code-bg:#F0E8DA; --md-code-inline:#E8E0D0;
+  --bar-bg:rgba(255,253,249,.80);
+  --shadow:0 20px 50px -30px rgba(70,60,40,.34), 0 2px 10px -6px rgba(70,60,40,.15);
+}
+
+/* 4. 水墨 — 深色朱砂 */
+[data-theme="ink"]{
+  --bg:#1A1A1A; --panel:#212121; --raised:#2A2A2A;
+  --line:#2E2E2E; --line-soft:#242424;
+  --ink:#F0F0E8; --dim:#9A9A90; --faint:#63635C;
+  --accent:#E05A42;
+  --accent-soft:rgba(224,90,66,.12);
+  --accent-line:rgba(224,90,66,.34);
+  --md-ink:#E0E0D8; --md-dim:#8A8A80;
+  --md-code-bg:#141414; --md-code-inline:#242424;
+  --bar-bg:rgba(33,33,33,.78);
+  --shadow:0 20px 50px -28px rgba(0,0,0,.8), 0 2px 10px -6px rgba(0,0,0,.55);
+}
+
+/* 5. 森林 — 深色苔绿 */
+[data-theme="forest"]{
+  --bg:#0F1611; --panel:#141C16; --raised:#1A231C;
+  --line:#24301F; --line-soft:#1B251A;
+  --ink:#E3EAE0; --dim:#7F9080; --faint:#5A6B5C;
+  --accent:#7DA05C;
+  --accent-soft:rgba(125,160,92,.14);
+  --accent-line:rgba(125,160,92,.38);
+  --md-ink:#D5DED0; --md-dim:#8A9988;
+  --md-code-bg:#0B110D; --md-code-inline:#1D2820;
+  --bar-bg:rgba(20,28,22,.78);
+  --shadow:0 20px 50px -28px rgba(0,0,0,.75), 0 2px 10px -6px rgba(0,0,0,.5);
+}
+
+/* 6. 深海 — 深色青蓝 */
+[data-theme="ocean"]{
+  --bg:#0B1418; --panel:#101A1F; --raised:#152228;
+  --line:#1E2E35; --line-soft:#16232A;
+  --ink:#E0E8EC; --dim:#7C8C94; --faint:#556870;
+  --accent:#4A9DB5;
+  --accent-soft:rgba(74,157,181,.14);
+  --accent-line:rgba(74,157,181,.38);
+  --md-ink:#D4DFE4; --md-dim:#8695A0;
+  --md-code-bg:#081013; --md-code-inline:#18262D;
+  --bar-bg:rgba(16,26,31,.78);
+  --shadow:0 20px 50px -28px rgba(0,0,0,.78), 0 2px 10px -6px rgba(0,0,0,.52);
+}
+
+/* 7. 玫瑰 — 浅色粉调 */
+[data-theme="rose"]{
+  --bg:#F7EDEF; --panel:#FDF8F9; --raised:#FAF0F2;
+  --line:#EBD9DD; --line-soft:#F0E2E5;
+  --ink:#2B1F23; --dim:#7D6A70; --faint:#A8959B;
+  --accent:#B04A6A;
+  --accent-soft:rgba(176,74,106,.09);
+  --accent-line:rgba(176,74,106,.30);
+  --md-ink:#35262B; --md-dim:#8A7580;
+  --md-code-bg:#F0E2E6; --md-code-inline:#EAD8DD;
+  --bar-bg:rgba(253,248,249,.80);
+  --shadow:0 20px 50px -30px rgba(80,50,60,.30), 0 2px 10px -6px rgba(80,50,60,.14);
+}
+
+/* 8. 羊皮纸 — 浅色棕褐 */
+[data-theme="sepia"]{
+  --bg:#F2EAD8; --panel:#FAF3E2; --raised:#F5EDDC;
+  --line:#DDD0B4; --line-soft:#E5DAC2;
+  --ink:#2C251A; --dim:#7A6F5A; --faint:#A69A82;
+  --accent:#8A6B3A;
+  --accent-soft:rgba(138,107,58,.11);
+  --accent-line:rgba(138,107,58,.32);
+  --md-ink:#332A1E; --md-dim:#88795E;
+  --md-code-bg:#E8DEC5; --md-code-inline:#E0D4B6;
+  --bar-bg:rgba(250,243,226,.82);
+  --shadow:0 20px 50px -30px rgba(70,55,35,.32), 0 2px 10px -6px rgba(70,55,35,.14);
+}
+
+/* 9. 午夜 — 深色蓝调 */
+[data-theme="midnight"]{
+  --bg:#0A0E17; --panel:#101623; --raised:#151C2B;
+  --line:#1E273A; --line-soft:#161E2F;
+  --ink:#E0E6EF; --dim:#7C8AA0; --faint:#55627A;
+  --accent:#5B8FB9;
+  --accent-soft:rgba(91,143,185,.14);
+  --accent-line:rgba(91,143,185,.38);
+  --md-ink:#D4DCE6; --md-dim:#8694AA;
+  --md-code-bg:#070A11; --md-code-inline:#182132;
+  --bar-bg:rgba(16,22,35,.78);
+  --shadow:0 20px 50px -28px rgba(0,0,0,.80), 0 2px 10px -6px rgba(0,0,0,.55);
+}
+
+/* 10. 纸张 — 浅色极简 */
+[data-theme="paper"]{
+  --bg:#FAFAF7; --panel:#FFFFFF; --raised:#F5F5F0;
+  --line:#E0E0D8; --line-soft:#EDEDE5;
+  --ink:#1A1A1A; --dim:#6B6B65; --faint:#9A9A92;
+  --accent:#333333;
+  --accent-soft:rgba(51,51,51,.08);
+  --accent-line:rgba(51,51,51,.28);
+  --md-ink:#2A2A2A; --md-dim:#757570;
+  --md-code-bg:#F0F0EA; --md-code-inline:#E8E8E0;
+  --bar-bg:rgba(255,255,255,.82);
+  --shadow:0 20px 50px -32px rgba(0,0,0,.20), 0 2px 10px -6px rgba(0,0,0,.08);
+}
+
+/* 11. 琥珀 — 深色金棕 */
+[data-theme="amber"]{
+  --bg:#18140E; --panel:#1F1A12; --raised:#262016;
+  --line:#332A1C; --line-soft:#272015;
+  --ink:#EDE5D5; --dim:#A09080; --faint:#6B6050;
+  --accent:#D9A44A;
+  --accent-soft:rgba(217,164,74,.14);
+  --accent-line:rgba(217,164,74,.38);
+  --md-ink:#E0D8C8; --md-dim:#968A78;
+  --md-code-bg:#120F0A; --md-code-inline:#262018;
+  --bar-bg:rgba(31,26,18,.78);
+  --shadow:0 20px 50px -28px rgba(0,0,0,.78), 0 2px 10px -6px rgba(0,0,0,.52);
+}
+
+/* 12. 苔藓 — 浅色草绿 */
+[data-theme="moss"]{
+  --bg:#EEF1E6; --panel:#F7F9F0; --raised:#F2F5E9;
+  --line:#D8DFC8; --line-soft:#E3E9D6;
+  --ink:#232A1A; --dim:#6B7460; --faint:#969E88;
+  --accent:#5A6B3A;
+  --accent-soft:rgba(90,107,58,.11);
+  --accent-line:rgba(90,107,58,.32);
+  --md-ink:#2D3521; --md-dim:#757F68;
+  --md-code-bg:#E4EAD8; --md-code-inline:#DCE3CC;
+  --bar-bg:rgba(247,249,240,.82);
+  --shadow:0 20px 50px -32px rgba(50,60,35,.28), 0 2px 10px -6px rgba(50,60,35,.12);
+}
+
+html,body{margin:0;height:100%}
+
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:14px;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow:hidden;
+  height:100dvh;
+  transition:background-color .22s var(--ease),color .22s var(--ease);
+}
+
+.app{display:flex;height:100dvh}
+
+/* ═══════════ 侧栏 ═══════════ */
+.sidebar{
+  width:var(--sidebar-w); flex:none;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  background:linear-gradient(180deg,
+    color-mix(in srgb,var(--panel) 92%,var(--ink) 3%) 0%,
+    var(--panel) 100%);
+  border-right:1px solid var(--line);
+  min-height:0;
+  transition:width .24s var(--ease),opacity .18s var(--ease),
+             background-color .22s var(--ease),border-color .22s var(--ease);
+}
+
+.side-head{
+  flex:none;
+  padding:16px 16px 12px;
+  border-bottom:1px solid var(--line);
+}
+.side-title{display:flex;align-items:center;gap:9px}
+.side-title .mark{
+  width:26px;height:26px;flex:none;
+  display:grid;place-items:center;
+  border-radius:6px;
+  background:var(--accent-soft);
+  border:1px solid var(--accent-line);
+  color:var(--accent);
+}
+.side-title .mark svg{width:14px;height:14px}
+.side-title h1{
+  margin:0;font-size:14px;font-weight:640;
+  letter-spacing:-.005em;
+}
+.side-collapse{
+  flex:none;
+  display:inline-flex;align-items:center;gap:4px;
+  border:1px solid var(--line);
+  cursor:pointer;
+  transition:color .14s var(--ease),border-color .14s var(--ease),background .14s var(--ease);
+  margin-left:auto;
+  font-family:var(--mono);font-size:11px;
+  color:var(--faint);
+  padding:2px 6px;
+  background:color-mix(in srgb,var(--ink) 4%,transparent);
+  border-radius:3px;
+}
+
+.side-collapse:hover{color:var(--ink);border-color:var(--dim)}
+.side-collapse:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.side-collapse svg{width:11px;height:11px}
+
+/* ── 侧栏收起 ── */
+html.side-collapsed .sidebar{width:0;opacity:0;border-right-width:0;pointer-events:none}
+
+.searchbox{padding:10px 12px 8px;flex:none;position:relative}
+.searchbox input{
+  width:100%;
+  padding:7px 28px 7px 30px;
+  background:var(--raised);
+  border:1px solid var(--line);
+  border-radius:5px;
+  color:var(--ink);
+  font-family:var(--mono);font-size:12px;
+  outline:none;
+  transition:border-color .13s var(--ease),background-color .2s var(--ease);
+}
+.search-icon{
+  position:absolute;
+  left:19px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;
+  color:var(--faint);
+  pointer-events:none;
+}
+.search-icon svg{width:14px;height:14px;display:block}
+/* 已改用内联 SVG 图标，以下为旧背景图标规则（保留注释）
+x
+  background-position:10px 50%;
+}
+[data-theme="cloud"] .searchbox input,
+[data-theme="linen"] .searchbox input,
+[data-theme="rose"] .searchbox input,
+[data-theme="sepia"] .searchbox input,
+[data-theme="paper"] .searchbox input,
+[data-theme="moss"] .searchbox input{
+  background-image:none;
+}
+*/
+.searchbox input::placeholder{color:var(--faint);opacity:.7}
+.searchbox input:focus{border-color:var(--accent-line);background:var(--bg)}
+.searchbox input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+.search-clear{
+  position:absolute;
+  right:18px; top:50%; transform:translateY(-50%);
+  width:18px;height:18px;
+  display:none;
+  align-items:center;justify-content:center;
+  border:0;background:transparent;
+  color:var(--faint);
+  cursor:pointer;
+  border-radius:3px;
+  padding:0;
+}
+.search-clear.on{display:flex}
+.search-clear:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.search-clear svg{width:12px;height:12px}
+.search-clear:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+.filelist{
+  flex:1;min-height:0;
+  overflow-y:auto;
+  padding:4px 8px 8px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--line) transparent;
+}
+.filelist::-webkit-scrollbar{width:8px}
+.filelist::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+.filelist::-webkit-scrollbar-thumb:hover{background:var(--dim)}
+
+.group-head{
+  padding:14px 10px 6px;
+  font-family:var(--mono);
+  font-size:10.5px;
+  font-weight:600;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  color:var(--faint);
+  user-select:none;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.group-head::after{
+  content:'';
+  flex:1;
+  height:1px;
+  background:var(--line-soft);
+}
+
+.group-items{margin-bottom:4px}
+
+.file-item{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 9px;
+  border-radius:5px;
+  cursor:pointer;
+  color:var(--ink);
+  opacity:.72;
+  font-size:13px;
+  user-select:none;
+  transition:background .1s var(--ease),opacity .1s var(--ease);
+  margin-bottom:1px;
+  position:relative;
+}
+.file-item:hover{background:color-mix(in srgb,var(--ink) 5%,transparent);opacity:1}
+.file-item.active{
+  background:var(--accent-soft);
+  opacity:1;
+}
+.file-item.active::before{
+  content:'';position:absolute;left:0;top:6px;bottom:6px;
+  width:2px;border-radius:2px;
+  background:var(--accent);
+}
+
+.file-icon{
+  width:16px;height:16px;flex:none;
+  display:grid;place-items:center;
+  color:var(--faint);
+}
+.file-item.active .file-icon{color:var(--accent)}
+.file-icon svg{width:14px;height:14px}
+
+.file-name{
+  flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:13px;
+  letter-spacing:-.005em;
+}
+.file-name mark{
+  background:color-mix(in srgb,var(--accent) 30%,transparent);
+  color:var(--ink);
+  padding:0 1px;
+  border-radius:2px;
+}
+
+.empty-side{
+  padding:40px 20px;
+  text-align:center;
+  font-size:12.5px;
+  color:var(--faint);
+  line-height:1.8;
+}
+.empty-side code{
+  font-family:var(--mono);font-size:11.5px;
+  background:color-mix(in srgb,var(--ink) 5%,transparent);
+  padding:1px 5px;border-radius:3px;
+  color:var(--dim);
+}
+
+/* ═══════════ 主区域 ═══════════ */
+.main{
+  flex:1;min-width:0;
+  display:flex;flex-direction:column;
+  background:var(--bg);
+}
+
+.main-bar{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;align-items:center;gap:10px;
+  padding:11px 16px 11px 20px;
+  background:var(--bar-bg);
+  background-color:color-mix(in srgb,var(--panel) var(--bar-alpha),transparent);
+  background-image:var(--glass-sheen);
+  background-blend-mode:var(--glass-blend);
+  background-size:var(--glass-size,auto);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(var(--glass-bright));
+  backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(var(--glass-bright));
+  border-bottom:1px solid var(--line);
+  min-height:var(--bar-h);
+  flex:none;
+  z-index:10;
+}
+
+/* ── 顶栏效果：云母 / Aero / 亚克力 ── */
+html[data-glass="mica"]{
+  --glass-blur:6px; --glass-sat:130%; --glass-bright:100%;
+  --glass-sheen:linear-gradient(180deg,
+    rgba(255,255,255,.05) 0%,
+    rgba(255,255,255,0) 58%,
+    rgba(0,0,0,.06) 100%);
+  --glass-blend:normal;
+}
+html[data-glass="aero"]{
+  --glass-blur:22px; --glass-sat:190%; --glass-bright:106%;
+  --glass-sheen:linear-gradient(180deg,
+    rgba(255,255,255,.22) 0%,
+    rgba(255,255,255,.07) 42%,
+    rgba(255,255,255,0) 64%,
+    rgba(0,0,0,.06) 100%);
+  --glass-blend:screen;
+}
+html[data-glass="aero"] .main-bar{
+  border-bottom-color:color-mix(in srgb,var(--accent) 24%,var(--line));
+}
+html[data-glass="acrylic"]{
+  --glass-blur:28px; --glass-sat:150%; --glass-bright:100%;
+  --glass-sheen:
+    radial-gradient(circle at 0 0,rgba(255,255,255,.13) 0 1px,rgba(255,255,255,0) 1.6px),
+    linear-gradient(180deg,rgba(255,255,255,.06) 0%,rgba(0,0,0,.05) 100%);
+  --glass-size:4px 4px,auto;
+  --glass-blend:normal;
+}
+
+.main-title{
+  flex:1;min-width:0;
+  display:flex;align-items:baseline;gap:10px;
+}
+.main-title .name{
+  font-size:14.5px;
+  color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  letter-spacing:-.005em;
+  font-weight:600;
+}
+.main-title .meta{
+  font-family:var(--mono);font-size:11px;
+  color:var(--faint);
+  flex:none;
+}
+@media (max-width:640px){
+  .main-title .meta{display:none}
+}
+
+.main-actions{display:flex;gap:6px;flex:none;align-items:center}
+
+.mbtn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:6px 11px;
+  background:transparent;
+  border:1px solid var(--line);
+  border-radius:5px;
+  color:var(--dim);
+  font-family:var(--mono);font-size:11.5px;
+  cursor:pointer;
+  transition:all .13s var(--ease);
+  white-space:nowrap;
+}
+.mbtn:hover{border-color:var(--dim);color:var(--ink);background:color-mix(in srgb,var(--ink) 4%,transparent)}
+.mbtn:active{transform:scale(.96)}
+.mbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mbtn:disabled{opacity:.32;cursor:not-allowed;pointer-events:none}
+.mbtn svg{width:12px;height:12px;flex:none}
+.mbtn.active{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
+.mbtn.icon-only{padding:6px 8px}
+
+@media (max-width:560px){
+  .mbtn .lbl{display:none}
+  .mbtn{padding:6px 8px}
+}
+
+.content{
+  flex:1;min-height:0;
+  overflow:auto;
+  position:relative;
+  scrollbar-width:thin;
+  scrollbar-color:var(--line) transparent;
+}
+/* 顶栏悬浮在正文之上，正文从这里开始往下排，滚动时从顶栏后面穿过 */
+.content{padding-top:var(--bar-h)}
+.content::-webkit-scrollbar{width:11px;height:11px}
+.content::-webkit-scrollbar-thumb{
+  background:var(--line);border-radius:5px;
+  border:3px solid var(--bg);
+}
+.content::-webkit-scrollbar-thumb:hover{background:var(--dim)}
+
+/* ═══════════ Markdown 排版 ═══════════ */
+.md{
+  max-width:820px;
+  margin:0 auto;
+  padding:44px 40px 100px;
+  font-size:var(--fs-md);
+  line-height:1.78;
+  color:var(--md-ink);
+  word-wrap:break-word;
+  transition:color .2s var(--ease);
+}
+@media (max-width:640px){
+  .md{padding:28px 20px 80px;font-size:14.5px}
+}
+
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{
+  color:var(--ink);
+  font-weight:640;
+  line-height:1.3;
+  letter-spacing:-.012em;
+  margin:1.8em 0 .7em;
+}
+.md h1{font-size:1.85em;margin-top:0;padding-bottom:.35em;border-bottom:1px solid var(--line)}
+.md h2{font-size:1.4em;padding-bottom:.3em;border-bottom:1px solid var(--line-soft)}
+.md h3{font-size:1.15em}
+.md h4{font-size:1em}
+.md h5,.md h6{font-size:.92em;color:var(--md-dim)}
+
+.md p{margin:1em 0}
+.md a{
+  color:var(--accent);
+  text-decoration:none;
+  border-bottom:1px solid var(--accent-line);
+  transition:border-color .13s var(--ease);
+}
+.md a:hover{border-bottom-color:var(--accent)}
+.md strong{color:var(--ink);font-weight:640}
+.md em{color:var(--md-ink);font-style:italic}
+.md del{color:var(--md-dim)}
+
+.md code{
+  font-family:var(--mono);
+  font-size:.86em;
+  background:var(--md-code-inline);
+  color:var(--accent);
+  padding:.15em .4em;
+  border-radius:3px;
+  word-break:break-word;
+}
+.md pre{
+  background:var(--md-code-bg);
+  border:1px solid var(--line);
+  border-radius:7px;
+  padding:14px 18px;
+  overflow-x:auto;
+  margin:1.2em 0;
+  font-size:13px;
+  line-height:1.65;
+}
+.md pre code{
+  background:transparent;
+  color:var(--md-ink);
+  padding:0;
+  font-size:inherit;
+  border-radius:0;
+  white-space:pre;
+}
+.md blockquote{
+  margin:1.2em 0;
+  padding:.2em 0 .2em 1.2em;
+  border-left:3px solid var(--accent-line);
+  color:var(--md-dim);
+  font-style:italic;
+}
+.md blockquote p{margin:.5em 0}
+.md ul,.md ol{padding-left:1.6em;margin:1em 0}
+.md li{margin:.35em 0}
+.md li > p{margin:.4em 0}
+.md hr{
+  border:none;height:1px;
+  background:var(--line);
+  margin:2.4em 0;
+}
+.md table{
+  border-collapse:collapse;
+  width:100%;
+  margin:1.2em 0;
+  font-size:13.5px;
+  display:block;
+  overflow-x:auto;
+}
+.md table thead{background:color-mix(in srgb,var(--ink) 3%,transparent)}
+.md table th,.md table td{
+  padding:9px 14px;
+  border:1px solid var(--line);
+  text-align:left;
+  vertical-align:top;
+}
+.md table th{font-weight:640;color:var(--ink)}
+.md img{
+  max-width:100%;
+  border-radius:6px;
+  border:1px solid var(--line);
+  margin:1em 0;
+}
+
+/* ═══════════ 源码视图 ═══════════ */
+.code-view{
+  min-height:100%;
+  display:flex;
+  background:var(--md-code-bg);
+}
+.code-view .gutter{
+  flex:none;
+  width:56px;
+  padding:20px 0 40px;
+  background:color-mix(in srgb,var(--md-code-bg) 90%,black 10%);
+  border-right:1px solid var(--line-soft);
+  font-family:var(--mono);font-size:12.5px;line-height:1.72;
+  color:var(--faint);
+  text-align:right;
+  user-select:none;
+  white-space:pre;
+  opacity:.65;
+}
+.code-view .gutter .ln{display:block;padding-right:16px}
+.code-view .code{
+  flex:1;
+  padding:20px 24px 40px;
+  font-family:var(--mono);font-size:12.5px;line-height:1.72;
+  color:var(--md-ink);
+  white-space:pre;
+  tab-size:2;
+  min-width:0;
+}
+
+/* ═══════════ 图片 / 视频 / PDF ═══════════ */
+.img-view{
+  min-height:100%;
+  display:grid;place-items:center;
+  padding:32px;
+}
+.img-view img{
+  max-width:100%;
+  max-height:calc(100dvh - 160px);
+  border-radius:6px;
+  border:1px solid var(--line);
+}
+.frame-view{
+  width:100%;height:100%;
+  border:none;
+  background:#fff;
+  display:block;
+}
+
+/* ═══════════ 空态 ═══════════ */
+.empty-main{
+  height:100%;
+  display:grid;place-items:center;
+  padding:48px 32px;
+  text-align:center;
+}
+.empty-main .inner{
+  max-width:520px;
+  font-size:13.5px;
+  line-height:1.85;
+  color:var(--faint);
+}
+.empty-main svg{
+  width:48px;height:48px;
+  color:var(--faint);
+  margin-bottom:20px;
+  opacity:.5;
+}
+.empty-main h2{
+  margin:0 0 12px;font-size:18px;font-weight:640;
+  color:var(--dim);
+  letter-spacing:-.005em;
+}
+.empty-main p{margin:0 0 18px}
+.empty-main code{
+  font-family:var(--mono);font-size:12px;
+  background:color-mix(in srgb,var(--ink) 5%,transparent);
+  padding:2px 6px;border-radius:3px;
+  color:var(--dim);
+}
+.empty-main pre{
+  font-family:var(--mono);font-size:11.5px;line-height:1.75;
+  color:var(--dim);
+  background:color-mix(in srgb,var(--ink) 3%,transparent);
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:16px 18px;
+  margin:20px auto 0;
+  max-width:440px;
+  text-align:left;
+  overflow-x:auto;
+}
+
+/* ═══════════ 设置抽屉 ═══════════ */
+.scrim{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.42);
+  z-index:110;
+  opacity:0;pointer-events:none;
+  transition:opacity .22s var(--ease);
+}
+.scrim.on{opacity:1;pointer-events:auto}
+
+.drawer{
+  position:fixed;
+  top:0;right:0;bottom:0;
+  width:min(380px,100vw);
+  background:var(--panel);
+  border-left:1px solid var(--line);
+  z-index:130;
+  display:flex;flex-direction:column;
+  transform:translateX(101%);
+  transition:transform .3s var(--ease),background-color .22s var(--ease);
+  box-shadow:var(--shadow);
+}
+.drawer.on{transform:none}
+
+.drawer-hd{
+  flex:none;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 12px 0 18px;
+  height:52px;
+  border-bottom:1px solid var(--line);
+}
+.drawer-hd h2{margin:0;font-size:13px;font-weight:600;letter-spacing:.01em}
+
+.drawer-bd{
+  flex:1;min-height:0;
+  overflow-y:auto;
+  padding:0 18px 48px;
+  scrollbar-width:thin;
+}
+.drawer-bd::-webkit-scrollbar{width:10px}
+.drawer-bd::-webkit-scrollbar-thumb{
+  background:var(--line);border:3px solid transparent;
+  background-clip:content-box;border-radius:8px;
+}
+
+.group{padding:18px 0;border-bottom:1px solid var(--line-soft)}
+.group:last-child{border-bottom:0}
+.group h3{
+  margin:0 0 13px;
+  font-family:var(--mono);
+  font-size:10.5px;font-weight:500;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--faint);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.group h3 em{
+  font-style:normal;letter-spacing:0;
+  text-transform:none;color:var(--dim);font-size:11px;
+}
+
+.themes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.theme-opt{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:5px;
+  background:transparent;
+  cursor:pointer;
+  text-align:left;
+  color:var(--dim);
+  font-family:inherit;font-size:12px;
+  transition:border-color .14s var(--ease),
+             background .14s var(--ease),
+             color .14s var(--ease);
+}
+.theme-opt:hover{border-color:var(--dim);color:var(--ink)}
+.theme-opt[aria-pressed="true"]{
+  border-color:var(--accent-line);
+  background:var(--accent-soft);
+  color:var(--ink);
+}
+.theme-opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.swatch{
+  width:22px;height:22px;flex:none;
+  border-radius:4px;
+  border:1px solid rgba(128,128,128,.28);
+  background:linear-gradient(135deg,var(--sw-bg) 0 54%,var(--sw-accent) 54% 100%);
+}
+
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:22px;background:transparent;
+  cursor:pointer;padding:0;margin:0;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:2px;background:var(--line);border-radius:2px;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--accent);
+  border:0;margin-top:-6px;
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+input[type=range]::-moz-range-track{height:2px;background:var(--line);border-radius:2px}
+input[type=range]::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;
+  background:var(--accent);border:0;
+}
+input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:4px}
+
+/* ── 设置里的选项按钮（顶栏效果 / 本页目录） ── */
+.opt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.opt-btn{
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  padding:9px 8px;
+  border:1px solid var(--line);
+  border-radius:5px;
+  background:transparent;
+  cursor:pointer;
+  color:var(--dim);
+  font-family:inherit;font-size:12px;
+  transition:border-color .14s var(--ease),background .14s var(--ease),color .14s var(--ease);
+}
+.opt-btn:hover{border-color:var(--dim);color:var(--ink)}
+.opt-btn[aria-pressed="true"]{border-color:var(--accent-line);background:var(--accent-soft);color:var(--ink)}
+.opt-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* 效果预览：一条迷你顶栏浮在色块上，跟着当前不透明度实时变化 */
+.glass-chip{
+  position:relative;width:100%;height:30px;flex:none;
+  border-radius:4px;overflow:hidden;
+  background:linear-gradient(112deg,
+    var(--accent) 0%, var(--accent-line) 34%, var(--raised) 72%, var(--line) 100%);
+}
+.glass-chip i{
+  position:absolute;left:4px;right:4px;top:4px;height:11px;
+  border-radius:3px;
+  background-color:color-mix(in srgb,var(--panel) var(--bar-alpha),transparent);
+  background-image:var(--chip-sheen,none);
+  background-size:var(--chip-size,auto);
+  -webkit-backdrop-filter:blur(var(--chip-blur,6px)) saturate(var(--chip-sat,130%));
+  backdrop-filter:blur(var(--chip-blur,6px)) saturate(var(--chip-sat,130%));
+}
+.glass-chip[data-variant="mica"]{--chip-blur:6px;--chip-sat:130%;--chip-sheen:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.06))}
+.glass-chip[data-variant="aero"]{--chip-blur:13px;--chip-sat:190%;--chip-sheen:linear-gradient(180deg,rgba(255,255,255,.24),rgba(255,255,255,0) 62%)}
+.glass-chip[data-variant="acrylic"]{
+  --chip-blur:17px;--chip-sat:150%;
+  --chip-sheen:
+    radial-gradient(circle at 0 0,rgba(255,255,255,.16) 0 0.8px,rgba(255,255,255,0) 1.3px),
+    linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.06));
+  --chip-size:3px 3px,auto;
+}
+
+/* 顶栏标题旁的“加载中”提示：渲染器/依赖还在加载时显示 */
+.load-badge{
+  display:none;align-items:center;gap:6px;
+  flex:none;
+  padding:1px 8px 1px 7px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:color-mix(in srgb,var(--ink) 4%,transparent);
+  color:var(--faint);
+  font-family:var(--mono);font-size:11px;
+  letter-spacing:.01em;
+  white-space:nowrap;
+}
+.load-badge.on{ display:inline-flex }
+.load-dot{
+  width:6px;height:6px;flex:none;border-radius:50%;
+  background:var(--accent);
+  animation:loadPulse 1.05s var(--ease) infinite;
+}
+@keyframes loadPulse{
+  0%,100%{ opacity:.35;transform:scale(.78) }
+  50%{ opacity:1;transform:scale(1) }
+}
+@media (prefers-reduced-motion:reduce){
+  .load-dot{ animation:none;opacity:1 }
+}
+
+/* 打开文档时的加载态：弱化成一行细提示，不出现居中大块 */
+.content > .empty-main:has(.doc-loading-title){ place-items:start;padding:26px 40px 0;text-align:left }
+.content > .empty-main .doc-loading-title{
+  margin:0 0 4px;
+  font-family:var(--mono);font-size:12px;font-weight:400;
+  color:var(--faint);letter-spacing:.02em;
+}
+.content > .empty-main:has(.doc-loading-title) p{
+  margin:0;font-family:var(--mono);font-size:11.5px;color:var(--faint);opacity:.8;
+}
+
+/* ═══════════ Toast ═══════════ */
+.toast{
+  position:fixed;right:20px;bottom:20px;
+  z-index:300;
+  padding:9px 14px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:6px;
+  font-family:var(--mono);font-size:12px;
+  color:var(--ink);
+  opacity:0;transform:translateY(6px);
+  pointer-events:none;
+  transition:opacity .16s var(--ease),transform .16s var(--ease);
+  box-shadow:var(--shadow);
+}
+.toast.show{opacity:1;transform:none}
+.toast.error{border-color:var(--accent-line);color:var(--accent)}
+
+/* ═══════════ 阅读进度条 ═══════════ */
+.progress{
+  position:fixed;top:0;left:0;right:0;height:2px;
+  z-index:200;
+  background:var(--accent);
+  transform:scaleX(0);transform-origin:0 50%;
+  transition:transform .08s linear;
+  pointer-events:none;
+}
+
+/* ═══════════ 主区域：内容 + 本页目录 ═══════════ */
+.main{position:relative}
+
+.main-body{flex:1;min-height:0;display:flex;min-width:0}
+
+.outline{
+  width:226px;flex:none;
+  display:none;
+  overflow-y:auto;
+  padding:30px 14px 64px 10px;
+  border-left:1px solid var(--line-soft);
+  scrollbar-width:thin;
+  scrollbar-color:var(--line) transparent;
+}
+.outline.on{display:block}
+
+/* ── 本页目录：停靠 / 悬浮 / 关闭 ── */
+.outline-head{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.outline-head .outline-title{margin:0;flex:1;min-width:0}
+.outline-x{
+  flex:none;width:20px;height:20px;margin-right:8px;
+  display:none;place-items:center;
+  border:0;background:transparent;padding:0;
+  color:var(--faint);cursor:pointer;border-radius:4px;
+  transition:color .13s var(--ease),background .13s var(--ease);
+}
+.outline-x:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,transparent)}
+.outline-x:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.outline-x svg{width:11px;height:11px}
+
+html[data-outline="off"] .outline{display:none}
+
+html[data-outline="float"] .outline{
+  position:fixed;
+  top:calc(var(--bar-h) + 14px);
+  right:16px;
+  width:min(268px,calc(100vw - 32px));
+  max-height:min(62vh,520px);
+  z-index:105;
+  padding:12px 6px 14px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:color-mix(in srgb,var(--panel) var(--bar-alpha),transparent);
+  -webkit-backdrop-filter:blur(20px) saturate(150%);
+  backdrop-filter:blur(20px) saturate(150%);
+  box-shadow:var(--shadow);
+}
+html[data-outline="float"] .outline.on{display:block}
+html[data-outline="float"] .outline.on.hide{display:none}
+html[data-outline="float"] .outline-x{display:grid}
+html[data-outline="float"] .outline-head{margin-bottom:8px}
+
+.outline-pill{
+  position:fixed;
+  top:calc(var(--bar-h) + 14px);
+  right:16px;
+  z-index:104;
+  display:none;align-items:center;gap:5px;
+  padding:5px 10px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:color-mix(in srgb,var(--panel) 88%,transparent);
+  -webkit-backdrop-filter:blur(12px) saturate(140%);
+  backdrop-filter:blur(12px) saturate(140%);
+  color:var(--dim);
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.02em;
+  cursor:pointer;
+  box-shadow:var(--shadow);
+  transition:color .14s var(--ease),border-color .14s var(--ease);
+}
+.outline-pill.shown{display:inline-flex}
+.outline-pill:hover{color:var(--ink);border-color:var(--dim)}
+.outline-pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.outline-pill svg{width:12px;height:12px}
+.outline{padding-top:calc(var(--bar-h) + 14px)}
+.outline::-webkit-scrollbar{width:9px}
+.outline::-webkit-scrollbar-thumb{
+  background:var(--line);border-radius:5px;border:2px solid var(--bg);
+}
+.outline-title{
+  margin:0 0 12px;padding-left:10px;
+  font-family:var(--mono);font-size:10.5px;font-weight:600;
+  letter-spacing:.13em;text-transform:uppercase;
+  color:var(--faint);
+}
+.outline ul{list-style:none;margin:0;padding:0}
+.outline li{margin:0}
+.outline a{
+  display:block;
+  padding:5px 10px;
+  font-size:12.5px;line-height:1.5;
+  color:var(--dim);
+  text-decoration:none;
+  border-left:2px solid transparent;
+  border-radius:0 4px 4px 0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  transition:color .13s var(--ease),border-color .13s var(--ease),background .13s var(--ease);
+}
+.outline a:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.outline a.active{
+  color:var(--accent);
+  border-left-color:var(--accent);
+  background:var(--accent-soft);
+}
+.outline .lv-2 a{padding-left:22px}
+.outline .lv-3 a{padding-left:34px;font-size:12px}
+.outline .lv-4 a{padding-left:46px;font-size:12px}
+
+/* ═══════════ 标题锚点 ═══════════ */
+.md h1,.md h2,.md h3,.md h4{scroll-margin-top:calc(var(--bar-h) + 14px)}
+.md .anchor{
+  margin-left:8px;
+  color:var(--faint);text-decoration:none;border:0;
+  font-weight:400;opacity:0;
+  transition:opacity .13s var(--ease),color .13s var(--ease);
+}
+.md h1:hover .anchor,.md h2:hover .anchor,
+.md h3:hover .anchor,.md h4:hover .anchor{opacity:1}
+.md .anchor:hover{color:var(--accent);border:0}
+.md .anchor:focus-visible{opacity:1;outline:2px solid var(--accent);outline-offset:1px}
+
+/* ═══════════ 上一篇 / 下一篇 ═══════════ */
+.doc-nav{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  margin:44px 0 0;
+  padding:0;
+}
+.doc-nav a{
+  display:flex;flex-direction:column;gap:5px;
+  padding:14px 16px;min-width:0;
+  border:1px solid var(--line);border-radius:7px;
+  text-decoration:none;
+  transition:border-color .14s var(--ease),background .14s var(--ease);
+}
+.doc-nav a:hover{border-color:var(--accent-line);background:var(--accent-soft)}
+.doc-nav .dir{
+  font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);
+}
+.doc-nav .ttl{
+  font-size:13.5px;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.doc-nav .next{text-align:right}
+.doc-nav .ghost{visibility:hidden}
+
+/* ═══════════ 返回顶部 ═══════════ */
+.totop{
+  position:fixed;right:26px;bottom:26px;z-index:120;
+  width:40px;height:40px;border-radius:8px;
+  display:grid;place-items:center;
+  background:var(--panel);border:1px solid var(--line);
+  color:var(--dim);cursor:pointer;padding:0;
+  box-shadow:var(--shadow);
+  opacity:0;transform:translateY(8px);pointer-events:none;
+  transition:opacity .2s var(--ease),transform .2s var(--ease),
+             color .13s var(--ease),border-color .13s var(--ease);
+}
+.totop.on{opacity:1;transform:none;pointer-events:auto}
+.totop:hover{color:var(--ink);border-color:var(--dim)}
+.totop:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.totop svg{width:16px;height:16px}
+
+/* ═══════════ 分组折叠 ═══════════ */
+.group-head{cursor:pointer}
+.group-head:hover{color:var(--dim)}
+.group-head .caret{
+  flex:none;width:9px;height:9px;
+  display:grid;place-items:center;
+  transition:transform .18s var(--ease);
+  order:-1;margin-right:1px;
+}
+.group-head .caret svg{width:9px;height:9px}
+.group-head.collapsed .caret{transform:rotate(-90deg)}
+.group-head.collapsed + .group-items{display:none}
+.group.collapsed .group-items{display:none}
+.group-head .gcount{
+  margin-left:auto;flex:none;
+  font-family:var(--mono);font-size:10px;
+  color:var(--faint);
+}
+.group-head::after{display:none}
+.group-head{gap:6px}
+
+/* ═══════════ 响应式 ═══════════ */
+@media (max-width:720px){
+  .app{flex-direction:column}
+  .sidebar{
+    width:100%;height:240px;flex:none;
+    border-right:none;
+    border-bottom:1px solid var(--line);
+  }
+  .drawer{width:100vw}
+  html.side-collapsed .sidebar{width:100%;height:0;opacity:0;border-bottom-width:0}
+  .doc-nav{grid-template-columns:1fr;margin-top:32px}
+  .doc-nav .next{text-align:left}
+  .doc-nav .ghost{display:none}
+  .totop{right:16px;bottom:16px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    transition-duration:.01ms !important;
+    animation-duration:.01ms !important;
+  }
+  .drawer{transition:none}
+}
+</style>
+</head>
+<body>
+
+<noscript>
+<div class="noscript-wrap"><h1>文档 · JinSuper</h1><p>这个页面用 JavaScript 在现场排版 Markdown。下面先把预渲染好的正文列出来，其余资料给出原文件链接。</p><section><h2>启程</h2><ul><li><a href="../science.md">科技节活动方案</a></li><li><a href="../para/First.md">欢迎来到该网站</a></li><li><a href="../TEST.md">测试文档</a><div class="md"><h1 id="全功能-markdown-测试文档">全功能 Markdown 测试文档<a class="anchor" href="#全功能-markdown-测试文档" aria-label="锚点链接">#</a></h1>
+<blockquote>
+<p>本文档用于测试 Markdown 解析器对 CommonMark、GFM 及常见社区扩展的支持。<br>
+部分语法为扩展功能，实际渲染效果取决于解析器与插件。</p>
+</blockquote>
+<h2 id="目录">目录<a class="anchor" href="#目录" aria-label="锚点链接">#</a></h2>
+<nav class="md-toc" aria-label="本页目录"><p class="md-toc-title">本页目录</p><a class="md-toc-lv1" href="#全功能-markdown-测试文档">全功能 Markdown 测试文档</a><a class="md-toc-lv2" href="#目录">目录</a><a class="md-toc-lv2" href="#1-核心语法-commonmark">1. 核心语法 (CommonMark)</a><a class="md-toc-lv3" href="#11-标题">1.1 标题</a><a class="md-toc-lv1" href="#h1-标题">H1 标题</a><a class="md-toc-lv2" href="#h2-标题">H2 标题</a><a class="md-toc-lv3" href="#h3-标题">H3 标题</a><a class="md-toc-lv1" href="#一级标题">一级标题</a><a class="md-toc-lv2" href="#二级标题">二级标题</a><a class="md-toc-lv3" href="#12-段落与换行">1.2 段落与换行</a><a class="md-toc-lv3" href="#13-强调">1.3 强调</a><a class="md-toc-lv3" href="#14-列表">1.4 列表</a><a class="md-toc-lv3" href="#15-代码">1.5 代码</a><a class="md-toc-lv3" href="#16-链接与图片">1.6 链接与图片</a><a class="md-toc-lv3" href="#17-引用">1.7 引用</a><a class="md-toc-lv3" href="#18-分隔线">1.8 分隔线</a><a class="md-toc-lv2" href="#2-gfm-扩展">2. GFM 扩展</a><a class="md-toc-lv3" href="#21-表格">2.1 表格</a><a class="md-toc-lv3" href="#22-任务列表">2.2 任务列表</a><a class="md-toc-lv3" href="#23-删除线">2.3 删除线</a><a class="md-toc-lv3" href="#24-自动链接">2.4 自动链接</a><a class="md-toc-lv3" href="#25-脚注">2.5 脚注</a><a class="md-toc-lv3" href="#26-警告框">2.6 警告框</a><a class="md-toc-lv2" href="#3-内容增强">3. 内容增强</a><a class="md-toc-lv3" href="#31-emoji">3.1 Emoji</a><a class="md-toc-lv3" href="#32-上下标">3.2 上下标</a><a class="md-toc-lv3" href="#33-高亮标记">3.3 高亮/标记</a><a class="md-toc-lv3" href="#34-缩写词">3.4 缩写词</a><a class="md-toc-lv3" href="#35-定义列表">3.5 定义列表</a><a class="md-toc-lv3" href="#36-插入与删除">3.6 插入与删除</a><a class="md-toc-lv3" href="#37-ruby-注音">3.7 Ruby 注音</a><a class="md-toc-lv3" href="#38-剧透">3.8 剧透</a><a class="md-toc-lv3" href="#39-图标">3.9 图标</a><a class="md-toc-lv2" href="#4-学术与技术">4. 学术与技术</a><a class="md-toc-lv3" href="#41-数学公式-katex">4.1 数学公式 (KaTeX)</a><a class="md-toc-lv3" href="#42-mathjax">4.2 MathJax</a><a class="md-toc-lv3" href="#43-代码高亮">4.3 代码高亮</a><a class="md-toc-lv3" href="#44-代码行号">4.4 代码行号</a><a class="md-toc-lv2" href="#5-图表与可视化">5. 图表与可视化</a><a class="md-toc-lv3" href="#51-mermaid">5.1 Mermaid</a><a class="md-toc-lv3" href="#52-plantuml">5.2 PlantUML</a><a class="md-toc-lv3" href="#53-echarts">5.3 ECharts</a><a class="md-toc-lv3" href="#54-flowchart">5.4 Flowchart</a><a class="md-toc-lv2" href="#6-文档导航与结构">6. 文档导航与结构</a><a class="md-toc-lv3" href="#61-标题锚点">6.1 标题锚点</a><a class="md-toc-lv2" href="#custom-heading">带自定义 ID 的标题</a><a class="md-toc-lv3" href="#62-目录">6.2 目录</a><a class="md-toc-lv3" href="#63-属性">6.3 属性</a><a class="md-toc-lv1" href="#id">标题</a><a class="md-toc-lv3" href="#64-自定义容器">6.4 自定义容器</a><a class="md-toc-lv3" href="#65-选项卡">6.5 选项卡</a><a class="md-toc-lv3" href="#66-布局">6.6 布局</a><a class="md-toc-lv2" href="#7-其他实用功能">7. 其他实用功能</a><a class="md-toc-lv3" href="#71-图片尺寸">7.1 图片尺寸</a><a class="md-toc-lv3" href="#72-图片懒加载">7.2 图片懒加载</a><a class="md-toc-lv3" href="#73-图片预览">7.3 图片预览</a><a class="md-toc-lv3" href="#74-主题标记">7.4 主题标记</a><a class="md-toc-lv3" href="#75-包含文件">7.5 包含文件</a><a class="md-toc-lv3" href="#76-导入代码片段">7.6 导入代码片段</a><a class="md-toc-lv3" href="#77-自定义嵌入">7.7 自定义嵌入</a><a class="md-toc-lv3" href="#78-内容对齐">7.8 内容对齐</a><a class="md-toc-lv3" href="#79-样式化">7.9 样式化</a><a class="md-toc-lv2" href="#8-总结">8. 总结</a></nav>
+<h2 id="1-核心语法-commonmark">1. 核心语法 (CommonMark)<a class="anchor" href="#1-核心语法-commonmark" aria-label="锚点链接">#</a></h2>
+<h3 id="11-标题">1.1 标题<a class="anchor" href="#11-标题" aria-label="锚点链接">#</a></h3>
+<h1 id="h1-标题">H1 标题<a class="anchor" href="#h1-标题" aria-label="锚点链接">#</a></h1>
+<h2 id="h2-标题">H2 标题<a class="anchor" href="#h2-标题" aria-label="锚点链接">#</a></h2>
+<h3 id="h3-标题">H3 标题<a class="anchor" href="#h3-标题" aria-label="锚点链接">#</a></h3>
+<h4 id="h4-标题">H4 标题<a class="anchor" href="#h4-标题" aria-label="锚点链接">#</a></h4>
+<h5 id="h5-标题">H5 标题<a class="anchor" href="#h5-标题" aria-label="锚点链接">#</a></h5>
+<h6 id="h6-标题">H6 标题<a class="anchor" href="#h6-标题" aria-label="锚点链接">#</a></h6>
+<p>Setext 风格：</p>
+<h1 id="一级标题">一级标题<a class="anchor" href="#一级标题" aria-label="锚点链接">#</a></h1>
+<h2 id="二级标题">二级标题<a class="anchor" href="#二级标题" aria-label="锚点链接">#</a></h2>
+<h3 id="12-段落与换行">1.2 段落与换行<a class="anchor" href="#12-段落与换行" aria-label="锚点链接">#</a></h3>
+<p>这是一个普通段落。</p>
+<p>这是另一个段落，中间有空行。</p>
+<p>这是同一段落内的换行，<br>
+行尾有两个空格实现硬换行。</p>
+<p>这是使用反斜杠的硬换行<br>
+下一行。</p>
+<h3 id="13-强调">1.3 强调<a class="anchor" href="#13-强调" aria-label="锚点链接">#</a></h3>
+<p><em>斜体</em> 或 <em>斜体</em></p>
+<p><strong>粗体</strong> 或 <strong>粗体</strong></p>
+<p><em><strong>粗斜体</strong></em> 或 <em><strong>粗斜体</strong></em></p>
+<h3 id="14-列表">1.4 列表<a class="anchor" href="#14-列表" aria-label="锚点链接">#</a></h3>
+<p>无序列表：</p>
+<ul>
+<li>项目 A</li>
+<li>项目 B
+<ul>
+<li>嵌套项目 B1</li>
+<li>嵌套项目 B2</li>
+</ul>
+</li>
+<li>项目 C</li>
+</ul>
+<p>有序列表：</p>
+<ol>
+<li>第一项</li>
+<li>第二项
+<ol>
+<li>嵌套有序 2.1</li>
+<li>嵌套有序 2.2</li>
+</ol>
+</li>
+<li>第三项</li>
+</ol>
+<p>混合列表：</p>
+<ul>
+<li>项目
+<ol>
+<li>有序子项</li>
+<li>有序子项</li>
+</ol>
+</li>
+<li>项目</li>
+</ul>
+<h3 id="15-代码">1.5 代码<a class="anchor" href="#15-代码" aria-label="锚点链接">#</a></h3>
+<p>行内代码：<code>const a = 1;</code></p>
+<p>围栏代码块：</p>
+<pre><code class="hljs language-javascript"><span class="hljs-keyword">function</span> <span class="hljs-title function_">hello</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;Hello, Markdown!&#x27;</span>)
+}
+</code></pre>
+<p>缩进代码块：</p>
+<pre><code>indented code block
+line 2
+</code></pre>
+<h3 id="16-链接与图片">1.6 链接与图片<a class="anchor" href="#16-链接与图片" aria-label="锚点链接">#</a></h3>
+<p><a href="https://example.com">普通链接</a></p>
+<p><a href="https://example.com" title="示例网站">带标题的链接</a></p>
+<p><a href="https://example.com">https://example.com</a></p>
+<p><img src="https://via.placeholder.com/150" alt="替代文本" title="图片标题" loading="lazy" decoding="async"></p>
+<p><a href="https://example.com"><img src="https://via.placeholder.com/100" alt="图片链接" loading="lazy" decoding="async"></a></p>
+<h3 id="17-引用">1.7 引用<a class="anchor" href="#17-引用" aria-label="锚点链接">#</a></h3>
+<blockquote>
+<p>这是一级引用。</p>
+<blockquote>
+<p>这是嵌套引用。</p>
+</blockquote>
+<p>回到一级引用。</p>
+</blockquote>
+<h3 id="18-分隔线">1.8 分隔线<a class="anchor" href="#18-分隔线" aria-label="锚点链接">#</a></h3>
+<hr>
+<hr>
+<hr>
+<h2 id="2-gfm-扩展">2. GFM 扩展<a class="anchor" href="#2-gfm-扩展" aria-label="锚点链接">#</a></h2>
+<h3 id="21-表格">2.1 表格<a class="anchor" href="#21-表格" aria-label="锚点链接">#</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">左对齐</th>
+<th style="text-align:center">居中对齐</th>
+<th style="text-align:right">右对齐</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">单元格</td>
+<td style="text-align:center">单元格</td>
+<td style="text-align:right">单元格</td>
+</tr>
+<tr>
+<td style="text-align:left">内容</td>
+<td style="text-align:center">内容</td>
+<td style="text-align:right">内容</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-任务列表">2.2 任务列表<a class="anchor" href="#22-任务列表" aria-label="锚点链接">#</a></h3>
+<ul class="contains-task-list">
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox" id="task-item-1"><label class="task-list-item-label" for="task-item-1"> 已完成任务</label></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox" id="task-item-2"><label class="task-list-item-label" for="task-item-2"> 未完成任务</label></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox" id="task-item-3"><label class="task-list-item-label" for="task-item-3"> 待办事项</label></li>
+</ul>
+<h3 id="23-删除线">2.3 删除线<a class="anchor" href="#23-删除线" aria-label="锚点链接">#</a></h3>
+<p><s>删除线文本</s></p>
+<h3 id="24-自动链接">2.4 自动链接<a class="anchor" href="#24-自动链接" aria-label="锚点链接">#</a></h3>
+<p><a href="https://example.com">https://example.com</a></p>
+<p>www.example.com</p>
+<p><a href="mailto:user@example.com">user@example.com</a></p>
+<h3 id="25-脚注">2.5 脚注<a class="anchor" href="#25-脚注" aria-label="锚点链接">#</a></h3>
+<p>这是一个脚注引用<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>，还有另一个<sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup>。</p>
+<h3 id="26-警告框">2.6 警告框<a class="anchor" href="#26-警告框" aria-label="锚点链接">#</a></h3>
+<div class="markdown-alert markdown-alert-note"><p class="markdown-alert-title"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" fill="currentColor"><path d="M8 1.2A6.8 6.8 0 1 0 8 14.8 6.8 6.8 0 0 0 8 1.2Zm0 1.6a5.2 5.2 0 1 1 0 10.4A5.2 5.2 0 0 1 8 2.8Zm0 2.1a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm-.85 3.3h1.7v4.6h-1.7Z"/></svg>注意</p><p>这是一条提示信息。</p>
+</div>
+<div class="markdown-alert markdown-alert-tip"><p class="markdown-alert-title"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" fill="currentColor"><path d="M8 1.2c-2.4 0-4.2 1.8-4.2 4 0 1 .5 1.8 1.1 2.5.6.7 1 1.2 1.1 2h4c.1-.8.5-1.3 1.1-2 .6-.7 1.1-1.5 1.1-2.5 0-2.2-1.8-4-4.2-4Zm-1.7 10h3.4v1.2H6.3Zm.6 2.1h2.2l-.3 1.2H7.2Z"/></svg>提示</p><p>这是一条技巧信息。</p>
+</div>
+<div class="markdown-alert markdown-alert-important"><p class="markdown-alert-title"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" fill="currentColor"><path d="M8 1.2A6.8 6.8 0 1 0 8 14.8 6.8 6.8 0 0 0 8 1.2Zm0 1.6a5.2 5.2 0 1 1 0 10.4A5.2 5.2 0 0 1 8 2.8Zm-.9 1.8h1.8v4.6H7.1Zm0 5.6h1.8v1.8H7.1Z"/></svg>重要</p><p>这是一条重要信息。</p>
+</div>
+<div class="markdown-alert markdown-alert-warning"><p class="markdown-alert-title"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" fill="currentColor"><path d="M8 1.4 15 14H1L8 1.4Zm0 3.2a.9.9 0 0 0-.9.9v2.8a.9.9 0 0 0 1.8 0V5.5A.9.9 0 0 0 8 4.6Zm0 5.6a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/></svg>警告</p><p>这是一条警告信息。</p>
+</div>
+<div class="markdown-alert markdown-alert-caution"><p class="markdown-alert-title"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" fill="currentColor"><path d="M5.2 1h5.6L15 5.2v5.6L10.8 15H5.2L1 10.8V5.2L5.2 1Zm2.8 3.4a.9.9 0 0 0-.9.9v2.6a.9.9 0 0 0 1.8 0V5.3a.9.9 0 0 0-.9-.9Zm0 5.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z"/></svg>小心</p><p>这是一条注意事项。</p>
+</div>
+<h2 id="3-内容增强">3. 内容增强<a class="anchor" href="#3-内容增强" aria-label="锚点链接">#</a></h2>
+<h3 id="31-emoji">3.1 Emoji<a class="anchor" href="#31-emoji" aria-label="锚点链接">#</a></h3>
+<p>😄 ❤️ 👍 🚀</p>
+<h3 id="32-上下标">3.2 上下标<a class="anchor" href="#32-上下标" aria-label="锚点链接">#</a></h3>
+<p>H<sub>2</sub>O</p>
+<p>x<sup>2</sup> + y<sup>2</sup> = z<sup>2</sup></p>
+<h3 id="33-高亮标记">3.3 高亮/标记<a class="anchor" href="#33-高亮标记" aria-label="锚点链接">#</a></h3>
+<p><mark>高亮文本</mark></p>
+<h3 id="34-缩写词">3.4 缩写词<a class="anchor" href="#34-缩写词" aria-label="锚点链接">#</a></h3>
+<p><abbr title="超文本标记语言">HTML</abbr> 和 <abbr title="层叠样式表">CSS</abbr> 是网页基础。</p>
+<h3 id="35-定义列表">3.5 定义列表<a class="anchor" href="#35-定义列表" aria-label="锚点链接">#</a></h3>
+<dl>
+<dt>术语 1</dt>
+<dd>定义 1</dd>
+<dt>术语 2</dt>
+<dd>定义 2</dd>
+<dd>另一个定义</dd>
+</dl>
+<h3 id="36-插入与删除">3.6 插入与删除<a class="anchor" href="#36-插入与删除" aria-label="锚点链接">#</a></h3>
+<p><ins>插入文本</ins></p>
+<p><del>删除文本</del></p>
+<h3 id="37-ruby-注音">3.7 Ruby 注音<a class="anchor" href="#37-ruby-注音" aria-label="锚点链接">#</a></h3>
+<p><ruby>漢字<rp>(</rp><rt>かんじ</rt><rp>)</rp></ruby></p>
+<h3 id="38-剧透">3.8 剧透<a class="anchor" href="#38-剧透" aria-label="锚点链接">#</a></h3>
+<div class="md-spoiler"><button class="md-spoiler-head" type="button" aria-expanded="false"><span class="md-spoiler-mark" aria-hidden="true">!</span><span class="md-spoiler-label">剧透 · 点击展开</span></button><div class="md-spoiler-body"><p>这是剧透内容，点击显示。</p>
+</div></div>
+<h3 id="39-图标">3.9 图标<a class="anchor" href="#39-图标" aria-label="锚点链接">#</a></h3>
+<p>:icon-name:</p>
+<h2 id="4-学术与技术">4. 学术与技术<a class="anchor" href="#4-学术与技术" aria-label="锚点链接">#</a></h2>
+<h3 id="41-数学公式-katex">4.1 数学公式 (KaTeX)<a class="anchor" href="#41-数学公式-katex" aria-label="锚点链接">#</a></h3>
+<p>行内公式：<eq><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">E = mc^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">E</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord mathnormal">m</span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></eq></p>
+<p>块级公式：</p>
+<section><eqn><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msubsup><mo>∫</mo><mrow><mo>−</mo><mi mathvariant="normal">∞</mi></mrow><mi mathvariant="normal">∞</mi></msubsup><msup><mi>e</mi><mrow><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></msup><mi>d</mi><mi>x</mi><mo>=</mo><msqrt><mi>π</mi></msqrt></mrow><annotation encoding="application/x-tex">
+\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:2.3846em;vertical-align:-0.9703em;"></span><span class="mop"><span class="mop op-symbol large-op" style="margin-right:0.4445em;position:relative;top:-0.0011em;">∫</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.4143em;"><span style="top:-1.7881em;margin-left:-0.4445em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">∞</span></span></span></span><span style="top:-3.8129em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.9703em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.0369em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-2.931em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="katex-sizing reset-size3 size1 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="mord mathnormal">d</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.04em;vertical-align:-0.1908em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8492em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord mathnormal" style="margin-right:0.0359em;">π</span></span></span><span style="top:-2.8092em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.08em" viewBox="0 0 400000 1080" preserveAspectRatio="xMinYMin slice"><path d="M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1908em;"><span></span></span></span></span></span></span></span></span></span></eqn></section><h3 id="42-mathjax">4.2 MathJax<a class="anchor" href="#42-mathjax" aria-label="锚点链接">#</a></h3>
+<p>行内：<eq><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>a</mi><mn>2</mn></msup><mo>+</mo><msup><mi>b</mi><mn>2</mn></msup><mo>=</mo><msup><mi>c</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">a^2 + b^2 = c^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord mathnormal">a</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span></eq></p>
+<p>块级：</p>
+<section><eqn><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mfrac><mi mathvariant="normal">∂</mi><mrow><mi mathvariant="normal">∂</mi><mi>t</mi></mrow></mfrac><mi mathvariant="normal">Ψ</mi><mo>=</mo><mi>i</mi><mi mathvariant="normal">ℏ</mi><mfrac><mi mathvariant="normal">∂</mi><mrow><mi mathvariant="normal">∂</mi><mi>t</mi></mrow></mfrac><mi mathvariant="normal">Ψ</mi></mrow><annotation encoding="application/x-tex">\frac{\partial}{\partial t} \Psi = i\hbar \frac{\partial}{\partial t} \Psi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:2.0574em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3714em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord" style="margin-right:0.0556em;">∂</span><span class="mord mathnormal">t</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord" style="margin-right:0.0556em;">∂</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">Ψ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:2.0574em;vertical-align:-0.686em;"></span><span class="mord mathnormal">i</span><span class="mord">ℏ</span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3714em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord" style="margin-right:0.0556em;">∂</span><span class="mord mathnormal">t</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord" style="margin-right:0.0556em;">∂</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">Ψ</span></span></span></span></span></eqn></section><h3 id="43-代码高亮">4.3 代码高亮<a class="anchor" href="#43-代码高亮" aria-label="锚点链接">#</a></h3>
+<pre><code class="hljs language-python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">greet</span>(<span class="hljs-params">name</span>):
+    <span class="hljs-keyword">return</span> <span class="hljs-string">f&quot;Hello, <span class="hljs-subst">{name}</span>!&quot;</span>
+</code></pre>
+<h3 id="44-代码行号">4.4 代码行号<a class="anchor" href="#44-代码行号" aria-label="锚点链接">#</a></h3>
+<pre class="with-lines"><code class="hljs language-javascript with-lines"><span class="cl hl"><span class="hljs-comment">// 第 1 行高亮</span></span>
+<span class="cl"><span class="hljs-keyword">const</span> a = <span class="hljs-number">1</span></span>
+<span class="cl hl"><span class="hljs-keyword">const</span> b = <span class="hljs-number">2</span></span>
+<span class="cl hl"><span class="hljs-comment">// 第 4 行</span></span>
+<span class="cl hl"><span class="hljs-comment">// 第 5 行</span></span>
+<span class="cl"><span class="hljs-keyword">const</span> c = <span class="hljs-number">3</span></span></code></pre>
+<h2 id="5-图表与可视化">5. 图表与可视化<a class="anchor" href="#5-图表与可视化" aria-label="锚点链接">#</a></h2>
+<h3 id="51-mermaid">5.1 Mermaid<a class="anchor" href="#51-mermaid" aria-label="锚点链接">#</a></h3>
+<pre><code class="hljs language-mermaid">graph TD
+  A[开始] --&gt; B{判断}
+  B --&gt;|是| C[执行操作]
+  B --&gt;|否| D[结束]
+</code></pre>
+<h3 id="52-plantuml">5.2 PlantUML<a class="anchor" href="#52-plantuml" aria-label="锚点链接">#</a></h3>
+<pre><code class="hljs language-plantuml">@startuml
+Alice -&gt; Bob: Hello
+Bob --&gt; Alice: Hi
+@enduml
+</code></pre>
+<h3 id="53-echarts">5.3 ECharts<a class="anchor" href="#53-echarts" aria-label="锚点链接">#</a></h3>
+<pre><code class="hljs language-echarts">{
+  &quot;title&quot;: { &quot;text&quot;: &quot;示例图表&quot; },
+  &quot;xAxis&quot;: { &quot;type&quot;: &quot;category&quot;, &quot;data&quot;: [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;] },
+  &quot;yAxis&quot;: { &quot;type&quot;: &quot;value&quot; },
+  &quot;series&quot;: [{ &quot;data&quot;: [10, 20, 30], &quot;type&quot;: &quot;bar&quot; }]
+}
+</code></pre>
+<h3 id="54-flowchart">5.4 Flowchart<a class="anchor" href="#54-flowchart" aria-label="锚点链接">#</a></h3>
+<pre><code class="hljs language-flow">st=&gt;start: 开始
+op=&gt;operation: 操作
+cond=&gt;condition: 判断?
+e=&gt;end: 结束
+
+st-&gt;op-&gt;cond
+cond(yes)-&gt;e
+cond(no)-&gt;op
+</code></pre>
+<h2 id="6-文档导航与结构">6. 文档导航与结构<a class="anchor" href="#6-文档导航与结构" aria-label="锚点链接">#</a></h2>
+<h3 id="61-标题锚点">6.1 标题锚点<a class="anchor" href="#61-标题锚点" aria-label="锚点链接">#</a></h3>
+<h2 id="custom-heading">带自定义 ID 的标题<a class="anchor" href="#custom-heading" aria-label="锚点链接">#</a></h2>
+<p><a href="#custom-heading">跳转到自定义标题</a></p>
+<h3 id="62-目录">6.2 目录<a class="anchor" href="#62-目录" aria-label="锚点链接">#</a></h3>
+<p>[[toc]]</p>
+<h3 id="63-属性">6.3 属性<a class="anchor" href="#63-属性" aria-label="锚点链接">#</a></h3>
+<h1 id="id" class="class" style="color: red">标题<a class="anchor" href="#id" aria-label="锚点链接">#</a></h1>
+<p class="highlight">段落文本</p>
+<h3 id="64-自定义容器">6.4 自定义容器<a class="anchor" href="#64-自定义容器" aria-label="锚点链接">#</a></h3>
+<div class="md-box md-box-warning"><p class="md-box-title">警告</p>
+<p>这是一个警告容器。</p>
+</div>
+<div class="md-box md-box-tip"><p class="md-box-title">提示</p>
+<p>这是一个提示容器。</p>
+</div>
+<div class="md-box md-box-details"><p class="md-box-title">详情</p>
+<p>这是一个可折叠的详情容器。</p>
+</div>
+<h3 id="65-选项卡">6.5 选项卡<a class="anchor" href="#65-选项卡" aria-label="锚点链接">#</a></h3>
+<p>::: tabs</p>
+<p>@tab 标签 1<br>
+内容 1</p>
+<p>@tab 标签 2<br>
+内容 2</p>
+<p>:::</p>
+<h3 id="66-布局">6.6 布局<a class="anchor" href="#66-布局" aria-label="锚点链接">#</a></h3>
+<p>::: layout<br>
+::: col<br>
+左列内容<br>
+:::<br>
+::: col<br>
+右列内容<br>
+:::<br>
+:::</p>
+<h2 id="7-其他实用功能">7. 其他实用功能<a class="anchor" href="#7-其他实用功能" aria-label="锚点链接">#</a></h2>
+<h3 id="71-图片尺寸">7.1 图片尺寸<a class="anchor" href="#71-图片尺寸" aria-label="锚点链接">#</a></h3>
+<p><img src="https://via.placeholder.com/150" alt="替代文本" width="100" height="100" loading="lazy" decoding="async"></p>
+<h3 id="72-图片懒加载">7.2 图片懒加载<a class="anchor" href="#72-图片懒加载" aria-label="锚点链接">#</a></h3>
+<p><img src="https://via.placeholder.com/150" alt="懒加载图片" loading="lazy" decoding="async"></p>
+<h3 id="73-图片预览">7.3 图片预览<a class="anchor" href="#73-图片预览" aria-label="锚点链接">#</a></h3>
+<p><a href="https://via.placeholder.com/800"><img src="https://via.placeholder.com/100" alt="可预览图片" loading="lazy" decoding="async"></a></p>
+<h3 id="74-主题标记">7.4 主题标记<a class="anchor" href="#74-主题标记" aria-label="锚点链接">#</a></h3>
+<p><img src="https://via.placeholder.com/150" alt="浅色模式" data-mode="lightmode-only" loading="lazy" decoding="async"><br>
+<img src="https://via.placeholder.com/150" alt="深色模式" data-mode="darkmode-only" loading="lazy" decoding="async"></p>
+<h3 id="75-包含文件">7.5 包含文件<a class="anchor" href="#75-包含文件" aria-label="锚点链接">#</a></h3>
+<p>@include &quot;other.md&quot;</p>
+<h3 id="76-导入代码片段">7.6 导入代码片段<a class="anchor" href="#76-导入代码片段" aria-label="锚点链接">#</a></h3>
+<p>@snippet &quot;file.js&quot;#section</p>
+<h3 id="77-自定义嵌入">7.7 自定义嵌入<a class="anchor" href="#77-自定义嵌入" aria-label="锚点链接">#</a></h3>
+<p>@embed &quot;component&quot;</p>
+<h3 id="78-内容对齐">7.8 内容对齐<a class="anchor" href="#78-内容对齐" aria-label="锚点链接">#</a></h3>
+<p>-&gt;居中内容&lt;-</p>
+<p>-&gt;右对齐内容-&gt;</p>
+<p>&lt;-左对齐内容&lt;-</p>
+<h3 id="79-样式化">7.9 样式化<a class="anchor" href="#79-样式化" aria-label="锚点链接">#</a></h3>
+<p><span class="spoiler" tabindex="-1"> 样式化文本 </span></p>
+<h2 id="8-总结">8. 总结<a class="anchor" href="#8-总结" aria-label="锚点链接">#</a></h2>
+<p>本文档覆盖了 CommonMark、GFM 及常见 Markdown 扩展语法。<br>
+使用不同解析器时，请根据实际支持的插件启用相应功能。</p>
+<hr>
+<p><em>测试文档结束。</em></p>
+<hr class="footnotes-sep">
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>这是脚注内容。 <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn2" class="footnote-item"><p>这是命名脚注。 <a href="#fnref2" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+</div></li></ul></section><section><h2>神奇skills</h2><ul><li><a href="../../asset/SKILL.md">设计规范 SKILL</a></li><li><a href="../../asset/功能.md">功能清单</a></li><li><a href="../../asset/color-theme.md">主题参考</a></li></ul></section></div>
+</noscript>
+
+<div class="app">
+
+  <!-- 侧栏 -->
+  <aside class="sidebar">
+    <div class="side-head">
+      <div class="side-title">
+        <div class="mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h10l4 4v12H4z"/>
+            <path d="M14 4v4h4"/>
+            <path d="M8 12h8M8 16h6"/>
+          </svg>
+        </div>
+        <h1>文档</h1>
+        <button class="side-collapse" id="btnSideCollapse" title="收起文档列表"
+                aria-label="收起文档列表">
+          <span>收起</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="searchbox">
+      <input id="searchInput" type="text" placeholder="搜索… (Ctrl+F)" spellcheck="false"
+             aria-label="搜索文档">
+      <button class="search-clear" id="searchClear" aria-label="清除搜索" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="filelist" id="fileList"></div>
+  </aside>
+
+  <!-- 主区域 -->
+  <main class="main">
+    <div class="main-bar">
+      <button class="mbtn icon-only" id="btnSideToggle" title="显示 / 收起文档列表"
+              aria-label="显示或收起文档列表" aria-expanded="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="16" rx="2"/>
+          <path d="M9 4v16"/>
+        </svg>
+      </button>
+      <div class="main-title">
+        <span class="name" id="docName">—</span>
+        <span class="meta" id="docMeta"></span>
+        <span class="load-badge on" id="loadBadge" role="status" title="正文在构建期已预渲染，页面不请求任何接口">
+          <span class="load-dot" aria-hidden="true"></span>static</span>
+      </div>
+      <div class="main-actions">
+        <button class="mbtn" id="btnToggle" style="display:none" title="源码 / 渲染">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 8-4 4 4 4"/><path d="m15 8 4 4-4 4"/>
+          </svg>
+          <span class="lbl">源码</span>
+        </button>
+        <button class="mbtn" id="btnViewer" disabled title="在源码查看器中打开">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-7.5l-2-2H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1Z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+          <span class="lbl">查看器</span>
+        </button>
+        <button class="mbtn" id="btnCopy" disabled title="复制内容">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="11" height="11" rx="2"/>
+            <path d="M5 15V5a1 1 0 0 1 1-1h10"/>
+          </svg>
+          <span class="lbl">复制</span>
+        </button>
+        <button class="mbtn" id="btnOpen" disabled title="在新标签页打开原文件">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 4h6v6"/><path d="M20 4 10 14"/>
+            <path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5"/>
+          </svg>
+          <span class="lbl">原文件</span>
+        </button>
+        <button class="mbtn icon-only" id="btnSettings" title="设置" aria-label="打开设置">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.09A1.65 1.65 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="main-body">
+      <div class="content" id="content"></div>
+      <aside class="outline" id="outline" aria-label="本页目录">
+        <div class="outline-head">
+          <p class="outline-title">本页目录</p>
+          <button class="outline-x" id="outlineX" title="隐藏目录" aria-label="隐藏目录">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+          </button>
+        </div>
+        <ul id="outlineList"></ul>
+      </aside>
+    </div>
+  </main>
+
+</div>
+
+<!-- ══ 设置抽屉 ══ -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-label="设置">
+  <div class="drawer-hd">
+    <h2>设置</h2>
+    <button class="mbtn icon-only" id="drawerClose" aria-label="关闭设置">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="drawer-bd">
+    <section class="group">
+      <h3>顶栏效果 <em id="glassOut">云母</em></h3>
+      <div class="opt-grid" id="glassGrid">
+        <button class="opt-btn" data-glass="mica" aria-pressed="true">
+          <span class="glass-chip" data-variant="mica"><i></i></span>
+          <span>云母</span>
+        </button>
+        <button class="opt-btn" data-glass="aero" aria-pressed="false">
+          <span class="glass-chip" data-variant="aero"><i></i></span>
+          <span>Aero</span>
+        </button>
+        <button class="opt-btn" data-glass="acrylic" aria-pressed="false">
+          <span class="glass-chip" data-variant="acrylic"><i></i></span>
+          <span>亚克力</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="group">
+      <h3>顶栏不透明度 <em id="opacityOut">78%</em></h3>
+      <input type="range" id="opacityRange" min="10" max="100" step="1" value="78"
+             aria-label="顶栏不透明度">
+    </section>
+
+    <section class="group">
+      <h3>本页目录</h3>
+      <div class="opt-grid" id="outlineGrid">
+        <button class="opt-btn" data-outline="docked" aria-pressed="true"><span>停靠</span></button>
+        <button class="opt-btn" data-outline="float" aria-pressed="false"><span>悬浮</span></button>
+        <button class="opt-btn" data-outline="off" aria-pressed="false"><span>关闭</span></button>
+      </div>
+    </section>
+    <section class="group">
+      <h3>主题</h3>
+      <div class="themes" id="themeGrid">
+        <button class="theme-opt" data-theme="obsidian" aria-pressed="true">
+          <span class="swatch" style="--sw-bg:#0E1214;--sw-accent:#D97757"></span><span>曜石</span>
+        </button>
+        <button class="theme-opt" data-theme="cloud" aria-pressed="false">
+          <span class="swatch" style="--sw-bg:#F2F0EB;--sw-accent:#A8482A"></span><span>云舞者</span>
+        </button>
+        <button class="theme-opt" data-theme="linen" aria-pressed="false">
+          <span class="swatch" style="--sw-bg:#F8F3EC;--sw-accent:#5F6B3A"></span><span>暖米</span>
+        </button>
+        <button class="theme-opt" data-theme="ink" aria-pressed="false">
+          <span class="swatch" style="--sw-bg:#1A1A1A;--sw-accent:#E05A42"></span><span>水墨</span>
+        </button>
+        <button class="theme-opt" data-theme="forest" aria-pressed="false">
+          <span class="swatch" style="--sw-bg:#0F1611;--sw-accent:#7DA05C"></span><span>森林</span>
+        </button>
+        <button class="theme-opt" data-theme="ocean" aria-pressed="false">
+          <span class="swatch" style="--sw-bg:#0B1418;--sw-accent:#4A9DB5"></span><span>深海</span>
+        </button>
+        <button class="theme-opt" data-theme="rose" aria-pressed="false">
+          <span class="swatch" style="--sw-bg:#F7EDEF;--sw-accent:#B04A6A"></span><span>玫瑰</span>
+        </button>
+        <button class="theme-opt" data-theme="sepia" aria-pressed="false">
+          <span class="swatch" style="--sw-bg:#F2EAD8;--sw-accent:#8A6B3A"></span><span>羊皮纸</span>
+        </button>
+        <button class="theme-opt" data-theme="midnight" aria-pressed="false">
+          <span class="swatch" style="--sw-bg:#0A0E17;--sw-accent:#5B8FB9"></span><span>午夜</span>
+        </button>
+        <button class="theme-opt" data-theme="paper" aria-pressed="false">
+          <span class="swatch" style="--sw-bg:#FAFAF7;--sw-accent:#333333"></span><span>纸张</span>
+        </button>
+        <button class="theme-opt" data-theme="amber" aria-pressed="false">
+          <span class="swatch" style="--sw-bg:#18140E;--sw-accent:#D9A44A"></span><span>琥珀</span>
+        </button>
+        <button class="theme-opt" data-theme="moss" aria-pressed="false">
+          <span class="swatch" style="--sw-bg:#EEF1E6;--sw-accent:#5A6B3A"></span><span>苔藓</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="group">
+      <h3>正文字号 <em id="fsOut">15px</em></h3>
+      <input type="range" id="fsRange" min="13" max="20" step="1" value="15" aria-label="正文字号">
+    </section>
+  </div>
+</aside>
+
+<button class="outline-pill" id="outlinePill" title="显示本页目录" aria-label="显示本页目录">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 6h16"/><path d="M4 12h11"/><path d="M4 18h13"/>
+  </svg>
+  <span>目录</span>
+</button>
+
+<div class="toast" id="toast"></div>
+
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<button class="totop" id="btnTop" title="返回顶部" aria-label="返回顶部">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>
+  </svg>
+</button>
+
+<script>
+window.__SK__ = {"启程":{"科技节活动方案":"science.md","欢迎来到该网站":"para/First.md","测试文档":"TEST.md"},"神奇skills":{"设计规范 SKILL":"../asset/SKILL.md","功能清单":"../asset/功能.md","主题参考":"../asset/color-theme.md"},"奇思妙想":{}};
+window.__PRERENDERED__ = {"TEST.md":"<h1 id=\"全功能-markdown-测试文档\">全功能 Markdown 测试文档<a class=\"anchor\" href=\"#全功能-markdown-测试文档\" aria-label=\"锚点链接\">#</a></h1>\n<blockquote>\n<p>本文档用于测试 Markdown 解析器对 CommonMark、GFM 及常见社区扩展的支持。<br>\n部分语法为扩展功能，实际渲染效果取决于解析器与插件。</p>\n</blockquote>\n<h2 id=\"目录\">目录<a class=\"anchor\" href=\"#目录\" aria-label=\"锚点链接\">#</a></h2>\n<nav class=\"md-toc\" aria-label=\"本页目录\"><p class=\"md-toc-title\">本页目录</p><a class=\"md-toc-lv1\" href=\"#全功能-markdown-测试文档\">全功能 Markdown 测试文档</a><a class=\"md-toc-lv2\" href=\"#目录\">目录</a><a class=\"md-toc-lv2\" href=\"#1-核心语法-commonmark\">1. 核心语法 (CommonMark)</a><a class=\"md-toc-lv3\" href=\"#11-标题\">1.1 标题</a><a class=\"md-toc-lv1\" href=\"#h1-标题\">H1 标题</a><a class=\"md-toc-lv2\" href=\"#h2-标题\">H2 标题</a><a class=\"md-toc-lv3\" href=\"#h3-标题\">H3 标题</a><a class=\"md-toc-lv1\" href=\"#一级标题\">一级标题</a><a class=\"md-toc-lv2\" href=\"#二级标题\">二级标题</a><a class=\"md-toc-lv3\" href=\"#12-段落与换行\">1.2 段落与换行</a><a class=\"md-toc-lv3\" href=\"#13-强调\">1.3 强调</a><a class=\"md-toc-lv3\" href=\"#14-列表\">1.4 列表</a><a class=\"md-toc-lv3\" href=\"#15-代码\">1.5 代码</a><a class=\"md-toc-lv3\" href=\"#16-链接与图片\">1.6 链接与图片</a><a class=\"md-toc-lv3\" href=\"#17-引用\">1.7 引用</a><a class=\"md-toc-lv3\" href=\"#18-分隔线\">1.8 分隔线</a><a class=\"md-toc-lv2\" href=\"#2-gfm-扩展\">2. GFM 扩展</a><a class=\"md-toc-lv3\" href=\"#21-表格\">2.1 表格</a><a class=\"md-toc-lv3\" href=\"#22-任务列表\">2.2 任务列表</a><a class=\"md-toc-lv3\" href=\"#23-删除线\">2.3 删除线</a><a class=\"md-toc-lv3\" href=\"#24-自动链接\">2.4 自动链接</a><a class=\"md-toc-lv3\" href=\"#25-脚注\">2.5 脚注</a><a class=\"md-toc-lv3\" href=\"#26-警告框\">2.6 警告框</a><a class=\"md-toc-lv2\" href=\"#3-内容增强\">3. 内容增强</a><a class=\"md-toc-lv3\" href=\"#31-emoji\">3.1 Emoji</a><a class=\"md-toc-lv3\" href=\"#32-上下标\">3.2 上下标</a><a class=\"md-toc-lv3\" href=\"#33-高亮标记\">3.3 高亮/标记</a><a class=\"md-toc-lv3\" href=\"#34-缩写词\">3.4 缩写词</a><a class=\"md-toc-lv3\" href=\"#35-定义列表\">3.5 定义列表</a><a class=\"md-toc-lv3\" href=\"#36-插入与删除\">3.6 插入与删除</a><a class=\"md-toc-lv3\" href=\"#37-ruby-注音\">3.7 Ruby 注音</a><a class=\"md-toc-lv3\" href=\"#38-剧透\">3.8 剧透</a><a class=\"md-toc-lv3\" href=\"#39-图标\">3.9 图标</a><a class=\"md-toc-lv2\" href=\"#4-学术与技术\">4. 学术与技术</a><a class=\"md-toc-lv3\" href=\"#41-数学公式-katex\">4.1 数学公式 (KaTeX)</a><a class=\"md-toc-lv3\" href=\"#42-mathjax\">4.2 MathJax</a><a class=\"md-toc-lv3\" href=\"#43-代码高亮\">4.3 代码高亮</a><a class=\"md-toc-lv3\" href=\"#44-代码行号\">4.4 代码行号</a><a class=\"md-toc-lv2\" href=\"#5-图表与可视化\">5. 图表与可视化</a><a class=\"md-toc-lv3\" href=\"#51-mermaid\">5.1 Mermaid</a><a class=\"md-toc-lv3\" href=\"#52-plantuml\">5.2 PlantUML</a><a class=\"md-toc-lv3\" href=\"#53-echarts\">5.3 ECharts</a><a class=\"md-toc-lv3\" href=\"#54-flowchart\">5.4 Flowchart</a><a class=\"md-toc-lv2\" href=\"#6-文档导航与结构\">6. 文档导航与结构</a><a class=\"md-toc-lv3\" href=\"#61-标题锚点\">6.1 标题锚点</a><a class=\"md-toc-lv2\" href=\"#custom-heading\">带自定义 ID 的标题</a><a class=\"md-toc-lv3\" href=\"#62-目录\">6.2 目录</a><a class=\"md-toc-lv3\" href=\"#63-属性\">6.3 属性</a><a class=\"md-toc-lv1\" href=\"#id\">标题</a><a class=\"md-toc-lv3\" href=\"#64-自定义容器\">6.4 自定义容器</a><a class=\"md-toc-lv3\" href=\"#65-选项卡\">6.5 选项卡</a><a class=\"md-toc-lv3\" href=\"#66-布局\">6.6 布局</a><a class=\"md-toc-lv2\" href=\"#7-其他实用功能\">7. 其他实用功能</a><a class=\"md-toc-lv3\" href=\"#71-图片尺寸\">7.1 图片尺寸</a><a class=\"md-toc-lv3\" href=\"#72-图片懒加载\">7.2 图片懒加载</a><a class=\"md-toc-lv3\" href=\"#73-图片预览\">7.3 图片预览</a><a class=\"md-toc-lv3\" href=\"#74-主题标记\">7.4 主题标记</a><a class=\"md-toc-lv3\" href=\"#75-包含文件\">7.5 包含文件</a><a class=\"md-toc-lv3\" href=\"#76-导入代码片段\">7.6 导入代码片段</a><a class=\"md-toc-lv3\" href=\"#77-自定义嵌入\">7.7 自定义嵌入</a><a class=\"md-toc-lv3\" href=\"#78-内容对齐\">7.8 内容对齐</a><a class=\"md-toc-lv3\" href=\"#79-样式化\">7.9 样式化</a><a class=\"md-toc-lv2\" href=\"#8-总结\">8. 总结</a></nav>\n<h2 id=\"1-核心语法-commonmark\">1. 核心语法 (CommonMark)<a class=\"anchor\" href=\"#1-核心语法-commonmark\" aria-label=\"锚点链接\">#</a></h2>\n<h3 id=\"11-标题\">1.1 标题<a class=\"anchor\" href=\"#11-标题\" aria-label=\"锚点链接\">#</a></h3>\n<h1 id=\"h1-标题\">H1 标题<a class=\"anchor\" href=\"#h1-标题\" aria-label=\"锚点链接\">#</a></h1>\n<h2 id=\"h2-标题\">H2 标题<a class=\"anchor\" href=\"#h2-标题\" aria-label=\"锚点链接\">#</a></h2>\n<h3 id=\"h3-标题\">H3 标题<a class=\"anchor\" href=\"#h3-标题\" aria-label=\"锚点链接\">#</a></h3>\n<h4 id=\"h4-标题\">H4 标题<a class=\"anchor\" href=\"#h4-标题\" aria-label=\"锚点链接\">#</a></h4>\n<h5 id=\"h5-标题\">H5 标题<a class=\"anchor\" href=\"#h5-标题\" aria-label=\"锚点链接\">#</a></h5>\n<h6 id=\"h6-标题\">H6 标题<a class=\"anchor\" href=\"#h6-标题\" aria-label=\"锚点链接\">#</a></h6>\n<p>Setext 风格：</p>\n<h1 id=\"一级标题\">一级标题<a class=\"anchor\" href=\"#一级标题\" aria-label=\"锚点链接\">#</a></h1>\n<h2 id=\"二级标题\">二级标题<a class=\"anchor\" href=\"#二级标题\" aria-label=\"锚点链接\">#</a></h2>\n<h3 id=\"12-段落与换行\">1.2 段落与换行<a class=\"anchor\" href=\"#12-段落与换行\" aria-label=\"锚点链接\">#</a></h3>\n<p>这是一个普通段落。</p>\n<p>这是另一个段落，中间有空行。</p>\n<p>这是同一段落内的换行，<br>\n行尾有两个空格实现硬换行。</p>\n<p>这是使用反斜杠的硬换行<br>\n下一行。</p>\n<h3 id=\"13-强调\">1.3 强调<a class=\"anchor\" href=\"#13-强调\" aria-label=\"锚点链接\">#</a></h3>\n<p><em>斜体</em> 或 <em>斜体</em></p>\n<p><strong>粗体</strong> 或 <strong>粗体</strong></p>\n<p><em><strong>粗斜体</strong></em> 或 <em><strong>粗斜体</strong></em></p>\n<h3 id=\"14-列表\">1.4 列表<a class=\"anchor\" href=\"#14-列表\" aria-label=\"锚点链接\">#</a></h3>\n<p>无序列表：</p>\n<ul>\n<li>项目 A</li>\n<li>项目 B\n<ul>\n<li>嵌套项目 B1</li>\n<li>嵌套项目 B2</li>\n</ul>\n</li>\n<li>项目 C</li>\n</ul>\n<p>有序列表：</p>\n<ol>\n<li>第一项</li>\n<li>第二项\n<ol>\n<li>嵌套有序 2.1</li>\n<li>嵌套有序 2.2</li>\n</ol>\n</li>\n<li>第三项</li>\n</ol>\n<p>混合列表：</p>\n<ul>\n<li>项目\n<ol>\n<li>有序子项</li>\n<li>有序子项</li>\n</ol>\n</li>\n<li>项目</li>\n</ul>\n<h3 id=\"15-代码\">1.5 代码<a class=\"anchor\" href=\"#15-代码\" aria-label=\"锚点链接\">#</a></h3>\n<p>行内代码：<code>const a = 1;</code></p>\n<p>围栏代码块：</p>\n<pre><code class=\"hljs language-javascript\"><span class=\"hljs-keyword\">function</span> <span class=\"hljs-title function_\">hello</span>(<span class=\"hljs-params\"></span>) {\n  <span class=\"hljs-variable language_\">console</span>.<span class=\"hljs-title function_\">log</span>(<span class=\"hljs-string\">&#x27;Hello, Markdown!&#x27;</span>)\n}\n</code></pre>\n<p>缩进代码块：</p>\n<pre><code>indented code block\nline 2\n</code></pre>\n<h3 id=\"16-链接与图片\">1.6 链接与图片<a class=\"anchor\" href=\"#16-链接与图片\" aria-label=\"锚点链接\">#</a></h3>\n<p><a href=\"https://example.com\">普通链接</a></p>\n<p><a href=\"https://example.com\" title=\"示例网站\">带标题的链接</a></p>\n<p><a href=\"https://example.com\">https://example.com</a></p>\n<p><img src=\"https://via.placeholder.com/150\" alt=\"替代文本\" title=\"图片标题\" loading=\"lazy\" decoding=\"async\"></p>\n<p><a href=\"https://example.com\"><img src=\"https://via.placeholder.com/100\" alt=\"图片链接\" loading=\"lazy\" decoding=\"async\"></a></p>\n<h3 id=\"17-引用\">1.7 引用<a class=\"anchor\" href=\"#17-引用\" aria-label=\"锚点链接\">#</a></h3>\n<blockquote>\n<p>这是一级引用。</p>\n<blockquote>\n<p>这是嵌套引用。</p>\n</blockquote>\n<p>回到一级引用。</p>\n</blockquote>\n<h3 id=\"18-分隔线\">1.8 分隔线<a class=\"anchor\" href=\"#18-分隔线\" aria-label=\"锚点链接\">#</a></h3>\n<hr>\n<hr>\n<hr>\n<h2 id=\"2-gfm-扩展\">2. GFM 扩展<a class=\"anchor\" href=\"#2-gfm-扩展\" aria-label=\"锚点链接\">#</a></h2>\n<h3 id=\"21-表格\">2.1 表格<a class=\"anchor\" href=\"#21-表格\" aria-label=\"锚点链接\">#</a></h3>\n<table>\n<thead>\n<tr>\n<th style=\"text-align:left\">左对齐</th>\n<th style=\"text-align:center\">居中对齐</th>\n<th style=\"text-align:right\">右对齐</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td style=\"text-align:left\">单元格</td>\n<td style=\"text-align:center\">单元格</td>\n<td style=\"text-align:right\">单元格</td>\n</tr>\n<tr>\n<td style=\"text-align:left\">内容</td>\n<td style=\"text-align:center\">内容</td>\n<td style=\"text-align:right\">内容</td>\n</tr>\n</tbody>\n</table>\n<h3 id=\"22-任务列表\">2.2 任务列表<a class=\"anchor\" href=\"#22-任务列表\" aria-label=\"锚点链接\">#</a></h3>\n<ul class=\"contains-task-list\">\n<li class=\"task-list-item enabled\"><input class=\"task-list-item-checkbox\" checked=\"\"type=\"checkbox\" id=\"task-item-1\"><label class=\"task-list-item-label\" for=\"task-item-1\"> 已完成任务</label></li>\n<li class=\"task-list-item enabled\"><input class=\"task-list-item-checkbox\"type=\"checkbox\" id=\"task-item-2\"><label class=\"task-list-item-label\" for=\"task-item-2\"> 未完成任务</label></li>\n<li class=\"task-list-item enabled\"><input class=\"task-list-item-checkbox\"type=\"checkbox\" id=\"task-item-3\"><label class=\"task-list-item-label\" for=\"task-item-3\"> 待办事项</label></li>\n</ul>\n<h3 id=\"23-删除线\">2.3 删除线<a class=\"anchor\" href=\"#23-删除线\" aria-label=\"锚点链接\">#</a></h3>\n<p><s>删除线文本</s></p>\n<h3 id=\"24-自动链接\">2.4 自动链接<a class=\"anchor\" href=\"#24-自动链接\" aria-label=\"锚点链接\">#</a></h3>\n<p><a href=\"https://example.com\">https://example.com</a></p>\n<p>www.example.com</p>\n<p><a href=\"mailto:user@example.com\">user@example.com</a></p>\n<h3 id=\"25-脚注\">2.5 脚注<a class=\"anchor\" href=\"#25-脚注\" aria-label=\"锚点链接\">#</a></h3>\n<p>这是一个脚注引用<sup class=\"footnote-ref\"><a href=\"#fn1\" id=\"fnref1\">[1]</a></sup>，还有另一个<sup class=\"footnote-ref\"><a href=\"#fn2\" id=\"fnref2\">[2]</a></sup>。</p>\n<h3 id=\"26-警告框\">2.6 警告框<a class=\"anchor\" href=\"#26-警告框\" aria-label=\"锚点链接\">#</a></h3>\n<div class=\"markdown-alert markdown-alert-note\"><p class=\"markdown-alert-title\"><svg viewBox=\"0 0 16 16\" width=\"15\" height=\"15\" aria-hidden=\"true\" fill=\"currentColor\"><path d=\"M8 1.2A6.8 6.8 0 1 0 8 14.8 6.8 6.8 0 0 0 8 1.2Zm0 1.6a5.2 5.2 0 1 1 0 10.4A5.2 5.2 0 0 1 8 2.8Zm0 2.1a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm-.85 3.3h1.7v4.6h-1.7Z\"/></svg>注意</p><p>这是一条提示信息。</p>\n</div>\n<div class=\"markdown-alert markdown-alert-tip\"><p class=\"markdown-alert-title\"><svg viewBox=\"0 0 16 16\" width=\"15\" height=\"15\" aria-hidden=\"true\" fill=\"currentColor\"><path d=\"M8 1.2c-2.4 0-4.2 1.8-4.2 4 0 1 .5 1.8 1.1 2.5.6.7 1 1.2 1.1 2h4c.1-.8.5-1.3 1.1-2 .6-.7 1.1-1.5 1.1-2.5 0-2.2-1.8-4-4.2-4Zm-1.7 10h3.4v1.2H6.3Zm.6 2.1h2.2l-.3 1.2H7.2Z\"/></svg>提示</p><p>这是一条技巧信息。</p>\n</div>\n<div class=\"markdown-alert markdown-alert-important\"><p class=\"markdown-alert-title\"><svg viewBox=\"0 0 16 16\" width=\"15\" height=\"15\" aria-hidden=\"true\" fill=\"currentColor\"><path d=\"M8 1.2A6.8 6.8 0 1 0 8 14.8 6.8 6.8 0 0 0 8 1.2Zm0 1.6a5.2 5.2 0 1 1 0 10.4A5.2 5.2 0 0 1 8 2.8Zm-.9 1.8h1.8v4.6H7.1Zm0 5.6h1.8v1.8H7.1Z\"/></svg>重要</p><p>这是一条重要信息。</p>\n</div>\n<div class=\"markdown-alert markdown-alert-warning\"><p class=\"markdown-alert-title\"><svg viewBox=\"0 0 16 16\" width=\"15\" height=\"15\" aria-hidden=\"true\" fill=\"currentColor\"><path d=\"M8 1.4 15 14H1L8 1.4Zm0 3.2a.9.9 0 0 0-.9.9v2.8a.9.9 0 0 0 1.8 0V5.5A.9.9 0 0 0 8 4.6Zm0 5.6a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z\"/></svg>警告</p><p>这是一条警告信息。</p>\n</div>\n<div class=\"markdown-alert markdown-alert-caution\"><p class=\"markdown-alert-title\"><svg viewBox=\"0 0 16 16\" width=\"15\" height=\"15\" aria-hidden=\"true\" fill=\"currentColor\"><path d=\"M5.2 1h5.6L15 5.2v5.6L10.8 15H5.2L1 10.8V5.2L5.2 1Zm2.8 3.4a.9.9 0 0 0-.9.9v2.6a.9.9 0 0 0 1.8 0V5.3a.9.9 0 0 0-.9-.9Zm0 5.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z\"/></svg>小心</p><p>这是一条注意事项。</p>\n</div>\n<h2 id=\"3-内容增强\">3. 内容增强<a class=\"anchor\" href=\"#3-内容增强\" aria-label=\"锚点链接\">#</a></h2>\n<h3 id=\"31-emoji\">3.1 Emoji<a class=\"anchor\" href=\"#31-emoji\" aria-label=\"锚点链接\">#</a></h3>\n<p>😄 ❤️ 👍 🚀</p>\n<h3 id=\"32-上下标\">3.2 上下标<a class=\"anchor\" href=\"#32-上下标\" aria-label=\"锚点链接\">#</a></h3>\n<p>H<sub>2</sub>O</p>\n<p>x<sup>2</sup> + y<sup>2</sup> = z<sup>2</sup></p>\n<h3 id=\"33-高亮标记\">3.3 高亮/标记<a class=\"anchor\" href=\"#33-高亮标记\" aria-label=\"锚点链接\">#</a></h3>\n<p><mark>高亮文本</mark></p>\n<h3 id=\"34-缩写词\">3.4 缩写词<a class=\"anchor\" href=\"#34-缩写词\" aria-label=\"锚点链接\">#</a></h3>\n<p><abbr title=\"超文本标记语言\">HTML</abbr> 和 <abbr title=\"层叠样式表\">CSS</abbr> 是网页基础。</p>\n<h3 id=\"35-定义列表\">3.5 定义列表<a class=\"anchor\" href=\"#35-定义列表\" aria-label=\"锚点链接\">#</a></h3>\n<dl>\n<dt>术语 1</dt>\n<dd>定义 1</dd>\n<dt>术语 2</dt>\n<dd>定义 2</dd>\n<dd>另一个定义</dd>\n</dl>\n<h3 id=\"36-插入与删除\">3.6 插入与删除<a class=\"anchor\" href=\"#36-插入与删除\" aria-label=\"锚点链接\">#</a></h3>\n<p><ins>插入文本</ins></p>\n<p><del>删除文本</del></p>\n<h3 id=\"37-ruby-注音\">3.7 Ruby 注音<a class=\"anchor\" href=\"#37-ruby-注音\" aria-label=\"锚点链接\">#</a></h3>\n<p><ruby>漢字<rp>(</rp><rt>かんじ</rt><rp>)</rp></ruby></p>\n<h3 id=\"38-剧透\">3.8 剧透<a class=\"anchor\" href=\"#38-剧透\" aria-label=\"锚点链接\">#</a></h3>\n<div class=\"md-spoiler\"><button class=\"md-spoiler-head\" type=\"button\" aria-expanded=\"false\"><span class=\"md-spoiler-mark\" aria-hidden=\"true\">!</span><span class=\"md-spoiler-label\">剧透 · 点击展开</span></button><div class=\"md-spoiler-body\"><p>这是剧透内容，点击显示。</p>\n</div></div>\n<h3 id=\"39-图标\">3.9 图标<a class=\"anchor\" href=\"#39-图标\" aria-label=\"锚点链接\">#</a></h3>\n<p>:icon-name:</p>\n<h2 id=\"4-学术与技术\">4. 学术与技术<a class=\"anchor\" href=\"#4-学术与技术\" aria-label=\"锚点链接\">#</a></h2>\n<h3 id=\"41-数学公式-katex\">4.1 数学公式 (KaTeX)<a class=\"anchor\" href=\"#41-数学公式-katex\" aria-label=\"锚点链接\">#</a></h3>\n<p>行内公式：<eq><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\"><semantics><mrow><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow><annotation encoding=\"application/x-tex\">E = mc^2</annotation></semantics></math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.6833em;\"></span><span class=\"mord mathnormal\" style=\"margin-right:0.0576em;\">E</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.8141em;\"></span><span class=\"mord mathnormal\">m</span><span class=\"mord\"><span class=\"mord mathnormal\">c</span><span class=\"msupsub\"><span class=\"vlist-t\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.8141em;\"><span style=\"top:-3.063em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\">2</span></span></span></span></span></span></span></span></span></span></span></eq></p>\n<p>块级公式：</p>\n<section><eqn><span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><semantics><mrow><msubsup><mo>∫</mo><mrow><mo>−</mo><mi mathvariant=\"normal\">∞</mi></mrow><mi mathvariant=\"normal\">∞</mi></msubsup><msup><mi>e</mi><mrow><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></msup><mi>d</mi><mi>x</mi><mo>=</mo><msqrt><mi>π</mi></msqrt></mrow><annotation encoding=\"application/x-tex\">\n\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}\n</annotation></semantics></math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:2.3846em;vertical-align:-0.9703em;\"></span><span class=\"mop\"><span class=\"mop op-symbol large-op\" style=\"margin-right:0.4445em;position:relative;top:-0.0011em;\">∫</span><span class=\"msupsub\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:1.4143em;\"><span style=\"top:-1.7881em;margin-left:-0.4445em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\"><span class=\"mord mtight\">−</span><span class=\"mord mtight\">∞</span></span></span></span><span style=\"top:-3.8129em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\"><span class=\"mord mtight\">∞</span></span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.9703em;\"><span></span></span></span></span></span></span><span class=\"mspace\" style=\"margin-right:0.1667em;\"></span><span class=\"mord\"><span class=\"mord mathnormal\">e</span><span class=\"msupsub\"><span class=\"vlist-t\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:1.0369em;\"><span style=\"top:-3.113em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\"><span class=\"mord mtight\">−</span><span class=\"mord mtight\"><span class=\"mord mathnormal mtight\">x</span><span class=\"msupsub\"><span class=\"vlist-t\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.8913em;\"><span style=\"top:-2.931em;margin-right:0.0714em;\"><span class=\"pstrut\" style=\"height:2.5em;\"></span><span class=\"katex-sizing reset-size3 size1 mtight\"><span class=\"mord mtight\">2</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class=\"mord mathnormal\">d</span><span class=\"mord mathnormal\">x</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:1.04em;vertical-align:-0.1908em;\"></span><span class=\"mord sqrt\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.8492em;\"><span class=\"svg-align\" style=\"top:-3em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"mord\" style=\"padding-left:0.833em;\"><span class=\"mord mathnormal\" style=\"margin-right:0.0359em;\">π</span></span></span><span style=\"top:-2.8092em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"hide-tail\" style=\"min-width:0.853em;height:1.08em;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400em\" height=\"1.08em\" viewBox=\"0 0 400000 1080\" preserveAspectRatio=\"xMinYMin slice\"><path d=\"M95,702\nc-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14\nc0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54\nc44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10\ns173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429\nc69,-144,104.5,-217.7,106.5,-221\nl0 -0\nc5.3,-9.3,12,-14,20,-14\nH400000v40H845.2724\ns-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7\nc-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z\nM834 80h400000v40h-400000z\"/></svg></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.1908em;\"><span></span></span></span></span></span></span></span></span></span></eqn></section><h3 id=\"42-mathjax\">4.2 MathJax<a class=\"anchor\" href=\"#42-mathjax\" aria-label=\"锚点链接\">#</a></h3>\n<p>行内：<eq><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\"><semantics><mrow><msup><mi>a</mi><mn>2</mn></msup><mo>+</mo><msup><mi>b</mi><mn>2</mn></msup><mo>=</mo><msup><mi>c</mi><mn>2</mn></msup></mrow><annotation encoding=\"application/x-tex\">a^2 + b^2 = c^2</annotation></semantics></math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.8974em;vertical-align:-0.0833em;\"></span><span class=\"mord\"><span class=\"mord mathnormal\">a</span><span class=\"msupsub\"><span class=\"vlist-t\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.8141em;\"><span style=\"top:-3.063em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\">2</span></span></span></span></span></span></span></span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span><span class=\"mbin\">+</span><span class=\"mspace\" style=\"margin-right:0.2222em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.8141em;\"></span><span class=\"mord\"><span class=\"mord mathnormal\">b</span><span class=\"msupsub\"><span class=\"vlist-t\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.8141em;\"><span style=\"top:-3.063em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\">2</span></span></span></span></span></span></span></span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:0.8141em;\"></span><span class=\"mord\"><span class=\"mord mathnormal\">c</span><span class=\"msupsub\"><span class=\"vlist-t\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.8141em;\"><span style=\"top:-3.063em;margin-right:0.05em;\"><span class=\"pstrut\" style=\"height:2.7em;\"></span><span class=\"katex-sizing reset-size6 size3 mtight\"><span class=\"mord mtight\">2</span></span></span></span></span></span></span></span></span></span></span></eq></p>\n<p>块级：</p>\n<section><eqn><span class=\"katex-display\"><span class=\"katex\"><span class=\"katex-mathml\"><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><semantics><mrow><mfrac><mi mathvariant=\"normal\">∂</mi><mrow><mi mathvariant=\"normal\">∂</mi><mi>t</mi></mrow></mfrac><mi mathvariant=\"normal\">Ψ</mi><mo>=</mo><mi>i</mi><mi mathvariant=\"normal\">ℏ</mi><mfrac><mi mathvariant=\"normal\">∂</mi><mrow><mi mathvariant=\"normal\">∂</mi><mi>t</mi></mrow></mfrac><mi mathvariant=\"normal\">Ψ</mi></mrow><annotation encoding=\"application/x-tex\">\\frac{\\partial}{\\partial t} \\Psi = i\\hbar \\frac{\\partial}{\\partial t} \\Psi</annotation></semantics></math></span><span class=\"katex-html\" aria-hidden=\"true\"><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:2.0574em;vertical-align:-0.686em;\"></span><span class=\"mord\"><span class=\"mopen nulldelimiter\"></span><span class=\"mfrac\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:1.3714em;\"><span style=\"top:-2.314em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"mord\"><span class=\"mord\" style=\"margin-right:0.0556em;\">∂</span><span class=\"mord mathnormal\">t</span></span></span><span style=\"top:-3.23em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"frac-line\" style=\"border-bottom-width:0.04em;\"></span></span><span style=\"top:-3.677em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"mord\"><span class=\"mord\" style=\"margin-right:0.0556em;\">∂</span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.686em;\"><span></span></span></span></span></span><span class=\"mclose nulldelimiter\"></span></span><span class=\"mord\">Ψ</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span><span class=\"mrel\">=</span><span class=\"mspace\" style=\"margin-right:0.2778em;\"></span></span><span class=\"katex-base\"><span class=\"katex-strut\" style=\"height:2.0574em;vertical-align:-0.686em;\"></span><span class=\"mord mathnormal\">i</span><span class=\"mord\">ℏ</span><span class=\"mord\"><span class=\"mopen nulldelimiter\"></span><span class=\"mfrac\"><span class=\"vlist-t vlist-t2\"><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:1.3714em;\"><span style=\"top:-2.314em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"mord\"><span class=\"mord\" style=\"margin-right:0.0556em;\">∂</span><span class=\"mord mathnormal\">t</span></span></span><span style=\"top:-3.23em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"frac-line\" style=\"border-bottom-width:0.04em;\"></span></span><span style=\"top:-3.677em;\"><span class=\"pstrut\" style=\"height:3em;\"></span><span class=\"mord\"><span class=\"mord\" style=\"margin-right:0.0556em;\">∂</span></span></span></span><span class=\"vlist-s\">​</span></span><span class=\"vlist-r\"><span class=\"vlist\" style=\"height:0.686em;\"><span></span></span></span></span></span><span class=\"mclose nulldelimiter\"></span></span><span class=\"mord\">Ψ</span></span></span></span></span></eqn></section><h3 id=\"43-代码高亮\">4.3 代码高亮<a class=\"anchor\" href=\"#43-代码高亮\" aria-label=\"锚点链接\">#</a></h3>\n<pre><code class=\"hljs language-python\"><span class=\"hljs-keyword\">def</span> <span class=\"hljs-title function_\">greet</span>(<span class=\"hljs-params\">name</span>):\n    <span class=\"hljs-keyword\">return</span> <span class=\"hljs-string\">f&quot;Hello, <span class=\"hljs-subst\">{name}</span>!&quot;</span>\n</code></pre>\n<h3 id=\"44-代码行号\">4.4 代码行号<a class=\"anchor\" href=\"#44-代码行号\" aria-label=\"锚点链接\">#</a></h3>\n<pre class=\"with-lines\"><code class=\"hljs language-javascript with-lines\"><span class=\"cl hl\"><span class=\"hljs-comment\">// 第 1 行高亮</span></span>\n<span class=\"cl\"><span class=\"hljs-keyword\">const</span> a = <span class=\"hljs-number\">1</span></span>\n<span class=\"cl hl\"><span class=\"hljs-keyword\">const</span> b = <span class=\"hljs-number\">2</span></span>\n<span class=\"cl hl\"><span class=\"hljs-comment\">// 第 4 行</span></span>\n<span class=\"cl hl\"><span class=\"hljs-comment\">// 第 5 行</span></span>\n<span class=\"cl\"><span class=\"hljs-keyword\">const</span> c = <span class=\"hljs-number\">3</span></span></code></pre>\n<h2 id=\"5-图表与可视化\">5. 图表与可视化<a class=\"anchor\" href=\"#5-图表与可视化\" aria-label=\"锚点链接\">#</a></h2>\n<h3 id=\"51-mermaid\">5.1 Mermaid<a class=\"anchor\" href=\"#51-mermaid\" aria-label=\"锚点链接\">#</a></h3>\n<pre><code class=\"hljs language-mermaid\">graph TD\n  A[开始] --&gt; B{判断}\n  B --&gt;|是| C[执行操作]\n  B --&gt;|否| D[结束]\n</code></pre>\n<h3 id=\"52-plantuml\">5.2 PlantUML<a class=\"anchor\" href=\"#52-plantuml\" aria-label=\"锚点链接\">#</a></h3>\n<pre><code class=\"hljs language-plantuml\">@startuml\nAlice -&gt; Bob: Hello\nBob --&gt; Alice: Hi\n@enduml\n</code></pre>\n<h3 id=\"53-echarts\">5.3 ECharts<a class=\"anchor\" href=\"#53-echarts\" aria-label=\"锚点链接\">#</a></h3>\n<pre><code class=\"hljs language-echarts\">{\n  &quot;title&quot;: { &quot;text&quot;: &quot;示例图表&quot; },\n  &quot;xAxis&quot;: { &quot;type&quot;: &quot;category&quot;, &quot;data&quot;: [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;] },\n  &quot;yAxis&quot;: { &quot;type&quot;: &quot;value&quot; },\n  &quot;series&quot;: [{ &quot;data&quot;: [10, 20, 30], &quot;type&quot;: &quot;bar&quot; }]\n}\n</code></pre>\n<h3 id=\"54-flowchart\">5.4 Flowchart<a class=\"anchor\" href=\"#54-flowchart\" aria-label=\"锚点链接\">#</a></h3>\n<pre><code class=\"hljs language-flow\">st=&gt;start: 开始\nop=&gt;operation: 操作\ncond=&gt;condition: 判断?\ne=&gt;end: 结束\n\nst-&gt;op-&gt;cond\ncond(yes)-&gt;e\ncond(no)-&gt;op\n</code></pre>\n<h2 id=\"6-文档导航与结构\">6. 文档导航与结构<a class=\"anchor\" href=\"#6-文档导航与结构\" aria-label=\"锚点链接\">#</a></h2>\n<h3 id=\"61-标题锚点\">6.1 标题锚点<a class=\"anchor\" href=\"#61-标题锚点\" aria-label=\"锚点链接\">#</a></h3>\n<h2 id=\"custom-heading\">带自定义 ID 的标题<a class=\"anchor\" href=\"#custom-heading\" aria-label=\"锚点链接\">#</a></h2>\n<p><a href=\"#custom-heading\">跳转到自定义标题</a></p>\n<h3 id=\"62-目录\">6.2 目录<a class=\"anchor\" href=\"#62-目录\" aria-label=\"锚点链接\">#</a></h3>\n<p>[[toc]]</p>\n<h3 id=\"63-属性\">6.3 属性<a class=\"anchor\" href=\"#63-属性\" aria-label=\"锚点链接\">#</a></h3>\n<h1 id=\"id\" class=\"class\" style=\"color: red\">标题<a class=\"anchor\" href=\"#id\" aria-label=\"锚点链接\">#</a></h1>\n<p class=\"highlight\">段落文本</p>\n<h3 id=\"64-自定义容器\">6.4 自定义容器<a class=\"anchor\" href=\"#64-自定义容器\" aria-label=\"锚点链接\">#</a></h3>\n<div class=\"md-box md-box-warning\"><p class=\"md-box-title\">警告</p>\n<p>这是一个警告容器。</p>\n</div>\n<div class=\"md-box md-box-tip\"><p class=\"md-box-title\">提示</p>\n<p>这是一个提示容器。</p>\n</div>\n<div class=\"md-box md-box-details\"><p class=\"md-box-title\">详情</p>\n<p>这是一个可折叠的详情容器。</p>\n</div>\n<h3 id=\"65-选项卡\">6.5 选项卡<a class=\"anchor\" href=\"#65-选项卡\" aria-label=\"锚点链接\">#</a></h3>\n<p>::: tabs</p>\n<p>@tab 标签 1<br>\n内容 1</p>\n<p>@tab 标签 2<br>\n内容 2</p>\n<p>:::</p>\n<h3 id=\"66-布局\">6.6 布局<a class=\"anchor\" href=\"#66-布局\" aria-label=\"锚点链接\">#</a></h3>\n<p>::: layout<br>\n::: col<br>\n左列内容<br>\n:::<br>\n::: col<br>\n右列内容<br>\n:::<br>\n:::</p>\n<h2 id=\"7-其他实用功能\">7. 其他实用功能<a class=\"anchor\" href=\"#7-其他实用功能\" aria-label=\"锚点链接\">#</a></h2>\n<h3 id=\"71-图片尺寸\">7.1 图片尺寸<a class=\"anchor\" href=\"#71-图片尺寸\" aria-label=\"锚点链接\">#</a></h3>\n<p><img src=\"https://via.placeholder.com/150\" alt=\"替代文本\" width=\"100\" height=\"100\" loading=\"lazy\" decoding=\"async\"></p>\n<h3 id=\"72-图片懒加载\">7.2 图片懒加载<a class=\"anchor\" href=\"#72-图片懒加载\" aria-label=\"锚点链接\">#</a></h3>\n<p><img src=\"https://via.placeholder.com/150\" alt=\"懒加载图片\" loading=\"lazy\" decoding=\"async\"></p>\n<h3 id=\"73-图片预览\">7.3 图片预览<a class=\"anchor\" href=\"#73-图片预览\" aria-label=\"锚点链接\">#</a></h3>\n<p><a href=\"https://via.placeholder.com/800\"><img src=\"https://via.placeholder.com/100\" alt=\"可预览图片\" loading=\"lazy\" decoding=\"async\"></a></p>\n<h3 id=\"74-主题标记\">7.4 主题标记<a class=\"anchor\" href=\"#74-主题标记\" aria-label=\"锚点链接\">#</a></h3>\n<p><img src=\"https://via.placeholder.com/150\" alt=\"浅色模式\" data-mode=\"lightmode-only\" loading=\"lazy\" decoding=\"async\"><br>\n<img src=\"https://via.placeholder.com/150\" alt=\"深色模式\" data-mode=\"darkmode-only\" loading=\"lazy\" decoding=\"async\"></p>\n<h3 id=\"75-包含文件\">7.5 包含文件<a class=\"anchor\" href=\"#75-包含文件\" aria-label=\"锚点链接\">#</a></h3>\n<p>@include &quot;other.md&quot;</p>\n<h3 id=\"76-导入代码片段\">7.6 导入代码片段<a class=\"anchor\" href=\"#76-导入代码片段\" aria-label=\"锚点链接\">#</a></h3>\n<p>@snippet &quot;file.js&quot;#section</p>\n<h3 id=\"77-自定义嵌入\">7.7 自定义嵌入<a class=\"anchor\" href=\"#77-自定义嵌入\" aria-label=\"锚点链接\">#</a></h3>\n<p>@embed &quot;component&quot;</p>\n<h3 id=\"78-内容对齐\">7.8 内容对齐<a class=\"anchor\" href=\"#78-内容对齐\" aria-label=\"锚点链接\">#</a></h3>\n<p>-&gt;居中内容&lt;-</p>\n<p>-&gt;右对齐内容-&gt;</p>\n<p>&lt;-左对齐内容&lt;-</p>\n<h3 id=\"79-样式化\">7.9 样式化<a class=\"anchor\" href=\"#79-样式化\" aria-label=\"锚点链接\">#</a></h3>\n<p><span class=\"spoiler\" tabindex=\"-1\"> 样式化文本 </span></p>\n<h2 id=\"8-总结\">8. 总结<a class=\"anchor\" href=\"#8-总结\" aria-label=\"锚点链接\">#</a></h2>\n<p>本文档覆盖了 CommonMark、GFM 及常见 Markdown 扩展语法。<br>\n使用不同解析器时，请根据实际支持的插件启用相应功能。</p>\n<hr>\n<p><em>测试文档结束。</em></p>\n<hr class=\"footnotes-sep\">\n<section class=\"footnotes\">\n<ol class=\"footnotes-list\">\n<li id=\"fn1\" class=\"footnote-item\"><p>这是脚注内容。 <a href=\"#fnref1\" class=\"footnote-backref\">↩︎</a></p>\n</li>\n<li id=\"fn2\" class=\"footnote-item\"><p>这是命名脚注。 <a href=\"#fnref2\" class=\"footnote-backref\">↩︎</a></p>\n</li>\n</ol>\n</section>\n"};
+</script>
+<script src="./docs-md.js?v=3"></script>
+<script>
+/* ═══════════════════════════════════════════════════
+   文档站 · 客户端脚本（约 200 行）
+   ---------------------------------------------------
+   正文已经在构建期预渲染成 HTML 内联在 window.__DOCS__ 里，
+   所以这里只负责「切换 + 设置 + 交互」，一行 Markdown 解析都没有。
+
+   不依赖：CDN / 云函数 / 网络请求。
+   高级版过期后，这个页面照常工作。
+   ═══════════════════════════════════════════════════ */
+(function(){
+'use strict';
+
+/**
+ * 清单来源：构建期把根目录的 sk.json 内联进来（省一次请求，也让断网可用）。
+ * 你在 sk.json 里加键值对之后，只要重新构建一次，这个内联副本就会更新；
+ * 想完全跳过构建，也可以把 INLINE_MANIFEST 置空，页面就会去 fetch sk.json。
+ */
+var INLINE_MANIFEST = window.__SK__ || null;
+
+var GROUPS = [];
+var ALL = [];
+
+/* 少数文档走预渲染（构建期就把 HTML 渲染好内联），
+   其余一律在浏览器里用本地渲染器现场渲染 —— 所以你在 /p/ 放 .md、
+   在 sk.json 加一行，刷新这个页面就能看到。 */
+var PRE_RENDERED = window.__PRERENDERED__ || {};
+
+/* ═══ 清单 ═══ */
+
+/**
+ * 加载 sk.json。
+ *
+ * 内联副本用来兜底（构建时打进来的），但优先走网络 ——
+ * 这样你往 sk.json 加了条目，刷新就能看到，不必重新构建。
+ */
+function loadManifest(cb){
+  var finish = function(text, source){
+    var data;
+    try { data = JSON.parse(text); }
+    catch(e){ cb(new Error('sk.json 不是合法 JSON：' + (e.message || e))); return; }
+    try { cb(null, parseManifest(data), source); }
+    catch(e){ cb(new Error('清单结构不对：' + (e.message || e))); return; }
+  };
+
+  /* 清单在网站根目录，这个页面在 /p/ 下，所以要 ../ */
+  fetch(ROOT_PREFIX + 'sk.json?t=' + Date.now(), { cache: 'no-store' })
+    .then(function(r){
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function(t){ finish(t, 'network'); })
+    .catch(function(e){
+      if (INLINE_MANIFEST) finish(INLINE_MANIFEST, 'inline');
+      else cb(e);
+    });
+}
+
+/** 支持三种形态：扁平映射 / 分组映射 / 分组数组 */
+function parseManifest(data){
+  if (!data || typeof data !== 'object' || Array.isArray(data)){
+    throw new Error('清单应该是一个对象');
+  }
+
+  var keys = Object.keys(data);
+  var isGrouped = keys.some(function(k){
+    var v = data[k];
+    return v && typeof v === 'object';
+  });
+
+  var out = [];
+
+  if (!isGrouped){
+    var flat = [];
+    keys.forEach(function(k){
+      if (typeof data[k] === 'string' && data[k].trim()) flat.push({ name: k, path: data[k].trim() });
+    });
+    if (flat.length) out.push({ name: '文档', items: flat });
+    return out;
+  }
+
+  keys.forEach(function(g){
+    var val = data[g];
+    var items = [];
+
+    if (Array.isArray(val)){
+      val.forEach(function(el, i){
+        if (typeof el === 'string' && el.trim()){
+          items.push({ name: g + ' ' + (i + 1), path: el.trim() });
+        } else if (el && typeof el === 'object'){
+          Object.keys(el).forEach(function(n){
+            if (typeof el[n] === 'string' && el[n].trim()) items.push({ name: n, path: el[n].trim() });
+          });
+        }
+      });
+    } else if (val && typeof val === 'object'){
+      Object.keys(val).forEach(function(n){
+        var p = val[n];
+        if (typeof p === 'string' && p.trim()) items.push({ name: n, path: p.trim() });
+      });
+    } else if (typeof val === 'string' && val.trim()){
+      items.push({ name: g, path: val.trim() });
+    }
+
+    if (items.length) out.push({ name: g, items: items });
+  });
+
+  return out;
+}
+
+/** 补上 kind 等派生属性，并摊平进 ALL */
+function fillFromGroups(parsed){
+  GROUPS = parsed || [];
+  ALL = [];
+  GROUPS.forEach(function(g){
+    g.items.forEach(function(it){
+      it.group = g.name;
+      it.kind = detectKind(it.path);
+      it.root = it.path;
+      ALL.push(it);
+    });
+  });
+  return ALL;
+}
+
+function detectKind(p){
+  var m = /\.([a-zA-Z0-9]+)$/.exec(String(p || ''));
+  var e = m ? m[1].toLowerCase() : '';
+  if (['md', 'markdown', 'mdown', 'mkd'].indexOf(e) >= 0) return 'md';
+  if (['html', 'htm', 'xhtml'].indexOf(e) >= 0) return 'html';
+  if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif',
+       'pdf', 'mp4', 'webm', 'ogv', 'mov', 'm4v',
+       'mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac'].indexOf(e) >= 0) return 'media';
+  if (['txt', 'log', 'json', 'xml', 'yml', 'yaml', 'csv', 'tsv',
+       'js', 'mjs', 'cjs', 'ts', 'tsx', 'jsx', 'vue', 'svelte',
+       'css', 'scss', 'sass', 'less', 'styl',
+       'py', 'rb', 'go', 'rs', 'java', 'c', 'cpp', 'h', 'hpp', 'cs', 'php',
+       'swift', 'kt', 'sh', 'bash', 'zsh', 'fish', 'sql', 'toml', 'ini', 'conf'].indexOf(e) >= 0) return 'code';
+  return 'unknown';
+}
+
+/* ═══ 配置 ═══ */
+
+/* 页面在 /p/ 下，相对路径要 ../ 才回到网站根 */
+var ROOT_PREFIX = '../';
+
+var GLASS_NAMES = { mica:'云母', aero:'Aero', acrylic:'亚克力' };
+
+var LIBS = {
+  md:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15V9l3 3 3-3v6"/><path d="M17 9v6M15 13l2 2 2-2"/></svg>',
+  code:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 8-4 4 4 4"/><path d="m15 8 4 4-4 4"/></svg>',
+  html:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>',
+  media:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m3 17 5-5 4 4 3-3 6 6"/></svg>',
+  unknown:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6"/></svg>'
+};
+
+var settings = {
+  theme:'obsidian', fontSize:15, glass:'mica',
+  barOpacity:78, outline:'docked', sideCollapsed:false
+};
+
+var activePath = null;
+var codeMode = false;
+var collapsedGroups = {};
+
+/**
+ * 取文档原文。
+ *
+ * 顺序很讲究，因为热铁盒会把 .md 直接渲染成 HTML 页面返回：
+ *
+ *   1. raw.php 云函数 —— 拿回来的是**真原文**，公式、代码围栏、语法标记
+ *      一个不少。浏览器端渲染器才能正常工作。
+ *   2. 直接 fetch 那个 .md —— 拿到的是平台渲染好的整页 HTML。
+ *      正文虽然是对的，但 **LaTeX 源码已经在平台那层丢掉了**，
+ *      公式会退化成平台渲染的样子（通常是干巴巴的文本）。
+ *      所以这是降级路径：至少能读，别开天窗。
+ *
+ * 换句话说：raw.php 装了更完整，没装也能用，只是公式会不理想。
+ */
+var rawCache = {};
+var rawInflight = {};
+
+/** 判断拿回来的是不是「平台渲染过的整页 HTML」 */
+function looksLikePlatformHtml(text){
+  var s = String(text || '').slice(0, 600).toLowerCase();
+  return s.indexOf('<!doctype') >= 0 || s.indexOf('<html') >= 0;
+}
+
+/** 从平台渲染的整页 HTML 里拆出正文 */
+function stripPlatformWrapper(text){
+  var s = String(text == null ? '' : text);
+  if (!s) return s;
+  if (!looksLikePlatformHtml(s)) return s;
+  var m = s.match(/<body[^>]*class=["'][^"']*markdown-body[^"']*["'][^>]*>([\s\S]*?)<\/body>/i)
+       || s.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
+       || s.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
+  return m ? m[1] : s;
+}
+
+/**
+ * 把文档相对路径编码成安全 URL。
+ * 逐段 encodeURIComponent，但保留 .. 和 . —— 中文文件名必须被编码，
+ * 否则请求里出现非 ASCII 字符，不同静态服务器处理方式不一致（可能 404）。
+ */
+function encodePath(p){
+  return String(p || '').split('/').map(function(seg){
+    if (seg === '..' || seg === '.' || seg === '') return seg;
+    return encodeURIComponent(seg);
+  }).join('/');
+}
+
+function fetchText(url){
+  return fetch(url, { cache: 'no-store' }).then(function(r){
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
+  });
+}
+
+/** 读文本：raw.php 优先，退回平台渲染版 */
+function loadText(doc, cb){
+  if (rawCache[doc.path] != null){
+    cb(null, rawCache[doc.path].text, rawCache[doc.path].fromPlatform);
+    return;
+  }
+  if (rawInflight[doc.path]){ rawInflight[doc.path].push(cb); return; }
+  rawInflight[doc.path] = [cb];
+  offLoading(true);
+
+  var done = function(err, text, fromPlatform){
+    var waiting = rawInflight[doc.path] || [];
+    delete rawInflight[doc.path];
+    if (!err && text != null) rawCache[doc.path] = { text: text, fromPlatform: !!fromPlatform };
+    offLoading(false);
+    waiting.forEach(function(f){ f(err, text, !!fromPlatform); });
+  };
+
+  var encoded = encodePath(doc.root);
+
+  /* ① 先要原文。只有原文才保得住 LaTeX 公式和代码围栏 */
+  fetchText('./raw.php?f=' + encoded)
+    .then(function(text){
+      if (looksLikePlatformHtml(text)) throw new Error('raw.php 返回的不是原文');
+      if (!text.trim()) throw new Error('raw.php 返回空内容');
+      done(null, text, false);
+    })
+    .catch(function(e1){
+      /* ② 退回直接取文件。平台会把 md 渲染成 HTML —— 这时正文已经是 HTML 了，
+            不能再交给 Markdown 渲染器处理一遍，直接当成品用。 */
+      fetchText(encoded)
+        .then(function(text){
+          var wasHtml = looksLikePlatformHtml(text);
+          var body = stripPlatformWrapper(text);
+          if (!body || !body.trim()) throw new Error('文件是空的');
+          done(null, body, wasHtml);
+        })
+        .catch(function(e2){
+          done(new Error('读不到 ' + doc.root + '（' + (e2.message || e1.message) + '）'));
+        });
+    });
+}
+
+/** 顶栏那个角标：加载中 / static */
+function offLoading(on){
+  if (!loadBadgeEl) return;
+  if (on){
+    loadBadgeEl.textContent = '';
+    loadBadgeEl.innerHTML = '<span class="load-dot" aria-hidden="true"></span>读取中';
+    loadBadgeEl.classList.add('on');
+  } else {
+    var busy = Object.keys(rawInflight).length > 0;
+    if (busy) return;
+    loadBadgeEl.innerHTML = '<span class="load-dot" aria-hidden="true"></span>static';
+  }
+}
+
+/* 兼容旧调用点 */
+function getRaw(doc, cb){ loadText(doc, function(err, text){ cb(err ? null : text); }); }
+
+/* ═══ DOM ═══ */
+var $ = function(id){ return document.getElementById(id); };
+var loadBadgeEl = $('loadBadge'), btnSideToggle = $('btnSideToggle'), btnSideCollapse = $('btnSideCollapse');
+var glassGridEl = $('glassGrid'), outlineGridEl = $('outlineGrid'), outlineXEl = $('outlineX'), outlinePillEl = $('outlinePill');
+var searchInput = $('searchInput'), searchClear = $('searchClear'), fileListEl = $('fileList');
+var contentEl = $('content'), docNameEl = $('docName'), docMetaEl = $('docMeta');
+var btnToggle = $('btnToggle'), btnViewer = $('btnViewer'), btnCopy = $('btnCopy'), btnOpen = $('btnOpen');
+var btnSettings = $('btnSettings'), drawerEl = $('drawer'), scrimEl = $('scrim'), themeGridEl = $('themeGrid');
+var toastEl = $('toast'), outlineEl = $('outline'), outlineListEl = $('outlineList');
+var progressEl = $('progress'), btnTopEl = $('btnTop');
+
+/* ═══ 工具 ═══ */
+function esc(s){
+  return String(s).replace(/[&<>"]/g, function(c){
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c];
+  });
+}
+
+function fmtSize(n){
+  if (!isFinite(n) || n <= 0) return '';
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1048576).toFixed(1) + ' MB';
+}
+
+/**
+ * 把文档里的相对链接补回网站根。
+ *
+ * 规则与浏览器一致：
+ *   · #锚点、//协议相对、http(s):/mailto: 等绝对地址 —— 原样不动
+ *   · / 开头的根路径 —— 原样不动（它本来就是相对站点根的）
+ *   · 其余（a.md、./a.md、../asset/a.md、img/x.png）—— 补 ROOT_PREFIX
+ *
+ * 为什么不在构建期写死前缀：站点目录层级将来可能变，运行时算最稳。
+ */
+function renderURL(u){
+  var s = String(u || '');
+  if (!s) return s;
+  if (s.charAt(0) === '#') return s;
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(s)) return s;
+  /* 根路径也要补前缀：这个页面本身就在 /p/ 下，
+     "/sk.json" 得变成 "../sk.json" 才真的指向网站根。
+     这样整站挪进子目录也不会断。 */
+  if (s.charAt(0) === '/') return ROOT_PREFIX + s.replace(/^\/+/, '');
+  return ROOT_PREFIX + s.split('/').map(encodeURIComponent).join('/');
+}
+
+/* 命中的关键词高亮：先切段再逐段转义，避免注入 */
+function highlightText(text, query){
+  if (!query) return esc(text);
+  var lower = text.toLowerCase(), q = query.toLowerCase();
+  var out = '', i = 0, qLen = q.length;
+  while (i < text.length){
+    var idx = lower.indexOf(q, i);
+    if (idx === -1){ out += esc(text.slice(i)); break; }
+    out += esc(text.slice(i, idx)) + '<mark>' + esc(text.slice(idx, idx + qLen)) + '</mark>';
+    i = idx + qLen;
+  }
+  return out;
+}
+
+var toastTimer = null;
+function toast(msg, isErr){
+  toastEl.textContent = String(msg);
+  toastEl.className = 'toast show' + (isErr ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastEl.className = 'toast'; }, 2200);
+}
+
+/* ═══ 侧栏 ═══ */
+function renderSidebar(){
+  var q = searchInput.value.trim();
+  var ql = q.toLowerCase();
+  searchClear.classList.toggle('on', q.length > 0);
+
+  var totalShown = 0, html = '';
+
+  for (var gi = 0; gi < GROUPS.length; gi++){
+    var g = GROUPS[gi];
+    var items = (g.items || []).filter(function(it){
+      if (!ql) return true;
+      return (it.name + ' ' + it.path + ' ' + g.name).toLowerCase().indexOf(ql) >= 0;
+    });
+    if (!items.length) continue;
+
+    if (GROUPS.length > 1 || g.name !== '文档'){
+      var isCollapsed = !!collapsedGroups[g.name];
+      html += '<div class="group-head' + (isCollapsed ? ' collapsed' : '') + '" data-group="' + esc(g.name) +
+        '" role="button" tabindex="0" aria-expanded="' + (isCollapsed ? 'false' : 'true') + '">' +
+        '<span class="caret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>' +
+        esc(g.name) + '<span class="gcount">' + items.length + '</span></div>';
+    }
+
+    html += '<div class="group-items">';
+    for (var ii = 0; ii < items.length; ii++){
+      var it = items[ii];
+      html += '<div class="file-item' + (it.path === activePath ? ' active' : '') + '" data-path="' + esc(it.path) +
+        '" role="button" tabindex="0" title="' + esc(it.path) + '">' +
+        '<span class="file-icon">' + (LIBS[it.kind] || LIBS.unknown) + '</span>' +
+        '<span class="file-name">' + (ql ? highlightText(it.name, q) : esc(it.name)) + '</span></div>';
+    }
+    html += '</div>';
+    totalShown += items.length;
+  }
+
+  if (!totalShown){
+    fileListEl.innerHTML = q
+      ? '<div class="empty-side">没匹配的<br>试试别的关键词</div>'
+      : '<div class="empty-side">还没有文档</div>';
+    return;
+  }
+  fileListEl.innerHTML = html;
+}
+
+/* ═══ 打开文档 ═══ */
+function openDoc(p, skipHash){
+  var doc = null;
+  for (var i = 0; i < ALL.length; i++){ if (ALL[i].path === p){ doc = ALL[i]; break; } }
+  if (!doc) return;
+
+  activePath = p;
+  if (!skipHash){
+    try { history.replaceState(null, '', '#' + encodeURIComponent(p)); } catch(e){}
+  }
+  document.title = doc.name + ' · JinSuper';
+  renderSidebar();
+
+  docNameEl.textContent = doc.name;
+  docMetaEl.textContent = '';
+  outlineEl.classList.remove('on');
+  progressEl.style.transform = 'scaleX(0)';
+  btnViewer.disabled = doc.kind === 'media';
+  btnOpen.disabled = false;
+  btnCopy.disabled = doc.kind === 'media';
+
+  btnViewer.onclick = function(){
+    /* viewer.html 在 /Skills/ 下，用相对路径而不是 /p/…
+       这样站点将来挪到子目录也不会断 */
+    window.open('../Skills/viewer.html?f=' + encodeURIComponent(ROOT_PREFIX + doc.root), '_blank', 'noopener');
+  };
+  btnOpen.onclick = function(){
+    window.open(renderURL(doc.root), '_blank', 'noopener');
+  };
+
+  /* ── 图片 / 视频 / 音频：浏览器直接能放的，不进渲染流程 ── */
+  if (doc.kind === 'media'){
+    var u = renderURL(doc.root);
+    var lower = doc.root.toLowerCase();
+    var inner;
+    if (/\.(png|jpe?g|gif|webp|svg|bmp|ico|avif)$/.test(lower)){
+      inner = '<div class="img-view"><img src="' + esc(u) + '" alt="' + esc(doc.name) + '"></div>';
+    } else if (/\.(mp4|webm|ogv|mov|m4v)$/.test(lower)){
+      inner = '<div class="img-view"><video src="' + esc(u) + '" controls style="max-width:100%;max-height:calc(100dvh - 160px);border-radius:6px"></video></div>';
+    } else if (/\.(mp3|wav|ogg|m4a|flac|aac)$/.test(lower)){
+      inner = '<div class="img-view"><audio src="' + esc(u) + '" controls></audio></div>';
+    } else if (/\.pdf$/.test(lower)){
+      inner = '<iframe class="frame-view" src="' + esc(u) + '" title="PDF"></iframe>';
+    } else {
+      inner = '';
+    }
+    btnToggle.style.display = 'none';
+    contentEl.innerHTML = inner || ('<div class="empty-main"><div class="inner"><h2>不支持预览</h2>' +
+      '<p><code>' + esc(doc.path) + '</code></p></div></div>');
+    docMetaEl.textContent = '媒体';
+    return;
+  }
+
+  var preHtml = PRE_RENDERED[doc.path] || null;
+  var cachedEntry = rawCache[doc.path] || null;
+  var cachedText = cachedEntry ? cachedEntry.text : null;
+
+  /* ── 源码 / 渲染切换：只有能拿到原文的文本类文档才需要 ── */
+  codeMode = false;
+  var canShowSource = (doc.kind === 'md' || doc.kind === 'code' || doc.kind === 'html');
+  btnToggle.style.display = canShowSource && doc.kind === 'md' ? '' : 'none';
+  btnToggle.classList.remove('active');
+  btnToggle.querySelector('.lbl').textContent = '源码';
+
+  function showSource(){
+    var entry = rawCache[doc.path];
+    if (entry == null){ showNoSource(doc); return; }
+    renderCodeView(entry.text);
+  }
+
+  function showMd(){
+    if (codeMode){ showSource(); return; }
+    if (cachedText == null && preHtml == null){
+      showLoading(doc);
+      loadText(doc, function(err, text, fromPlatform){
+        if (codeMode) return;             /* 用户已经切到源码了 */
+        if (err || text == null){ showLoadError(doc, err); return; }
+        doRenderMarkdown(doc, text, null, fromPlatform);
+      });
+      return;
+    }
+    doRenderMarkdown(doc, cachedText, preHtml);
+  }
+
+  if (doc.kind === 'md'){
+    btnToggle.onclick = function(){
+      codeMode = !codeMode;
+      btnToggle.classList.toggle('active', codeMode);
+      btnToggle.querySelector('.lbl').textContent = codeMode ? '渲染' : '源码';
+      if (codeMode){
+        if (rawCache[doc.path] != null){ showSource(); return; }
+        loadText(doc, function(err, text){
+          if (codeMode && !err) renderCodeView(text);
+          else if (codeMode) showNoSource(doc);
+        });
+      } else {
+        showMd();
+      }
+    };
+    showMd();
+    return;
+  }
+
+  if (doc.kind === 'code' || doc.kind === 'html'){
+    btnToggle.style.display = 'none';
+    if (cachedText != null){ renderCodeView(cachedText); return; }
+    showLoading(doc);
+    loadText(doc, function(err, text){
+      if (err || text == null){ showLoadError(doc, err); return; }
+      renderCodeView(text);
+      docMetaEl.textContent = doc.kind === 'html' ? 'HTML 源码' : '纯文本';
+    });
+    return;
+  }
+
+  /* 认不出类型：给个出口 */
+  btnToggle.style.display = 'none';
+  contentEl.innerHTML = '<div class="empty-main"><div class="inner"><h2>不支持预览</h2>' +
+    '<p><code>' + esc(doc.path) + '</code></p>' +
+    '<p style="margin-top:14px">用右上角「原文件」按钮在新标签页打开。</p></div></div>';
+}
+
+/** 渲染 Markdown 并接管后续（目录 / 进度 / 前后篇 / 链接重写） */
+function doRenderMarkdown(doc, text, preHtml, fromPlatform){
+  var html = preHtml;
+  var fromPrerender = !!preHtml;
+
+  if (html == null){
+    if (fromPlatform){
+      /* 平台已经把 md 渲染成 HTML 了（raw.php 不可用时的降级路径）。
+         这已经是成品，再交给 Markdown 渲染器处理只会画蛇添足，
+         直接当正文用。代价是公式退化成平台渲染的样子。 */
+      html = text;
+      docMetaEl.textContent = 'Markdown · 平台渲染';
+    } else {
+      if (!window.DocsMd || !window.DocsMd.ready()){
+        showNoRenderer(doc);
+        return;
+      }
+      try {
+        html = window.DocsMd.render(text);
+      } catch(e){
+        renderLoadError(doc, '渲染失败：' + (e && e.message ? e.message : e));
+        return;
+      }
+    }
+    if (!fromPlatform) docMetaEl.textContent = 'Markdown';
+  }
+
+  if (fromPrerender) docMetaEl.textContent = 'Markdown · 预渲染';
+  contentEl.innerHTML = '<div class="md">' + html + '</div>';
+  fixURLs(contentEl);
+  fixChartBlocks(contentEl);
+  addCodeCopyButtons(contentEl);
+  buildOutline();
+  appendDocNav();
+  contentEl.scrollTop = 0;
+  updateProgress();
+}
+
+/**
+ * 给每个代码块加一个复制按钮。
+ * ---------------------------------------------------
+ * 放在这里统一处理，是为了同时覆盖两种情况：
+ *   · TEST.md 那种构建期预渲染的 HTML
+ *   · 其余文档运行时渲染出来的 HTML
+ * 改渲染器只能覆盖后者。
+ *
+ * 复制的是代码原文（按钮本身在 <pre> 里，所以要剔掉自己的文字）。
+ */
+function addCodeCopyButtons(root){
+  var pres = root.querySelectorAll('pre');
+  for (var i = 0; i < pres.length; i++){
+    var pre = pres[i];
+    if (pre.querySelector(':scope > .code-copy')) continue;
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'code-copy';
+    btn.textContent = '复制';
+    btn.setAttribute('aria-label', '复制这段代码');
+    btn.addEventListener('click', function(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      var self = this;
+      var block = self.parentNode;
+      var code = block.querySelector('code');
+      var text = code ? code.textContent : block.textContent;
+      /* 末尾那个换行是围栏自带的，复制时去掉更干净 */
+      text = String(text).replace(/\n$/, '');
+      copyText(text, function(okk){
+        var old = self.textContent;
+        self.textContent = okk ? '已复制' : '复制失败';
+        self.classList.toggle('ok', okk);
+        self.classList.toggle('err', !okk);
+        setTimeout(function(){
+          self.textContent = old;
+          self.classList.remove('ok');
+          self.classList.remove('err');
+        }, 1400);
+      });
+    });
+    pre.appendChild(btn);
+  }
+}
+
+/** 统一的复制入口：先试 Clipboard API，不行降级 execCommand */
+function copyText(text, cb){
+  var fallback = function(){
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.top = '-2000px';
+    document.body.appendChild(ta);
+    ta.select();
+    var okk = false;
+    try { okk = document.execCommand('copy'); } catch(e){ okk = false; }
+    document.body.removeChild(ta);
+    cb(okk);
+  };
+
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ cb(true); }, fallback);
+    } else {
+      fallback();
+    }
+  } catch(e){ fallback(); }
+}
+
+function showLoading(doc){
+  outlineEl.classList.remove('on');
+  contentEl.innerHTML = '<div class="empty-main"><div class="inner">' +
+    '<h2 class="doc-loading-title">加载中…</h2><p>' + esc(doc.root) + '</p></div></div>';
+}
+
+function renderLoadError(doc, msg){
+  outlineEl.classList.remove('on');
+  contentEl.innerHTML = '<div class="empty-main"><div class="inner">' +
+    '<h2>没能显示这篇</h2>' +
+    '<p><code>' + esc(doc.root) + '</code></p>' +
+    '<p style="color:var(--accent)">' + esc(String(msg)) + '</p>' +
+    '<p style="margin-top:14px">可以用右上角「原文件」在新标签页打开。</p></div></div>';
+}
+
+function showLoadError(doc, err){
+  renderLoadError(doc, err && err.message ? err.message : '读取失败');
+}
+
+/** 渲染器没就位时的说明（正常情况下不会发生，docs-md.js 就在同目录） */
+function showNoRenderer(doc){
+  outlineEl.classList.remove('on');
+  contentEl.innerHTML = '<div class="empty-main"><div class="inner">' +
+    '<h2>渲染器没加载</h2>' +
+    '<p>同目录下的 <code>docs-md.js</code> 负责把 Markdown 画出来，这次没取到。</p>' +
+    '<p style="margin-top:14px">确认它和 <code>docs.html</code> 一起上传了，然后刷新。</p></div></div>';
+}
+
+/** 原文不在页内时的兜底提示（正常情况下走不到这里） */
+function showNoSource(doc){
+  outlineEl.classList.remove('on');
+  contentEl.innerHTML = '<div class="empty-main"><div class="inner">' +
+    '<h2>这篇没有内联原文</h2>' +
+    '<p><code>' + esc(doc.root) + '</code></p>' +
+    '<p style="margin-top:14px">正文渲染稿不受影响，切回「渲染」继续阅读；' +
+    '或用右上角「原文件」/「查看器」打开。</p></div></div>';
+}
+
+function renderCodeView(text){
+  outlineEl.classList.remove('on');
+  var lines = String(text).split('\n');
+  var g = '';
+  for (var i = 1; i <= lines.length; i++) g += '<span class="ln">' + i + '</span>';
+  contentEl.innerHTML = '<div class="code-view"><div class="gutter">' + g + '</div>' +
+    '<div class="code" id="__code"></div></div>';
+  contentEl.querySelector('#__code').textContent = text;
+  contentEl.scrollTop = 0;
+  updateProgress();
+}
+
+/** 把正文里的相对链接补回网站根 */
+function fixURLs(root){
+  var i, el;
+  var as = root.querySelectorAll('a[href]');
+  for (i = 0; i < as.length; i++){
+    el = as[i];
+    el.setAttribute('href', renderURL(el.getAttribute('href')));
+    if (/^https?:\/\//i.test(el.getAttribute('href'))){
+      el.setAttribute('target', '_blank');
+      el.setAttribute('rel', 'noopener');
+    }
+  }
+  var imgs = root.querySelectorAll('img[src]');
+  for (i = 0; i < imgs.length; i++){
+    el = imgs[i];
+    el.setAttribute('src', renderURL(el.getAttribute('src')));
+  }
+}
+
+/** 给被砍掉的图表代码块加一行说明 */
+function fixChartBlocks(root){
+  var pres = root.querySelectorAll('pre > code[class*="language-mermaid"],' +
+    'pre > code[class*="language-plantuml"],pre > code[class*="language-flow"],' +
+    'pre > code[class*="language-echarts"]');
+  for (var i = 0; i < pres.length; i++){
+    var pre = pres[i].parentNode;
+    var note = document.createElement('p');
+    note.className = 'md-chart-off';
+    note.textContent = '图表渲染已下线，上方为源码。';
+    pre.parentNode.insertBefore(note, pre.nextSibling);
+  }
+}
+
+/* ═══ 本页目录 ═══ */
+function buildOutline(){
+  var heads = contentEl.querySelectorAll('.md h1, .md h2, .md h3, .md h4');
+  var html = '';
+  for (var i = 0; i < heads.length; i++){
+    var h = heads[i];
+    if (!h.id) continue;
+    var lvl = parseInt(h.tagName.charAt(1), 10);
+    if (lvl < 1 || lvl > 4) continue;
+    var label = h.textContent.replace(/#\s*$/, '').trim();
+    html += '<li class="lv-' + lvl + '"><a href="#' + esc(h.id) + '" data-target="' + esc(h.id) + '">' + esc(label) + '</a></li>';
+  }
+  outlineListEl.innerHTML = html;
+  outlineEl.classList.remove('hide');
+  var has = heads.length > 1 && settings.outline !== 'off';
+  outlineEl.classList.toggle('on', has);
+  if (has) setupOutlineSpy();
+}
+
+var outlineSpyOff = null;
+function setupOutlineSpy(){
+  if (outlineSpyOff) outlineSpyOff();
+  var links = outlineListEl.querySelectorAll('a');
+  if (!links.length) return;
+
+  function onScroll(){
+    var heads = contentEl.querySelectorAll('.md h1, .md h2, .md h3, .md h4');
+    if (!heads.length) return;
+    var top = contentEl.getBoundingClientRect().top;
+    var current = heads[0];
+    for (var i = 0; i < heads.length; i++){
+      if (heads[i].getBoundingClientRect().top - top <= 90) current = heads[i];
+      else break;
+    }
+    var id = current ? current.id : null;
+    for (var j = 0; j < links.length; j++){
+      links[j].classList.toggle('active', links[j].dataset.target === id);
+    }
+    updateProgress();
+  }
+
+  contentEl.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  outlineSpyOff = function(){
+    contentEl.removeEventListener('scroll', onScroll);
+    window.removeEventListener('resize', onScroll);
+  };
+  onScroll();
+}
+
+outlineListEl.addEventListener('click', function(e){
+  var a = e.target.closest('a');
+  if (!a) return;
+  e.preventDefault();
+  var target = document.getElementById(a.dataset.target);
+  if (!target) return;
+  var offset = target.getBoundingClientRect().top - contentEl.getBoundingClientRect().top;
+  var bar = document.querySelector('.main-bar');
+  var barH = bar ? bar.offsetHeight : 52;
+  contentEl.scrollTo({ top: contentEl.scrollTop + offset - barH - 14, behavior: 'smooth' });
+});
+
+outlineXEl.addEventListener('click', function(){
+  outlineEl.classList.add('hide');
+  updateOutlinePill();
+});
+outlinePillEl.addEventListener('click', function(){
+  outlineEl.classList.remove('hide');
+  updateOutlinePill();
+});
+
+function updateOutlinePill(){
+  var has = outlineListEl.children.length > 1;
+  outlinePillEl.classList.toggle('shown',
+    settings.outline === 'float' && has && outlineEl.classList.contains('hide'));
+}
+
+function refreshOutline(){
+  outlineEl.classList.remove('hide');
+  var has = outlineListEl.children.length > 1 && settings.outline !== 'off';
+  outlineEl.classList.toggle('on', has);
+  updateOutlinePill();
+}
+
+function updateProgress(){
+  var max = contentEl.scrollHeight - contentEl.clientHeight;
+  var p = max > 0 ? contentEl.scrollTop / max : 0;
+  progressEl.style.transform = 'scaleX(' + Math.min(1, Math.max(0, p)) + ')';
+  btnTopEl.classList.toggle('on', contentEl.scrollTop > 240);
+}
+
+/* ═══ 上一篇 / 下一篇 ═══ */
+function appendDocNav(){
+  var idx = -1;
+  for (var i = 0; i < ALL.length; i++){ if (ALL[i].path === activePath){ idx = i; break; } }
+  if (idx < 0) return;
+  var prev = idx > 0 ? ALL[idx - 1] : null;
+  var next = idx < ALL.length - 1 ? ALL[idx + 1] : null;
+  if (!prev && !next) return;
+
+  var mdEl = contentEl.querySelector('.md');
+  if (!mdEl) return;
+
+  var nav = document.createElement('nav');
+  nav.className = 'doc-nav';
+  nav.innerHTML =
+    (prev ? '<a href="#" data-path="' + esc(prev.path) + '"><span class="dir">← 上一篇</span><span class="ttl">' + esc(prev.name) + '</span></a>' : '<span class="ghost"></span>') +
+    (next ? '<a class="next" href="#" data-path="' + esc(next.path) + '"><span class="dir">下一篇 →</span><span class="ttl">' + esc(next.name) + '</span></a>' : '<span class="ghost"></span>');
+  mdEl.appendChild(nav);
+  nav.addEventListener('click', function(e){
+    var a = e.target.closest('a[data-path]');
+    if (!a) return;
+    e.preventDefault();
+    openDoc(a.dataset.path);
+  });
+}
+
+/* ═══ 剧透块展开 ═══ */
+document.addEventListener('click', function(e){
+  var head = e.target.closest ? e.target.closest('.md-spoiler-head') : null;
+  if (head && window.getSelection().toString()) return;
+  if (head){
+    var box = head.parentNode;
+    var open = box.getAttribute('data-open') === 'true';
+    box.setAttribute('data-open', open ? 'false' : 'true');
+    head.setAttribute('aria-expanded', open ? 'false' : 'true');
+  }
+});
+
+/* ═══ 图片灯箱 ═══ */
+var lightboxEl = null;
+
+function closeLightbox(){
+  if (!lightboxEl) return;
+  var el = lightboxEl;
+  lightboxEl = null;
+  el.classList.remove('on');
+  setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 200);
+}
+
+document.addEventListener('click', function(e){
+  var img = e.target.closest ? e.target.closest('.md img') : null;
+  if (!img || img.closest('a')) return;
+  e.preventDefault();
+  closeLightbox();
+  lightboxEl = document.createElement('div');
+  lightboxEl.className = 'md-lightbox';
+  var big = document.createElement('img');
+  big.src = img.currentSrc || img.src;
+  big.alt = img.alt || '';
+  lightboxEl.appendChild(big);
+  lightboxEl.addEventListener('click', closeLightbox);
+  document.body.appendChild(lightboxEl);
+  requestAnimationFrame(function(){ lightboxEl.classList.add('on'); });
+});
+
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') closeLightbox();
+});
+
+/* 图片可键盘打开 */
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Enter') return;
+  var img = e.target;
+  if (img && img.tagName === 'IMG' && img.closest('.md')){
+    e.preventDefault();
+    img.click();
+  }
+});
+
+/* ═══ 设置 ═══ */
+function applySettings(){
+  var root = document.documentElement;
+  root.setAttribute('data-theme', settings.theme);
+  root.setAttribute('data-glass', settings.glass);
+  root.setAttribute('data-outline', settings.outline);
+  root.style.setProperty('--bar-alpha', settings.barOpacity + '%');
+  root.classList.toggle('side-collapsed', !!settings.sideCollapsed);
+  btnSideToggle.setAttribute('aria-expanded', String(!settings.sideCollapsed));
+  btnSideCollapse.setAttribute('aria-expanded', String(!settings.sideCollapsed));
+  root.style.setProperty('--fs-md', settings.fontSize + 'px');
+
+  themeGridEl.querySelectorAll('.theme-opt').forEach(function(b){
+    b.setAttribute('aria-pressed', String(b.dataset.theme === settings.theme));
+  });
+  glassGridEl.querySelectorAll('.opt-btn').forEach(function(b){
+    b.setAttribute('aria-pressed', String(b.dataset.glass === settings.glass));
+  });
+  outlineGridEl.querySelectorAll('.opt-btn').forEach(function(b){
+    b.setAttribute('aria-pressed', String(b.dataset.outline === settings.outline));
+  });
+  $('glassOut').textContent = GLASS_NAMES[settings.glass] || settings.glass;
+  var opRange = $('opacityRange');
+  if (opRange) opRange.value = settings.barOpacity;
+  $('opacityOut').textContent = settings.barOpacity + '%';
+  var fsRange = $('fsRange');
+  if (fsRange) fsRange.value = settings.fontSize;
+  $('fsOut').textContent = settings.fontSize + 'px';
+  refreshOutline();
+}
+
+function saveSetting(k, v){
+  settings[k] = v;
+  try { localStorage.setItem('docs.' + k, String(v)); }catch(e){}
+  applySettings();
+}
+
+(function initSettings(){
+  try {
+    var t = localStorage.getItem('docs.theme');        if (t) settings.theme = t;
+    var g = localStorage.getItem('docs.glass');        if (GLASS_NAMES[g]) settings.glass = g;
+    var a = parseInt(localStorage.getItem('docs.barOpacity'), 10);
+    if (a >= 10 && a <= 100) settings.barOpacity = a;
+    var o = localStorage.getItem('docs.outline');
+    if (o === 'docked' || o === 'float' || o === 'off') settings.outline = o;
+    settings.sideCollapsed = localStorage.getItem('docs.sideCollapsed') === 'true';
+    var f = parseInt(localStorage.getItem('docs.fontSize'), 10);
+    if (f && f >= 13 && f <= 20) settings.fontSize = f;
+    var c = localStorage.getItem('docs.collapsed');
+    if (c) collapsedGroups = JSON.parse(c) || {};
+  }catch(e){}
+})();
+
+themeGridEl.addEventListener('click', function(e){
+  var btn = e.target.closest('.theme-opt');
+  if (btn) saveSetting('theme', btn.dataset.theme);
+});
+$('fsRange').addEventListener('input', function(e){ saveSetting('fontSize', Number(e.target.value) || 15); });
+glassGridEl.addEventListener('click', function(e){
+  var btn = e.target.closest('.opt-btn');
+  if (btn) saveSetting('glass', btn.dataset.glass);
+});
+outlineGridEl.addEventListener('click', function(e){
+  var btn = e.target.closest('.opt-btn');
+  if (btn) saveSetting('outline', btn.dataset.outline);
+});
+$('opacityRange').addEventListener('input', function(e){ saveSetting('barOpacity', Number(e.target.value) || 78); });
+
+/* ═══ 设置抽屉 ═══ */
+var lastFocus = null;
+function openDrawer(){
+  lastFocus = document.activeElement;
+  drawerEl.classList.add('on');
+  scrimEl.classList.add('on');
+  drawerEl.setAttribute('aria-hidden', 'false');
+  $('drawerClose').focus();
+}
+function closeDrawer(){
+  drawerEl.classList.remove('on');
+  scrimEl.classList.remove('on');
+  drawerEl.setAttribute('aria-hidden', 'true');
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+btnSettings.addEventListener('click', openDrawer);
+$('drawerClose').addEventListener('click', closeDrawer);
+scrimEl.addEventListener('click', closeDrawer);
+drawerEl.addEventListener('keydown', function(e){
+  if (e.key !== 'Tab') return;
+  var f = drawerEl.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  if (!f.length) return;
+  var first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+});
+
+/* ═══ 侧栏事件 ═══ */
+function setSideCollapsed(v){
+  settings.sideCollapsed = !!v;
+  try { localStorage.setItem('docs.sideCollapsed', String(settings.sideCollapsed)); }catch(e){}
+  document.documentElement.classList.toggle('side-collapsed', settings.sideCollapsed);
+  btnSideToggle.setAttribute('aria-expanded', String(!settings.sideCollapsed));
+  btnSideCollapse.setAttribute('aria-expanded', String(!settings.sideCollapsed));
+}
+
+btnSideToggle.addEventListener('click', function(){ setSideCollapsed(!settings.sideCollapsed); });
+btnSideCollapse.addEventListener('click', function(){ setSideCollapsed(true); });
+btnTopEl.addEventListener('click', function(){ contentEl.scrollTo({ top: 0, behavior: 'smooth' }); });
+
+function toggleGroup(name){
+  collapsedGroups[name] = !collapsedGroups[name];
+  try { localStorage.setItem('docs.collapsed', JSON.stringify(collapsedGroups)); }catch(e){}
+  renderSidebar();
+}
+
+fileListEl.addEventListener('click', function(e){
+  var head = e.target.closest('.group-head');
+  if (head){ toggleGroup(head.dataset.group); return; }
+  var item = e.target.closest('.file-item');
+  if (item) openDoc(item.dataset.path);
+});
+
+fileListEl.addEventListener('keydown', function(e){
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  var head = e.target.closest('.group-head');
+  if (head){ e.preventDefault(); toggleGroup(head.dataset.group); return; }
+  var item = e.target.closest('.file-item');
+  if (item){ e.preventDefault(); openDoc(item.dataset.path); }
+});
+
+searchInput.addEventListener('input', renderSidebar);
+searchClear.addEventListener('click', function(){
+  searchInput.value = '';
+  renderSidebar();
+  searchInput.focus();
+});
+searchInput.addEventListener('keydown', function(e){
+  if (e.key === 'Escape'){
+    e.preventDefault();
+    if (searchInput.value){ searchInput.value = ''; renderSidebar(); }
+    else searchInput.blur();
+    return;
+  }
+  if (e.key === 'Enter'){
+    e.preventDefault();
+    var first = fileListEl.querySelector('.file-item');
+    if (first) openDoc(first.dataset.path);
+  }
+});
+
+/* ═══ 复制原文 ═══ */
+/* 复制逻辑统一走 copyText（定义在上面，代码块按钮也用同一个） */
+function doCopy(text){
+  copyText(text, function(okk){
+    if (okk) toast('已复制 ' + text.length + ' 字符');
+    else toast('复制失败', true);
+  });
+}
+
+btnCopy.addEventListener('click', function(){
+  var doc = null;
+  for (var i = 0; i < ALL.length; i++){ if (ALL[i].path === activePath){ doc = ALL[i]; break; } }
+  if (!doc) return;
+
+  getRaw(doc, function(text){
+    if (text == null){ toast('这篇没有内联原文', true); return; }
+    doCopy(text);
+  });
+});
+
+/* ═══ 快捷键 ═══ */
+window.addEventListener('keydown', function(e){
+  var meta = e.metaKey || e.ctrlKey;
+  var tag = (e.target && e.target.tagName) || '';
+  var inField = tag === 'INPUT' || tag === 'TEXTAREA';
+
+  if (meta && !e.shiftKey && !e.altKey && (e.key === 'f' || e.key === 'F')){
+    e.preventDefault(); searchInput.focus(); searchInput.select(); return;
+  }
+  if (meta && e.shiftKey && (e.key === 'f' || e.key === 'F')){
+    e.preventDefault(); searchInput.value = ''; renderSidebar(); searchInput.focus(); return;
+  }
+  if (meta && (e.key === 'c' || e.key === 'C') && !inField){
+    if (!window.getSelection().toString() && !btnCopy.disabled){ e.preventDefault(); btnCopy.click(); }
+  }
+});
+
+/* ═══ 启动 ═══ */
+
+/* 供构建期自检使用：无副作用，也不属于页面必需接口 */
+window.__fixURLs = fixURLs;
+window.__renderURL = renderURL;
+window.__loadManifest = loadManifest;
+window.__parseManifest = parseManifest;
+
+applySettings();
+setSideCollapsed(settings.sideCollapsed);
+renderSidebar();
+
+/* 深链接支持：#文档路径；兼容 ?f= */
+(function boot(){
+  var want = null;
+  try {
+    var m = /^#(.+)$/.exec(location.hash);
+    if (m) want = decodeURIComponent(m[1]);
+  }catch(e){}
+  if (!want){
+    try {
+      var params = new URLSearchParams(location.search);
+      want = params.get('f') || params.get('file');
+    }catch(e){}
+  }
+
+  loadManifest(function(err, groups){
+    if (err || !groups || !groups.length){
+      contentEl.innerHTML = '<div class="empty-main"><div class="inner">' +
+        '<h2>读不到文档清单</h2>' +
+        '<p>页面会去找同级的 <code>sk.json</code>。</p>' +
+        (err ? '<p style="color:var(--accent)">' + esc(err.message || String(err)) + '</p>' : '') +
+        '<p style="margin-top:14px">确认 <code>sk.json</code> 已上传、格式是合法 JSON。</p></div></div>';
+      return;
+    }
+
+    fillFromGroups(groups);
+    renderSidebar();
+    btnSideCollapse.title = '收起文档列表 · 共 ' + ALL.length + ' 篇';
+
+    var hit = null;
+    if (want){
+      for (var i = 0; i < ALL.length; i++){
+        if (ALL[i].path === want || ALL[i].name === want || ALL[i].root === want){ hit = ALL[i]; break; }
+      }
+    }
+    if (!hit && ALL.length) hit = ALL[0];
+
+    if (hit) openDoc(hit.path, true);
+    else contentEl.innerHTML = '<div class="empty-main"><div class="inner">' +
+      '<h2>清单是空的</h2><p>往 <code>sk.json</code> 里加一行键值对即可。</p></div></div>';
+  });
+})();
+
+})();
+
+</script>
+</body>
+</html>

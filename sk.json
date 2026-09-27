@@ -1,0 +1,15 @@
+{
+	"启程": {
+		"科技节活动方案": "science.md",
+		"欢迎来到该网站": "para/First.md",
+		"测试文档":"TEST.md"
+	},
+	"神奇skills": {
+		"设计规范 SKILL": "../asset/SKILL.md",
+		"功能清单": "../asset/\u529f\u80fd.md",
+		"主题参考": "../asset/color-theme.md"
+	},
+	"奇思妙想": {
+	
+	}
+}
