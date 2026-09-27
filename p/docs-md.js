@@ -365,6 +365,21 @@ function fenceRule(md, useHljs) {
   };
 }
 
+/**
+ * 告示 / 提示框的标题文字。
+ * 允许行内 Markdown：`code`、**粗体**、[链接](…)、{漢字|かんじ} 等，
+ * 这样「自定义名字」才真的能自定义；渲染失败就退回纯文本转义。
+ */
+function inlineTitle(md, s) {
+  const text = String(s == null ? '' : s).trim();
+  if (!text) return '';
+  try {
+    return md.renderInline(text);
+  } catch (e) {
+    return esc(text);
+  }
+}
+
 /** GitHub 告示 > [!NOTE] */
 function alertAdapter(md) {
   const RE = /^\\?\[!(TIP|NOTE|IMPORTANT|WARNING|CAUTION)\]([^\n\r]*)/i;
@@ -388,12 +403,16 @@ function alertAdapter(md) {
       if (!match) continue;
 
       const type = match[1].toLowerCase();
-      const title = match[2].trim() || ALERT_TITLES[type] || type;
+      /* 名字完全以你自己写的为准：
+         `> [!NOTE] 部署须知` → 标题「部署须知」
+         `> [!NOTE]`         → 不给标题，不再硬塞「注意」
+         类型信息交给 aria-label，屏幕阅读器仍然读得出。 */
+      const title = match[2].trim();
       first.content = first.content.slice(match[0].length).replace(/^\s+/, '');
 
       open.type = 'alert_open';
       open.tag = 'div';
-      open.meta = { title, type };
+      open.meta = { title, type, defaultTitle: ALERT_TITLES[type] || type };
       close.type = 'alert_close';
       close.tag = 'div';
     }
@@ -401,8 +420,17 @@ function alertAdapter(md) {
 
   md.renderer.rules.alert_open = (tokens, idx) => {
     const meta = tokens[idx].meta || {};
-    return `<div class="markdown-alert markdown-alert-${esc(meta.type || 'note')}">` +
-           `<p class="markdown-alert-title">${ALERT_ICONS[meta.type] || ''}${esc(meta.title || '')}</p>`;
+    const type = esc(meta.type || 'note');
+    const name = String(meta.title || '').trim();
+
+    /* 写了名字才画标题行；没写就只有内容 + 左侧色条 */
+    const head = name
+      ? `<p class="markdown-alert-title">${ALERT_ICONS[meta.type] || ''}${inlineTitle(md, name)}</p>`
+      : '';
+
+    return `<div class="markdown-alert markdown-alert-${type}" role="note" ` +
+           `aria-label="${esc(meta.defaultTitle || name || type)}" ` +
+           (name ? '' : 'data-untitled="true"') + '>' + head;
   };
 }
 
@@ -795,7 +823,7 @@ function createRenderer(opts) {
       render(tokens, idx) {
         if (tokens[idx].nesting === 1) {
           const info = String(tokens[idx].info || '').trim().slice(name.length).trim();
-          return `<div class="md-box md-box-${name}"><p class="md-box-title">${esc(info || BOX_LABELS[name])}</p>\n`;
+          return `<div class="md-box md-box-${name}"><p class="md-box-title">${inlineTitle(md, info || BOX_LABELS[name])}</p>\n`;
         }
         return '</div>\n';
       },

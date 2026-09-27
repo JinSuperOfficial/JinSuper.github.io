@@ -1324,14 +1324,26 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
   border-radius:0 6px 6px 0;
   background:color-mix(in srgb,var(--md-hl) 8%,transparent);
 }
+/* 标题里允许行内 Markdown，所以这里不能用 flex：
+   flex 会把「文字 + code + 文字」拆成带间距的独立项，读起来是断的。 */
 .md .markdown-alert-title,
 .md .md-box-title{
-  display:flex;align-items:center;gap:6px;
   margin:0 0 6px;
   font-size:13px;font-weight:640;line-height:1.4;
   color:var(--md-hl);
 }
-.md .markdown-alert-title svg{ width:15px;height:15px;flex:none;fill:currentColor }
+.md .markdown-alert-title svg{
+  width:15px;height:15px;fill:currentColor;
+  display:inline-block;vertical-align:-2px;margin-right:6px;
+}
+.md .markdown-alert-title code,
+.md .md-box-title code{
+  font-size:.92em;padding:1px 5px;border-radius:4px;
+  color:inherit;
+  background:color-mix(in srgb,var(--md-hl) 15%,transparent);
+}
+.md .markdown-alert-title strong,
+.md .md-box-title strong{ font-weight:700 }
 .md .markdown-alert > :last-child,
 .md .md-box > :last-child{ margin-bottom:0 }
 .md .markdown-alert-note,.md .md-box-note,.md .md-box-info{ --md-hl:#4A90D9 }
@@ -1557,6 +1569,19 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
 .md .md-spoiler[data-open="true"] .md-spoiler-mark::before{ content:'−' }
 .md .md-spoiler[data-open="false"] .md-spoiler-mark::before,
 .md .md-spoiler:not([data-open]) .md-spoiler-mark::before{ content:'!' }
+
+/* ═══════════════════════════════════════════════════
+   告示（> [!NOTE]）的自定义名字
+   ---------------------------------------------------
+   写了名字 → 标题行显示你写的；没写 → 不画标题行，
+   只剩内容 + 左侧色条。类型仍通过 aria-label 暴露给读屏。
+   ═══════════════════════════════════════════════════ */
+.md .markdown-alert[data-untitled="true"]{
+  padding-top:13px;
+  padding-bottom:13px;
+}
+.md .markdown-alert[data-untitled="true"] > :first-child{ margin-top:0 }
+.md .markdown-alert[data-untitled="true"] > :last-child{ margin-bottom:0 }
 
 /* ═══════════════════════════════════════════════════
    代码组 ::: code-group
