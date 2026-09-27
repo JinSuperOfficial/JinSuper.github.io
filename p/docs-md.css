@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════
    文档站样式 · 由 build/lib/css.mjs 生成，请勿手改
-   组成：KaTeX 数学排版 + 扩展元素样式 + 剧透块
+   组成：KaTeX 数学排版 + 扩展元素样式 + 剧透块 + 卡片
    字体：./fonts/ 本地自托管，无任何 CDN
    ═══════════════════════════════════════════════════ */
 
@@ -1634,4 +1634,72 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
 .load-badge[title*="预渲染"] .load-dot{
   animation:none;
   opacity:.9;
+}
+
+
+/* ─────────── 4. 卡片（来自 p/docs-card.js） ─────────── */
+.card {
+  display: block;
+  position: relative;
+  padding: 18px 22px 18px 26px;
+  background: var(--panel, #13181B);
+  border: 1px solid var(--line, #232C31);
+  border-radius: 8px;
+  color: var(--ink, #E7E9E6);
+  text-decoration: none;
+  overflow: hidden;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  background: #D97757;
+  opacity: 0;
+  transform: scaleY(.4);
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.card:hover {
+  background: var(--raised, #191F23);
+  border-color: rgba(217, 119, 87, .36);
+  transform: translateY(-2px);
+}
+
+.card:hover::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+.card:focus-visible {
+  outline: 2px solid #D97757;
+  outline-offset: 3px;
+  border-color: rgba(217, 119, 87, .36);
+}
+
+.card-title {
+  display: block;
+  font-size: 1.05em;
+  font-weight: 600;
+  letter-spacing: -.005em;
+}
+
+.card-date {
+  display: block;
+  margin-top: 4px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: .78em;
+  color: var(--dim, #7E8A90);
+}
+
+.md a.card,
+.md a.card:hover,
+.md a.card:focus-visible {
+  color: var(--ink, #E7E9E6);
+  text-decoration: none;
+  border-bottom: 0;
 }
