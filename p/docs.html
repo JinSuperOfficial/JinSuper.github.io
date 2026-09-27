@@ -1971,10 +1971,36 @@ var collapsedGroups = {};
 var rawCache = {};
 var rawInflight = {};
 
-/** 判断拿回来的是不是「平台渲染过的整页 HTML」 */
+/**
+ * 判断拿回来的是不是「平台渲染过的整页 HTML」
+ */
 function looksLikePlatformHtml(text){
   var s = String(text || '').slice(0, 600).toLowerCase();
   return s.indexOf('<!doctype') >= 0 || s.indexOf('<html') >= 0;
+}
+
+/**
+ * 判断拿回来的是不是**源码文件**，而不是文章内容。
+ * ---------------------------------------------------
+ * 典型翻车场景：纯静态托管（GitHub Pages 这类）不会执行 .php，
+ * 而是把它当普通文本文件原样返回。于是 raw.php 的请求「成功」了，
+ * 拿到的却是 1000 多字的 PHP 源码。
+ *
+ * 更要命的是这段源码进了 Markdown 渲染器后，<?php 会被浏览器
+ * 当成「处理指令/注释」，整篇正文变成空白——看起来就是「内容没了」。
+ * 所以这里必须把它认出来，然后走降级路径。
+ */
+function looksLikeSourceCode(text){
+  var s = String(text || '');
+  if (!s) return false;
+  var head = s.slice(0, 3000);
+  if (/^\s*<\?php\b/i.test(head)) return true;
+  if (/^\s*<\?=/.test(head)) return true;
+  if (/^\s*#!\/.*\b(python|node|ruby|perl|bash|sh)\b/.test(head)) return true;
+  /* 没有尖括号包裹的纯后端代码特征（避免误伤正常文章，只在有函数迹象时才认） */
+  if (/\bfile_get_contents\s*\(/.test(head) && /\$_(GET|POST|REQUEST)\b/.test(head)) return true;
+  if (/\bheader\s*\(\s*['"]Content-Type/i.test(head) && /<\?php/i.test(head)) return true;
+  return false;
 }
 
 /** 从平台渲染的整页 HTML 里拆出正文 */
@@ -2000,11 +2026,31 @@ function encodePath(p){
   }).join('/');
 }
 
+/**
+ * 取文本 + content-type。
+ * content-type 是判断「服务器到底给了什么」最可靠的依据：
+ *   text/plain / text/markdown → 大概率是真原文
+ *   text/html                  → 平台渲染过的页面，得拆正文
+ */
 function fetchText(url){
   return fetch(url, { cache: 'no-store' }).then(function(r){
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    return r.text();
+    return r.text().then(function(text){
+      return { text: text, type: (r.headers.get('content-type') || '').toLowerCase() };
+    });
   });
+}
+
+/**
+ * 给拿到的东西分类。
+ * @returns {'raw'|'platform-html'|null|'source-code'} raw=真原文，可直接交给渲染器
+ */
+function classifyContent(res){
+  var text = String(res && res.text != null ? res.text : '');
+  if (!text.trim()) return null;
+  if (looksLikeSourceCode(text)) return 'source-code';
+  if (looksLikePlatformHtml(text) || /text\/html/.test((res && res.type) || '')) return 'platform-html';
+  return 'raw';
 }
 
 /** 读文本：raw.php 优先，退回平台渲染版 */
@@ -2027,22 +2073,25 @@ function loadText(doc, cb){
 
   var encoded = encodePath(doc.root);
 
-  /* ① 先要原文。只有原文才保得住 LaTeX 公式和代码围栏 */
+  /* ① 先要原文。只有真原文才保得住 LaTeX 公式和代码围栏。
+        但静态托管会让这个请求「成功却返回 PHP 源码」，所以必须分类。 */
   fetchText('./raw.php?f=' + encoded)
-    .then(function(text){
-      if (looksLikePlatformHtml(text)) throw new Error('raw.php 返回的不是原文');
-      if (!text.trim()) throw new Error('raw.php 返回空内容');
-      done(null, text, false);
+    .then(function(res){
+      if (classifyContent(res) !== 'raw') throw new Error('raw.php 没给出原文');
+      done(null, res.text, false);
     })
     .catch(function(e1){
-      /* ② 退回直接取文件。平台会把 md 渲染成 HTML —— 这时正文已经是 HTML 了，
-            不能再交给 Markdown 渲染器处理一遍，直接当成品用。 */
+      /* ② 退回直接取文件。
+            热铁盒会把 md 渲染成 HTML → 拆出正文当成品用（不能再渲染一遍）
+            静态托管直接给 .md 原文 → 交给渲染器 */
       fetchText(encoded)
-        .then(function(text){
-          var wasHtml = looksLikePlatformHtml(text);
-          var body = stripPlatformWrapper(text);
+        .then(function(res){
+          var kind = classifyContent(res);
+          if (kind === 'source-code') throw new Error('取到的还是源码/脚本，不是文章');
+          var fromPlatform = (kind === 'platform-html');
+          var body = fromPlatform ? stripPlatformWrapper(res.text) : res.text;
           if (!body || !body.trim()) throw new Error('文件是空的');
-          done(null, body, wasHtml);
+          done(null, body, fromPlatform);
         })
         .catch(function(e2){
           done(new Error('读不到 ' + doc.root + '（' + (e2.message || e1.message) + '）'));
