@@ -415,17 +415,74 @@ cond(no)->op
 这是一个提示容器。
 :::
 
-### 6.5 选项卡（未启用）
+### 6.5 选项卡 tabs
 
-`::: tabs` + `@tab` **没有实现**，会原样显示：
+由 `@mdit/plugin-tab` 提供。容器写 `::: tabs`，每个页签用 `@tab 标题` 起头：
 
 ::: tabs
 
 @tab 标签 1
-内容 1
+第一个页签的内容。
 
 @tab 标签 2
-内容 2
+第二个页签的内容。
+
+:::
+
+**默认选中第一个**。想默认展开别的页签，把那个写成 `@tab:active`：
+
+::: tabs
+
+@tab 第一个
+默认不选它。
+
+@tab:active 第二个
+这个才是默认展开的。
+
+:::
+
+标题支持行内 Markdown，代码块、公式、列表也都能放进页签里：
+
+::: tabs
+
+@tab 用 `npm` 安装
+```bash
+npm i @mdit/plugin-tab
+```
+
+@tab 手动下载
+直接引 `dist/cdn.umd.js`，它自带依赖，不依赖 CDN。
+
+:::
+
+给页签和容器起 `#id` 可以做**跨容器联动**（点一个，同 id 的另一个跟着切）：
+
+::: tabs #demo-group
+
+@tab 甲 #tab-a
+联动组里的 A。
+
+@tab 乙 #tab-b
+联动组里的 B。
+
+:::
+
+::: tabs #demo-group
+
+@tab 甲 #tab-a
+这是第二个容器，跟着一起切。
+
+@tab 乙 #tab-b
+同上。
+
+:::
+
+只有一个页签时，标签行会自动隐藏（写了也没意义）：
+
+::: tabs
+
+@tab 唯一
+孤零零一个页签。
 
 :::
 
@@ -588,13 +645,15 @@ const outside = true;
 | 显示行号 | 围栏语言后加 `:line-numbers` |
 | 行号 + 高亮 | 围栏语言后加 `:line-numbers {2}` |
 | 代码组 | `::: code-group`，面板用围栏 + `[标签]` |
+| 选项卡 | `::: tabs` + `@tab 标题`（`@mdit/plugin-tab`）；`@tab:active 标题` 指定默认展开 |
+| 选项卡联动 | `@tab 标题 #id` 写在多个容器里，点一个同 id 的一起切 |
 | 卡片 | `<card link="…" date="…">标题</card>` |
 | 图片尺寸 | `![alt](url =100x100)` |
 | 图片主题 | `![alt](url#dark)` / `#light` |
 | 其余 | 表格、任务列表、脚注、定义列表、上下标、`==高亮==`、缩写、插入删除、Emoji、懒加载 |
 
 **未支持**（写了会原样显示，不会报错）：Mermaid、PlantUML、ECharts、Flowchart、
-`::: tabs`、`::: layout`、`@include`、`@snippet`、`@embed`、`->对齐<-`。
+`::: layout`、`@include`、`@snippet`、`@embed`、`->对齐<-`。
 
 ---
 

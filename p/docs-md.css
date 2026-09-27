@@ -1640,6 +1640,78 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
 .md .code-group[data-single="true"] .cg-tabs{ display:none }
 
 /* ═══════════════════════════════════════════════════
+   标签页 ::: tabs / @tab（@mdit/plugin-tab）
+   ---------------------------------------------------
+   渲染器输出：
+     .tabs-tabs-wrapper[data-single]
+       .tabs-tabs-header > button.tabs-tab-button(.active)
+       .tabs-tabs-container > .tabs-tab-content(.active)
+   类名沿用插件的默认约定，方便它对外的客户端脚本也能用。
+
+   注意：插件自带的 tab.css 是一套写死的浅色（#f8fafc / #64748b / #2563eb），
+   在暗色主题下对比度直接不合格，所以这里不用它的样式表，
+   全部走本站在用的主题变量（--line / --ink / --dim / --accent）。
+   ═══════════════════════════════════════════════════ */
+.md .tabs-tabs-wrapper{
+  margin:1.2em 0;
+  border:1px solid var(--line);
+  border-radius:7px;
+  overflow:hidden;
+  background:color-mix(in srgb,var(--ink) 2%,transparent);
+}
+.md .tabs-tabs-header{
+  display:flex;
+  flex-wrap:wrap;
+  gap:2px;
+  padding:6px 8px 0;
+  border-bottom:1px solid var(--line);
+  background:color-mix(in srgb,var(--ink) 4%,transparent);
+}
+.md .tabs-tab-button{
+  padding:6px 12px;
+  border:0;
+  border-bottom:2px solid transparent;
+  border-radius:4px 4px 0 0;
+  background:transparent;
+  color:var(--dim);
+  font-family:inherit;
+  font-size:13px;
+  font-weight:500;
+  line-height:1.5;
+  white-space:nowrap;
+  cursor:pointer;
+  transition:color .14s var(--ease),border-color .14s var(--ease),background .14s var(--ease);
+}
+.md .tabs-tab-button code{
+  font-size:.92em;
+  padding:1px 4px;
+  border-radius:3px;
+  background:color-mix(in srgb,var(--ink) 8%,transparent);
+}
+.md .tabs-tab-button:hover{
+  color:var(--ink);
+  background:color-mix(in srgb,var(--ink) 6%,transparent);
+}
+.md .tabs-tab-button:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:-2px;
+}
+.md .tabs-tab-button.active{
+  color:var(--accent);
+  border-bottom-color:var(--accent);
+}
+.md .tabs-tabs-container{ padding:14px 16px }
+/* 只靠 .active 控制显隐（不用 hidden）：
+   这样官方 register-tab 客户端脚本切 .active 时也是对的。
+   渲染期一定会有一个 .active，所以没有 JS 也看得见内容。 */
+.md .tabs-tab-content{ display:none }
+.md .tabs-tab-content.active{ display:block }
+.md .tabs-tab-content > :first-child{ margin-top:0 }
+.md .tabs-tab-content > :last-child{ margin-bottom:0 }
+/* 只有一个标签页时标签行没意义 */
+.md .tabs-tabs-wrapper[data-single="true"] .tabs-tabs-header{ display:none }
+
+/* ═══════════════════════════════════════════════════
    代码块复制按钮
    ---------------------------------------------------
    由客户端 addCodeCopyButtons() 插进每个 <pre>。

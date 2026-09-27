@@ -22,25 +22,25 @@ __defs[0] = function(module, exports, require){
 'use strict';
 var M = __req(1);
 var katex = __req(23);
-var hljs = __req(26);
+var hljs = __req(27);
 
 /* 只注册常用的语言。要加语言就在这里加一行，然后重新构建。
-   （拿不准就用 __req(25)，代价是 +800KB） */
-__req(27)(hljs);
-__req(32)(hljs);
-__req(40)(hljs);
-__req(60)(hljs);
-__req(41)(hljs);
-__req(59)(hljs);
+   （拿不准就用 __req(26)，代价是 +800KB） */
 __req(28)(hljs);
-__req(56)(hljs);
-__req(51)(hljs);
-__req(48)(hljs);
-__req(57)(hljs);
 __req(33)(hljs);
+__req(41)(hljs);
+__req(61)(hljs);
+__req(42)(hljs);
+__req(60)(hljs);
+__req(29)(hljs);
+__req(57)(hljs);
+__req(52)(hljs);
+__req(49)(hljs);
+__req(58)(hljs);
 __req(34)(hljs);
-__req(38)(hljs);
-__req(50)(hljs);
+__req(35)(hljs);
+__req(39)(hljs);
+__req(51)(hljs);
 
 M.setEngines({ katex: katex, hljs: hljs });
 
@@ -118,6 +118,18 @@ var texmath = __req(22);
 var DocsCard = null;
 try { DocsCard = __req(24); }
 catch (e) { DocsCard = null; }
+
+/**
+ * @mdit/plugin-tab：`::: tabs` + `@tab 标题` 标签页。
+ * 打包时被复制成 lib/vendor/mdit-tab.cjs（原包是 ESM，见 build.mjs 里的说明）。
+ * 拿不到就不注册，`::: tabs` 会退化成普通段落，不影响其它语法。
+ */
+var TabPlugin = null;
+try { TabPlugin = __req(25); }
+catch (e) { TabPlugin = null; }
+
+/** 标签页容器的名字，决定了 CSS 类名前缀（tabs-tabs-wrapper 之类） */
+var TAB_NAME = 'tabs';
 
 /* ═══════════════════════════════════════════════════
    重量级引擎走「注入」而不是「硬 import」
@@ -703,6 +715,129 @@ function codeGroupAdapter(md){
   });
 }
 
+/**
+ * @mdit/plugin-tab 默认「不选中任何标签页」（active = -1）：
+ * 只有写了 `@tab:active` 才会有面板可见，否则所有 `.tabs-tab-content`
+ * 都是 display:none —— 标签页里一片空白，看起来像语法坏了。
+ *
+ * 所以这里补一条规则：容器里没人标 active 时，默认选中第一个。
+ * 作者显式写了 `@tab:active` 就尊重作者的选择，不动。
+ *
+ * 为什么不在 openRenderer 里改：`info.data` 和 `tab_open` token 的 meta
+ * 是两份数据，渲染器改前者影响不到后者（实测过），必须回到 token 层。
+ */
+function defaultActiveTab(md, name) {
+  md.core.ruler.after(name + '_tabs_core', 'docs-tabs-default-active', (state) => {
+    const tokens = state.tokens;
+    let seq = -1;      /* 当前容器内第几个 tab，-1 表示不在容器里 */
+    let active = -1;
+
+    for (const token of tokens) {
+      if (token.type === name + '_tabs_open') {
+        const info = token.meta && token.meta.tabsData;
+        if (info && info.active < 0) {
+          info.active = 0;
+          if (info.data && info.data[0]) info.data[0].isActive = true;
+          active = 0;
+        } else {
+          active = info ? info.active : -1;
+        }
+        seq = 0;
+        continue;
+      }
+      if (token.type === name + '_tabs_close') { seq = -1; active = -1; continue; }
+      if (token.type === name + '_tab_open' && seq >= 0) {
+        token.meta = token.meta || {};
+        token.meta.active = (seq === active);
+        seq++;
+      }
+    }
+  });
+}
+
+/**
+ * 标签页的 HTML 输出。
+ * ---------------------------------------------------
+ * 类名和 data-* 完全沿用 @mdit/plugin-tab 的默认约定
+ * （tabs-tabs-wrapper / tabs-tab-button / data-tab / data-index / data-id /
+ *  class="active" / data-active），所以官方那个 register-tab 客户端脚本
+ * 拿过来仍然能直接跑。
+ *
+ * 在它基础上多做了三件事：
+ *   1. 补 ARIA（role=tablist/tab/tabpanel、aria-selected、tabindex），
+ *      插件默认输出是没有的，读屏用户分不出这是标签页。
+ *   2. 只有一个标签时标 data-single，CSS 把没意义的标签行藏掉。
+ *   3. 渲染期就定好谁是 active，所以不依赖 JS 也看得见内容
+ *      （作者没写 @tab:active 时由 defaultActiveTab 兜底选第一个）。
+ */
+function tabRenderers(md, name) {
+  /* 标签标题支持行内 Markdown（`code`、**粗体**…）。
+     插件给的是原文，官方默认渲染器也是拿闭包里的 md 现场 renderInline 的，
+     这里保持一致；万一炸了就退回纯文本，不能让一个标题弄坏整页。 */
+  function title(text) {
+    const raw = String(text == null ? '' : text);
+    try {
+      return md.renderInline(raw);
+    } catch (e) {
+      return esc(raw);
+    }
+  }
+
+  return {
+    openRenderer(info) {
+      const ns = name + '-';
+      const active = info.active < 0 ? 0 : info.active;
+      const idAttr = info.id ? ' data-id="' + esc(info.id) + '"' : '';
+      const single = info.data.length === 1 ? ' data-single="true"' : '';
+
+      const buttons = info.data
+        .map((d) => {
+          const on = d.index === active;
+          return (
+            '<button type="button" class="' + ns + 'tab-button' + (on ? ' active' : '') + '"' +
+            ' role="tab"' +
+            ' aria-selected="' + (on ? 'true' : 'false') + '"' +
+            ' tabindex="' + (on ? '0' : '-1') + '"' +
+            ' data-tab="' + d.index + '"' +
+            (d.id ? ' data-id="' + esc(d.id) + '"' : '') +
+            (on ? ' data-active' : '') +
+            '>' + title(d.title) + '</button>'
+          );
+        })
+        .join('\n    ');
+
+      return (
+        '<div class="' + ns + 'tabs-wrapper"' + idAttr + single + '>\n' +
+        '  <div class="' + ns + 'tabs-header" role="tablist">\n' +
+        '    ' + buttons + '\n' +
+        '  </div>\n' +
+        '  <div class="' + ns + 'tabs-container">\n'
+      );
+    },
+
+    closeRenderer() {
+      return '  </div>\n</div>\n';
+    },
+
+    tabOpenRenderer(data) {
+      const ns = name + '-';
+      const on = !!data.isActive;
+      return (
+        '<div class="' + ns + 'tab-content' + (on ? ' active' : '') + '"' +
+        ' role="tabpanel"' +
+        ' data-index="' + data.index + '"' +
+        (data.id ? ' data-id="' + esc(data.id) + '"' : '') +
+        (on ? ' data-active=""' : '') +
+        '>\n'
+      );
+    },
+
+    tabCloseRenderer() {
+      return '</div>\n';
+    },
+  };
+}
+
 /** 行内扩展适配 */
 function inlineAdapter(md) {
   md.core.ruler.after('inline', 'docs-inline-extra', (state) => {
@@ -848,6 +983,13 @@ function createRenderer(opts) {
   /* 代码组 ::: code-group（内部会 md.use(container)） */
   codeGroupAdapter(md);
 
+  /* 标签页 ::: tabs / @tab —— @mdit/plugin-tab 官方插件。
+     注册顺序无所谓：人家用的是自己的 block 规则，不走 markdown-it-container。 */
+  if (TabPlugin && typeof TabPlugin.tab === 'function') {
+    md.use(TabPlugin.tab, Object.assign({ name: TAB_NAME }, tabRenderers(md, TAB_NAME)));
+    defaultActiveTab(md, TAB_NAME);
+  }
+
   alertAdapter(md);
   tocAdapter(md);
   spoilerBlockAdapter(md);
@@ -894,7 +1036,7 @@ function ensureEngines() {
   enginesReady = true;
   try {
     var k = __req(23);
-    var h = __req(25);
+    var h = __req(26);
     setEngines({ katex: k, hljs: h });
   } catch (e) {
     /* 浏览器环境：没有就没有，退化为无公式、无高亮 */
@@ -31739,50 +31881,72 @@ __defs[24] = function(module, exports, require){
 
 };
 __defs[25] = function(module, exports, require){
-var hljs = __req(26);
+/* 自动生成，请勿手改。
+ * 来源：@mdit/plugin-tab@2.0.2 dist/cdn.umd.js（自包含 UMD，已内联 @mdit/helper）
+ * 由 build/build.mjs 在每次构建时从 node_modules 复制并改名为 .cjs。
+ * 改名原因：原包是 "type":"module"，.js 会被 Node 与打包器当成 ESM；
+ * 换成 .cjs 后 UMD 走 CommonJS 分支，构建期（Node）和浏览器端（自写打包器）都能 require。
+ */
+(function(e,t){typeof exports==`object`&&typeof module<`u`?t(exports):typeof define==`function`&&define.amd?define([`exports`],t):(e=typeof globalThis<`u`?globalThis:e||self,t(e.mdItPluginTab={}))})(this,function(e){Object.defineProperty(e,Symbol.toStringTag,{value:`Module`}),String.raw`\$&`;let t=e=>e.replaceAll(`&`,`&amp;`).replaceAll(`<`,`&lt;`).replaceAll(`>`,`&gt;`).replaceAll(`"`,`&quot;`).replaceAll(`'`,`&#39;`),n=`@tab`,r=`${n}:active`,i=r.length,a=Symbol(`tab:name`),o=Symbol(`tab:level`),s=(e,t,n)=>{if(e.src.charCodeAt(t)!==64)return!1;let a=1;for(;a<i&&r.charCodeAt(a)===e.src.charCodeAt(t+a);a++);let o=a===i;if(!o&&a!==4)return!1;let s=t+a,c=e.skipSpaces(s);return c>s&&c<n&&{isActive:o,pos:c}},c=e=>(t,r,i,c)=>{if(t.env[a]!==e||t.level!==t.env[o])return!1;let l=t.bMarks[r]+t.tShift[r],u=t.eMarks[r],d=s(t,l,u);if(d===!1)return!1;if(c)return!0;let f=t.sCount[r],p=r+1,m=!1;for(;p<i;p++){let e=t.bMarks[p]+t.tShift[p];if(t.sCount[p]===f&&t.src[e]===`@`&&s(t,e,t.eMarks[p])){m=!0;break}}let h=t.parentType,g=t.lineMax,_=t.blkIndent;t.parentType=`tab`,t.lineMax=p-+!!m,t.blkIndent=f;let v=t.push(`${e}_tab_open`,``,1),y=d.pos,b=t.skipSpacesBack(u,y),x=b,S;for(;x>y;){if(t.src.charCodeAt(x)===35){for(S=x-1;t.src.charCodeAt(S)===92;)S--;if((x-S)%2==1)break}x--}let C,w=``;x===y?C=t.src.slice(y,b):(w=t.src.slice(t.skipSpaces(x+1),b),C=t.src.slice(y,t.skipSpacesBack(x,y))),v.block=!0,v.markup=n,v.info=C,v.meta={active:d.isActive},w&&(v.meta.id=w),v.map=[r,p-+!!m],t.md.block.tokenize(t,r+1,p+ +!m);let T=t.push(`${e}_tab_close`,``,-1);return T.block=!0,T.markup=``,t.parentType=h,t.lineMax=g,t.blkIndent=_,t.line=p+ +!m,!0},l=e=>(t,n,r,i)=>{let s=t.bMarks[n]+t.tShift[n];if(t.src.charCodeAt(s)!==58)return!1;let c=t.eMarks[n],l=s+1;for(;l<=c&&t.src.charCodeAt(l)===58;)l++;let u=l-s;if(u<3)return!1;l=t.skipSpaces(l);for(let n=0;n<e.length;n++){if(t.src.charCodeAt(l)!==e.charCodeAt(n))return!1;l++}let d=0,f;for(;l!==c;){if(f=t.src.charCodeAt(l++),f===35){d=l;break}if(!t.md.utils.isSpace(f))return!1}if(i)return!0;let p=t.sCount[n],m=n+1,h=!1;for(;m<r;m++){let e=t.bMarks[m]+t.tShift[m],n=t.eMarks[m];if(e<n&&t.sCount[m]<p)break;if(t.sCount[m]===p&&t.src.charCodeAt(e)===58){for(l=e+1;l<=n&&t.src.charCodeAt(l)===58;l++);if(l-e>=u&&(l=t.skipSpaces(l),l>=n)){h=!0;break}}}let g=t.parentType,_=t.lineMax,v=t.blkIndent,y=t.env[a],b=t.env[o];t.parentType=`${e}_tabs`,t.lineMax=m-+!!h,t.blkIndent=p;let x=`:`.repeat(u),S=``;if(d){d=t.skipSpaces(d);let e=t.skipSpacesBack(c,d);d<e&&(S=t.src.slice(d,e))}let C=t.push(`${e}_tabs_open`,``,1);C.markup=x,C.block=!0,C.info=e,C.meta=S?{id:S}:{},C.map=[n,m-+!!h],t.env[a]=e,t.env[o]=t.level,t.md.block.tokenize(t,n+1,m-+!!h),t.env[a]=y,t.env[o]=b;let w=t.push(`${e}_tabs_close`,``,-1);return w.markup=x,w.block=!0,t.parentType=g,t.lineMax=_,t.blkIndent=v,t.line=m+ +!!h,!0},u=e=>t=>{let n=t.tokens;for(let t=0;t<n.length;t++){let r=n[t];if(r.type!==`${e}_tabs_open`)continue;let i=[],a=-1,o=!1,s=0,{level:c}=r;for(let r=t+1;r<n.length;r++){let t=n[r],l=t.meta,u=t.type;if(u===`${e}_tabs_open`){s++;continue}if(u===`${e}_tabs_close`){if(t.level===c)break;s--;continue}if(t.level>c+1||s>0){o||(t.type=`${e}_tabs_empty`,t.hidden=!0);continue}if(u===`${e}_tab_open`){o=!0,l.index=i.length,l.active&&(a===-1?a=i.length:l.active=!1),i.push({title:t.info,index:i.length,id:l.id,isActive:l.active});continue}u!==`${e}_tab_close`&&(t.type=`${e}_tabs_empty`,t.hidden=!0)}let l=r.meta;l.tabsData={active:a,data:i,id:l.id}}},d=(e,t)=>{let n=e[t],r=n.meta;return{title:n.info,index:r.index,id:r.id,isActive:r.active}};e.tab=(e,n)=>{let{name:r=`tabs`,openRenderer:i=n=>{let{active:i,data:a,id:o}=n,s=a.map(({title:n,id:a},o)=>`<button type="button" class="${r}-tab-button${i===o?` active`:``}" data-tab="${o}"${a?` data-id="${t(a)}"`:``}${i===o?` data-active`:``}>${e.renderInline(n)}</button>`);return`\
+<div class="${r}-tabs-wrapper"${o?` data-id="${e.utils.escapeHtml(o)}"`:``}>
+  <div class="${r}-tabs-header">
+    ${s.join(`
+    `)}
+  </div>
+  <div class="${r}-tabs-container">
+`},closeRenderer:a=()=>`  </div>
+</div>
+`,tabOpenRenderer:o=t=>{let{index:n,id:i,isActive:a}=t;return`\
+<div class="${r}-tab-content${a?` active`:``}" data-index="${n}"${i?` data-id="${e.utils.escapeHtml(i)}"`:``}${a?` data-active=""`:``}>
+`},tabCloseRenderer:s=()=>`</div>
+`}=n??{},f=u(r);e.block.ruler.before(`fence`,`${r}_tabs`,l(r),{alt:[`paragraph`,`reference`,`blockquote`,`list`]}),e.block.ruler.before(`paragraph`,`${r}_tab`,c(r),{alt:[`paragraph`,`reference`,`blockquote`,`list`]}),e.core.ruler.push(`${r}_tabs_core`,f),e.renderer.rules[`${r}_tabs_open`]=(e,t,n,r,a)=>{let o=e[t].meta,s=o.tabsData??{active:-1,data:[],id:o.id};return i(s,e,t,n,r,a)},e.renderer.rules[`${r}_tabs_close`]=a,e.renderer.rules[`${r}_tab_open`]=(e,t,n,r,i)=>{let a=d(e,t);return o(a,e,t,n,r,i)},e.renderer.rules[`${r}_tab_close`]=s}});
+//# sourceMappingURL=cdn.umd.js.map
+};
+__defs[26] = function(module, exports, require){
+var hljs = __req(27);
 
-hljs.registerLanguage('xml', __req(27));
-hljs.registerLanguage('bash', __req(28));
-hljs.registerLanguage('c', __req(29));
-hljs.registerLanguage('cpp', __req(30));
-hljs.registerLanguage('csharp', __req(31));
-hljs.registerLanguage('css', __req(32));
-hljs.registerLanguage('markdown', __req(33));
-hljs.registerLanguage('diff', __req(34));
-hljs.registerLanguage('ruby', __req(35));
-hljs.registerLanguage('go', __req(36));
-hljs.registerLanguage('graphql', __req(37));
-hljs.registerLanguage('ini', __req(38));
-hljs.registerLanguage('java', __req(39));
-hljs.registerLanguage('javascript', __req(40));
-hljs.registerLanguage('json', __req(41));
-hljs.registerLanguage('kotlin', __req(42));
-hljs.registerLanguage('less', __req(43));
-hljs.registerLanguage('lua', __req(44));
-hljs.registerLanguage('makefile', __req(45));
-hljs.registerLanguage('perl', __req(46));
-hljs.registerLanguage('objectivec', __req(47));
-hljs.registerLanguage('php', __req(48));
-hljs.registerLanguage('php-template', __req(49));
-hljs.registerLanguage('plaintext', __req(50));
-hljs.registerLanguage('python', __req(51));
-hljs.registerLanguage('python-repl', __req(52));
-hljs.registerLanguage('r', __req(53));
-hljs.registerLanguage('rust', __req(54));
-hljs.registerLanguage('scss', __req(55));
-hljs.registerLanguage('shell', __req(56));
-hljs.registerLanguage('sql', __req(57));
-hljs.registerLanguage('swift', __req(58));
-hljs.registerLanguage('yaml', __req(59));
-hljs.registerLanguage('typescript', __req(60));
-hljs.registerLanguage('vbnet', __req(61));
-hljs.registerLanguage('wasm', __req(62));
+hljs.registerLanguage('xml', __req(28));
+hljs.registerLanguage('bash', __req(29));
+hljs.registerLanguage('c', __req(30));
+hljs.registerLanguage('cpp', __req(31));
+hljs.registerLanguage('csharp', __req(32));
+hljs.registerLanguage('css', __req(33));
+hljs.registerLanguage('markdown', __req(34));
+hljs.registerLanguage('diff', __req(35));
+hljs.registerLanguage('ruby', __req(36));
+hljs.registerLanguage('go', __req(37));
+hljs.registerLanguage('graphql', __req(38));
+hljs.registerLanguage('ini', __req(39));
+hljs.registerLanguage('java', __req(40));
+hljs.registerLanguage('javascript', __req(41));
+hljs.registerLanguage('json', __req(42));
+hljs.registerLanguage('kotlin', __req(43));
+hljs.registerLanguage('less', __req(44));
+hljs.registerLanguage('lua', __req(45));
+hljs.registerLanguage('makefile', __req(46));
+hljs.registerLanguage('perl', __req(47));
+hljs.registerLanguage('objectivec', __req(48));
+hljs.registerLanguage('php', __req(49));
+hljs.registerLanguage('php-template', __req(50));
+hljs.registerLanguage('plaintext', __req(51));
+hljs.registerLanguage('python', __req(52));
+hljs.registerLanguage('python-repl', __req(53));
+hljs.registerLanguage('r', __req(54));
+hljs.registerLanguage('rust', __req(55));
+hljs.registerLanguage('scss', __req(56));
+hljs.registerLanguage('shell', __req(57));
+hljs.registerLanguage('sql', __req(58));
+hljs.registerLanguage('swift', __req(59));
+hljs.registerLanguage('yaml', __req(60));
+hljs.registerLanguage('typescript', __req(61));
+hljs.registerLanguage('vbnet', __req(62));
+hljs.registerLanguage('wasm', __req(63));
 
 hljs.HighlightJS = hljs
 hljs.default = hljs
 module.exports = hljs;
 };
-__defs[26] = function(module, exports, require){
+__defs[27] = function(module, exports, require){
 /* eslint-disable no-multi-assign */
 
 function deepFreeze(obj) {
@@ -34388,7 +34552,7 @@ highlight.HighlightJS = highlight;
 highlight.default = highlight;
 
 };
-__defs[27] = function(module, exports, require){
+__defs[28] = function(module, exports, require){
 /*
 Language: HTML, XML
 Website: https://www.w3.org/XML/
@@ -34625,7 +34789,7 @@ function xml(hljs) {
 module.exports = xml;
 
 };
-__defs[28] = function(module, exports, require){
+__defs[29] = function(module, exports, require){
 /*
 Language: Bash
 Author: vah <vahtenberg@gmail.com>
@@ -35037,7 +35201,7 @@ function bash(hljs) {
 module.exports = bash;
 
 };
-__defs[29] = function(module, exports, require){
+__defs[30] = function(module, exports, require){
 /*
 Language: C
 Category: common, system
@@ -35451,7 +35615,7 @@ function c(hljs) {
 module.exports = c;
 
 };
-__defs[30] = function(module, exports, require){
+__defs[31] = function(module, exports, require){
 /*
 Language: C++
 Category: common, system
@@ -36091,7 +36255,7 @@ function cpp(hljs) {
 module.exports = cpp;
 
 };
-__defs[31] = function(module, exports, require){
+__defs[32] = function(module, exports, require){
 /*
 Language: C#
 Author: Jason Diamond <jason@diamond.name>
@@ -36512,7 +36676,7 @@ function csharp(hljs) {
 module.exports = csharp;
 
 };
-__defs[32] = function(module, exports, require){
+__defs[33] = function(module, exports, require){
 const MODES = (hljs) => {
   return {
     IMPORTANT: {
@@ -37475,7 +37639,7 @@ function css(hljs) {
 module.exports = css;
 
 };
-__defs[33] = function(module, exports, require){
+__defs[34] = function(module, exports, require){
 /*
 Language: Markdown
 Requires: xml.js
@@ -37728,7 +37892,7 @@ function markdown(hljs) {
 module.exports = markdown;
 
 };
-__defs[34] = function(module, exports, require){
+__defs[35] = function(module, exports, require){
 /*
 Language: Diff
 Description: Unified and context diff
@@ -37796,7 +37960,7 @@ function diff(hljs) {
 module.exports = diff;
 
 };
-__defs[35] = function(module, exports, require){
+__defs[36] = function(module, exports, require){
 /*
 Language: Ruby
 Description: Ruby is a dynamic, open source programming language with a focus on simplicity and productivity.
@@ -38248,7 +38412,7 @@ function ruby(hljs) {
 module.exports = ruby;
 
 };
-__defs[36] = function(module, exports, require){
+__defs[37] = function(module, exports, require){
 /*
 Language: Go
 Author: Stephan Kountso aka StepLg <steplg@gmail.com>
@@ -38411,7 +38575,7 @@ function go(hljs) {
 module.exports = go;
 
 };
-__defs[37] = function(module, exports, require){
+__defs[38] = function(module, exports, require){
 /*
  Language: GraphQL
  Author: John Foster (GH jf990), and others
@@ -38492,7 +38656,7 @@ function graphql(hljs) {
 module.exports = graphql;
 
 };
-__defs[38] = function(module, exports, require){
+__defs[39] = function(module, exports, require){
 /*
 Language: TOML, also INI
 Description: TOML aims to be a minimal configuration file format that's easy to read due to obvious semantics.
@@ -38616,7 +38780,7 @@ function ini(hljs) {
 module.exports = ini;
 
 };
-__defs[39] = function(module, exports, require){
+__defs[40] = function(module, exports, require){
 // https://docs.oracle.com/javase/specs/jls/se15/html/jls-3.html#jls-3.10
 var decimalDigits = '[0-9](_*[0-9])*';
 var frac = `\\.(${decimalDigits})`;
@@ -38933,7 +39097,7 @@ function java(hljs) {
 module.exports = java;
 
 };
-__defs[40] = function(module, exports, require){
+__defs[41] = function(module, exports, require){
 const IDENT_RE = '[A-Za-z$_][0-9A-Za-z$_]*';
 
 const KEYWORDS = [
@@ -39708,7 +39872,7 @@ function javascript(hljs) {
 module.exports = javascript;
 
 };
-__defs[41] = function(module, exports, require){
+__defs[42] = function(module, exports, require){
 const EXTENDED_NUMBER_RE = '([-+]?)(\\b0[xX][a-fA-F0-9]+|(\\b\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)|NaN|[-+]?Infinity'; // 0x..., 0..., decimal, float
 
 const EXTENDED_NUMBER_MODE = {
@@ -39774,7 +39938,7 @@ function json(hljs) {
 module.exports = json;
 
 };
-__defs[42] = function(module, exports, require){
+__defs[43] = function(module, exports, require){
 // https://docs.oracle.com/javase/specs/jls/se15/html/jls-3.html#jls-3.10
 var decimalDigits = '[0-9](_*[0-9])*';
 var frac = `\\.(${decimalDigits})`;
@@ -40065,7 +40229,7 @@ function kotlin(hljs) {
 module.exports = kotlin;
 
 };
-__defs[43] = function(module, exports, require){
+__defs[44] = function(module, exports, require){
 const MODES = (hljs) => {
   return {
     IMPORTANT: {
@@ -41129,7 +41293,7 @@ function less(hljs) {
 module.exports = less;
 
 };
-__defs[44] = function(module, exports, require){
+__defs[45] = function(module, exports, require){
 /*
 Language: Lua
 Description: Lua is a powerful, efficient, lightweight, embeddable scripting language.
@@ -41213,7 +41377,7 @@ function lua(hljs) {
 module.exports = lua;
 
 };
-__defs[45] = function(module, exports, require){
+__defs[46] = function(module, exports, require){
 /*
 Language: Makefile
 Author: Ivan Sagalaev <maniac@softwaremaniacs.org>
@@ -41305,7 +41469,7 @@ function makefile(hljs) {
 module.exports = makefile;
 
 };
-__defs[46] = function(module, exports, require){
+__defs[47] = function(module, exports, require){
 /*
 Language: Perl
 Author: Peter Leonov <gojpeg@yandex.ru>
@@ -41812,7 +41976,7 @@ function perl(hljs) {
 module.exports = perl;
 
 };
-__defs[47] = function(module, exports, require){
+__defs[48] = function(module, exports, require){
 /*
 Language: Objective-C
 Author: Valerii Hiora <valerii.hiora@gmail.com>
@@ -42068,7 +42232,7 @@ function objectivec(hljs) {
 module.exports = objectivec;
 
 };
-__defs[48] = function(module, exports, require){
+__defs[49] = function(module, exports, require){
 /*
 Language: PHP
 Author: Victor Karamzin <Victor.Karamzin@enterra-inc.com>
@@ -42706,7 +42870,7 @@ function php(hljs) {
 module.exports = php;
 
 };
-__defs[49] = function(module, exports, require){
+__defs[50] = function(module, exports, require){
 /*
 Language: PHP Template
 Requires: xml.js, php.js
@@ -42766,7 +42930,7 @@ function phpTemplate(hljs) {
 module.exports = phpTemplate;
 
 };
-__defs[50] = function(module, exports, require){
+__defs[51] = function(module, exports, require){
 /*
 Language: Plain text
 Author: Egor Rogov (e.rogov@postgrespro.ru)
@@ -42788,7 +42952,7 @@ function plaintext(hljs) {
 module.exports = plaintext;
 
 };
-__defs[51] = function(module, exports, require){
+__defs[52] = function(module, exports, require){
 /*
 Language: Python
 Description: Python is an interpreted, object-oriented, high-level programming language with dynamic semantics.
@@ -43232,7 +43396,7 @@ function python(hljs) {
 module.exports = python;
 
 };
-__defs[52] = function(module, exports, require){
+__defs[53] = function(module, exports, require){
 /*
 Language: Python REPL
 Requires: python.js
@@ -43267,7 +43431,7 @@ function pythonRepl(hljs) {
 module.exports = pythonRepl;
 
 };
-__defs[53] = function(module, exports, require){
+__defs[54] = function(module, exports, require){
 /*
 Language: R
 Description: R is a free software environment for statistical computing and graphics.
@@ -43527,7 +43691,7 @@ function r(hljs) {
 module.exports = r;
 
 };
-__defs[54] = function(module, exports, require){
+__defs[55] = function(module, exports, require){
 /*
 Language: Rust
 Author: Andrey Vlasovskikh <andrey.vlasovskikh@gmail.com>
@@ -43870,7 +44034,7 @@ function rust(hljs) {
 module.exports = rust;
 
 };
-__defs[55] = function(module, exports, require){
+__defs[56] = function(module, exports, require){
 const MODES = (hljs) => {
   return {
     IMPORTANT: {
@@ -44823,7 +44987,7 @@ function scss(hljs) {
 module.exports = scss;
 
 };
-__defs[56] = function(module, exports, require){
+__defs[57] = function(module, exports, require){
 /*
 Language: Shell Session
 Requires: bash.js
@@ -44859,7 +45023,7 @@ function shell(hljs) {
 module.exports = shell;
 
 };
-__defs[57] = function(module, exports, require){
+__defs[58] = function(module, exports, require){
 /*
  Language: SQL
  Website: https://en.wikipedia.org/wiki/SQL
@@ -45555,7 +45719,7 @@ function sql(hljs) {
 module.exports = sql;
 
 };
-__defs[58] = function(module, exports, require){
+__defs[59] = function(module, exports, require){
 /**
  * @param {string} value
  * @returns {RegExp}
@@ -46542,7 +46706,7 @@ function swift(hljs) {
 module.exports = swift;
 
 };
-__defs[59] = function(module, exports, require){
+__defs[60] = function(module, exports, require){
 /*
 Language: YAML
 Description: Yet Another Markdown Language
@@ -46758,7 +46922,7 @@ function yaml(hljs) {
 module.exports = yaml;
 
 };
-__defs[60] = function(module, exports, require){
+__defs[61] = function(module, exports, require){
 const IDENT_RE = '[A-Za-z$_][0-9A-Za-z$_]*';
 
 const KEYWORDS = [
@@ -47677,7 +47841,7 @@ function typescript(hljs) {
 module.exports = typescript;
 
 };
-__defs[61] = function(module, exports, require){
+__defs[62] = function(module, exports, require){
 /*
 Language: Visual Basic .NET
 Description: Visual Basic .NET (VB.NET) is a multi-paradigm, object-oriented programming language, implemented on the .NET Framework.
@@ -47837,7 +48001,7 @@ function vbnet(hljs) {
 module.exports = vbnet;
 
 };
-__defs[62] = function(module, exports, require){
+__defs[63] = function(module, exports, require){
 /*
 Language: WebAssembly
 Website: https://webassembly.org
