@@ -783,9 +783,18 @@ function tabRenderers(md, name) {
     }
   }
 
+  /* 空容器（写了 ::: tabs 却一个 @tab 都没有）会渲染成一个空的边框盒子，
+     看起来像坏了。用栈记住哪些 open 是空容器，对应的 close 一起吞掉，
+     保证标签成对、不会漏出 </div>。 */
+  const emptyStack = [];
+
   return {
     openRenderer(info) {
       const ns = name + '-';
+      const empty = !info.data || info.data.length === 0;
+      emptyStack.push(empty);
+      if (empty) return '';
+
       const active = info.active < 0 ? 0 : info.active;
       const idAttr = info.id ? ' data-id="' + esc(info.id) + '"' : '';
       const single = info.data.length === 1 ? ' data-single="true"' : '';
@@ -816,7 +825,8 @@ function tabRenderers(md, name) {
     },
 
     closeRenderer() {
-      return '  </div>\n</div>\n';
+      /* 空容器对应的闭合标签也要一起吞掉，否则 </div> 会多出来 */
+      return emptyStack.pop() ? '' : '  </div>\n</div>\n';
     },
 
     tabOpenRenderer(data) {
