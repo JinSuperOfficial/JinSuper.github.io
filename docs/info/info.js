@@ -60,17 +60,23 @@ const TREE = {
       ] }
     ] },
 
+    { name:'811/', dir:true, desc:'八年(11)班专区：作业、课程表与工具入口', children:[
+      { name:'index.html', desc:'811 工具箱：作业 / 课程表入口，页脚链回百宝箱与工具站' },
+      { name:'homework.html', desc:'今日份美味作业：读 data/homework.json 渲染每日清单，带完成进度与色调系统' },
+      { name:'classtable.html', desc:'课程表 · 811班：基础版 / 缩略版两套，可切完整课表与今日课程' },
+      { name:'data/', dir:true, desc:'作业数据', children:[
+        { name:'homework.json', desc:'作业数据：按科目键 + 特殊字段「笔记」' }
+      ] }
+    ] },
+
     { name:'Skills/', dir:true, desc:'工具站主目录：索引、清单、源码查看器', children:[
       { name:'index.html', desc:'目录页：读 skills.json 渲染列表，带搜索、面包屑、自定义右键菜单' },
-      { name:'skills.json', desc:'工具清单：9 条 items，按 canvas → demo → doc → tool 分组' },
+      { name:'skills.json', desc:'工具清单：11 条 items，按 canvas → demo → doc → tool 分组' },
       { name:'viewer.html', desc:'源码查看器：viewer.html?f=路径 高亮并查看任意页面源码' },
-      { name:'data/', dir:true, desc:'空目录（作业数据已迁往 tools/data）', children:[] },
+      { name:'data/', dir:true, desc:'空目录（作业数据已迁往 /811/data）', children:[] },
 
       { name:'standalone/', dir:true, desc:'独立小应用', children:[
         { name:'function.html', desc:'函数显示器：画函数 / 隐式 / 极坐标 / 参数方程，网格吸附、六套配色、JSON 导入导出' }
-      ] },
-      { name:'demo/', dir:true, desc:'演示类页面', children:[
-        { name:'classtable.html', desc:'课程表 · 811班' }
       ] },
       { name:'docs/', dir:true, desc:'文档类页面与说明', children:[
         { name:'docs.html', desc:'文档站：跳转页 → /p/docs.html' },
@@ -78,11 +84,10 @@ const TREE = {
         { name:'备注.txt', desc:'kind 内置值说明：canvas / color / demo / doc / game / tool 的图标与适用场景' }
       ] },
       { name:'tools/', dir:true, desc:'工具', children:[
-        { name:'homework.html', desc:'今日份美味作业：读 JSON 渲染每日清单，带完成进度与色调系统' },
+        { name:'homework-static.html', desc:'作业页静态版：历史版本，读同一份 /811/data/homework.json' },
         { name:'htmlview.html', desc:'HTML 在线运行：三栏编辑器，HTML / CSS / JS 分标签，实时预览与控制台' },
         { name:'speedtest.html', desc:'服务器性能测试：本机跑分 + 网络测速（延迟 / 抖动 / 下载 / 上传）' },
-        { name:'test_html_20260919_d04d4f.html', desc:'单摆计算器：周期 T 与摆长 l 任一互算' },
-        { name:'data/homework.json', desc:'作业数据：按科目键 + 特殊字段「笔记」' }
+        { name:'test_html_20260919_d04d4f.html', desc:'单摆计算器：周期 T 与摆长 l 任一互算' }
       ] },
       { name:'idea/', dir:true, desc:'创意 / 试验页（暂未列入清单）', children:[
         { name:'moont.html', desc:'月相演示器：三个视角看懂月球阴影' },

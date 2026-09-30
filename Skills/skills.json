@@ -1,6 +1,13 @@
 {
 	"items": [
 		{
+			"file": "../811/index.html",
+			"title": "811 工具箱",
+			"desc": "八年(11)班的工具中枢：作业、课程表都收在这里",
+			"kind": "page",
+			"icon": "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><rect x='3.5' y='3.5' width='7' height='7' rx='1.5'/><rect x='13.5' y='3.5' width='7' height='7' rx='1.5'/><rect x='3.5' y='13.5' width='7' height='7' rx='1.5'/><rect x='13.5' y='13.5' width='7' height='7' rx='1.5'/></svg>"
+		},
+		{
 			"file": "docs/docs.html",
 			"title": "文档站",
 			"desc": "查看文档",
@@ -19,7 +26,7 @@
 			"kind": "canvas"
 		},
 		{
-			"file": "demo/classtable.html",
+			"file": "../811/classtable.html",
 			"title": "课程表",
 			"desc": "让我看看有什么课程",
 			"kind": "demo"
@@ -37,7 +44,7 @@
 			"kind": "doc"
 		},
 		{
-			"file": "tools/homework.html",
+			"file": "../811/homework.html",
 			"title": "美味的作业",
 			"desc": "查看今天的作业",
 			"kind": "tool"

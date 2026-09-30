@@ -2,11 +2,29 @@
 <html lang="zh-CN" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
-<link rel="apple-touch-icon" href="../../apple-touch-icon.svg">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../apple-touch-icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>课程表 · 811班</title>
 <style>
+  /* ---------- 圆角（macOS 风格：小半径 + 层级化 + 同心嵌套） ----------
+     规范：.Skills/theme-plus/references/circle_angle.md
+     默认 rounded-md / rounded-lg，窗口最多 rounded-xl，禁止 rounded-2xl / rounded-3xl
+     以及按钮/输入框/卡片的 rounded-full；只有状态点、开关才用胶囊。 */
+  :root{
+    --radius-xs:4px;      /* 标签、徽章 */
+    --radius-sm:6px;      /* 小控件 */
+    --radius-md:8px;      /* 按钮、输入框、分段控件 */
+    --radius-lg:10px;     /* 卡片、面板 */
+    --radius-xl:12px;     /* 窗口、弹窗 */
+    --radius-pill:999px;  /* 仅状态点、开关 */
+
+    --radius-control:var(--radius-md);
+    --radius-card:var(--radius-lg);
+    --radius-swatch:var(--radius-xs);
+    --radius-badge:var(--radius-xs);
+  }
+
   :root[data-theme="dark"]{
     --bg:#0E1214;
     --panel:#13181B;
@@ -96,7 +114,7 @@
     margin-bottom:12px;
   }
   .eyebrow .dot{
-    width:6px; height:6px; border-radius:50%; background:var(--accent);
+    width:6px; height:6px; border-radius:var(--radius-pill); background:var(--accent);
     box-shadow:0 0 0 3px rgba(215,119,87,.18);
   }
   h1{
@@ -118,7 +136,7 @@
   .theme-btn{
     width:38px; height:38px;
     display:grid; place-items:center;
-    background:var(--raised); border:1px solid var(--line); border-radius:6px;
+    background:var(--raised); border:1px solid var(--line); border-radius:var(--radius-control);
     color:var(--dim); cursor:pointer;
     transition:border-color .13s var(--ease), color .13s var(--ease),
                background .13s var(--ease), transform .13s var(--ease);
@@ -130,15 +148,36 @@
   :root[data-theme="dark"] .theme-btn .sun{ display:block; }
   :root[data-theme="light"] .theme-btn .moon{ display:block; }
 
+  /* 更多 811 工具 → /811/index.html */
+  .more-btn{
+    display:inline-flex; align-items:center; gap:7px;
+    min-height:38px; padding:0 14px;
+    background:var(--raised); border:1px solid var(--line);
+    border-radius:var(--radius-control);
+    color:var(--dim);
+    font-family:var(--mono); font-size:12px; letter-spacing:.02em;
+    text-decoration:none; white-space:nowrap;
+    transition:border-color .13s var(--ease), color .13s var(--ease),
+               background .13s var(--ease), transform .13s var(--ease);
+  }
+  .more-btn svg{ width:15px; height:15px; flex:none; }
+  .more-btn:hover{
+    border-color:#3A464E; color:var(--ink); background:var(--raised-2);
+    transform:translateY(-1px);
+  }
+  :root[data-theme="light"] .more-btn:hover{ border-color:#C9BFB0; }
+  .more-btn:active{ transform:translateY(0) scale(.97); }
+  .more-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
   .switcher{
     display:inline-flex; gap:2px;
     padding:3px;
     background:var(--raised);
-    border:1px solid var(--line); border-radius:7px;
+    border:1px solid var(--line); border-radius:var(--radius-md);
   }
   .switcher button{
     padding:7px 14px;
-    background:transparent; border:none; border-radius:5px;
+    background:transparent; border:none; border-radius:calc(var(--radius-md) - 3px);
     color:var(--dim);
     font-family:var(--mono); font-size:12px; letter-spacing:.02em;
     cursor:pointer;
@@ -168,7 +207,7 @@
     gap:1px;
     background:var(--line);
     border:1px solid var(--line);
-    border-radius:9px;
+    border-radius:var(--radius-card);
     overflow:hidden;
     box-shadow:var(--shadow);
   }
@@ -220,7 +259,7 @@
     content:'';
     position:absolute; left:50%; bottom:6px; transform:translateX(-50%);
     width:16px; height:2px;
-    border-radius:2px;
+    border-radius:var(--radius-xs);
     background:var(--accent);
   }
 
@@ -322,7 +361,7 @@
     padding:4px 10px;
     background:var(--raised);
     border:1px solid var(--line);
-    border-radius:20px;
+    border-radius:var(--radius-badge);
   }
 
   .today-list{
@@ -335,7 +374,7 @@
     padding:16px 20px;
     background:var(--panel);
     border:1px solid var(--line);
-    border-radius:8px;
+    border-radius:var(--radius-md);
     position:relative;
     overflow:hidden;
     transition:border-color .15s var(--ease),
@@ -370,7 +409,7 @@
     color:var(--accent);
     padding:2px 6px;
     border:1px solid var(--accent-line);
-    border-radius:3px;
+    border-radius:var(--radius-xs);
     background:var(--accent-soft);
     animation:pulse 1.8s ease-in-out infinite;
   }
@@ -422,7 +461,7 @@
     padding:72px 32px;
     text-align:center;
     border:1px dashed var(--line);
-    border-radius:9px;
+    border-radius:var(--radius-card);
     background:var(--raised);
   }
   .empty-state svg{
@@ -461,7 +500,7 @@
     display:inline-flex; align-items:center; gap:6px;
   }
   footer .legend-dot{
-    width:8px; height:8px; border-radius:2px;
+    width:8px; height:8px; border-radius:var(--radius-swatch);
     flex:none;
   }
   .legend-time{ color:var(--dim); }
@@ -484,6 +523,21 @@
     header{ gap:14px; }
   }
 
+  /* 连续曲率：支持时启用 squircle，不支持就退回小半径 */
+  @supports (corner-shape: squircle){
+    .schedule,
+    .today-item,
+    .empty-state,
+    .switcher,
+    .switcher button,
+    .theme-btn,
+    .more-btn,
+    .today-count,
+    .today-item.now::after{
+      corner-shape:squircle;
+    }
+  }
+
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{
       animation-duration:.01ms !important;
@@ -502,14 +556,24 @@
     <div class="title-block">
       <div class="eyebrow"><span class="dot"></span> 2026 下半年 · 811 班</div>
       <h1>课程<em>表</em></h1>
-      <p class="sub" id="subtitle">常规版 · 完整课表</p>
+      <p class="sub" id="subtitle">基础版 · 常规课表</p>
     </div>
 
     <div class="head-right">
+      <a class="more-btn" href="/811/index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/>
+          <rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/>
+          <rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/>
+          <rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>
+        </svg>
+        <span>更多811工具</span>
+      </a>
+
       <div class="switcher" id="versionSwitch" role="tablist" aria-label="版本">
-        <button data-version="normal" class="active" role="tab" aria-selected="true">常规</button>
-        <button data-version="detailed" role="tab" aria-selected="false">完整</button>
-        <button data-version="flash" role="tab" aria-selected="false">Flash</button>
+        <button data-version="normal" class="active" role="tab" aria-selected="true">基础</button>
+        <button data-version="flash" role="tab" aria-selected="false">缩略</button>
       </div>
 
       <div class="switcher" id="viewSwitch" role="tablist" aria-label="视图">
@@ -593,10 +657,10 @@
     '语文|池春阳','数学|张新新','英语|施蓓蕾','社会|林晨露',''
   ];
 
-  /* ── 版本 1：常规（带教师名，含朗读活动） ── */
+  /* ── 版本 1：基础（带教师名，含朗读活动） ── */
   var NORMAL = {
-    name: '常规',
-    desc: '常规版 · 完整课表',
+    name: '基础',
+    desc: '基础版 · 常规课表',
     rows: [
       { type:'class', label:'早自修', time:'07:30–07:55', cells: MORNING_CELLS },
       { type:'class', label:'一',     time:'08:00–08:45', cells: MORNING_CELLS },
@@ -629,45 +693,10 @@
     ]
   };
 
-  /* ── 版本 2：完整 ── */
-  var DETAILED = {
-    name: '完整',
-    desc: '完整版 · 含晚读、三节晚自习',
-    rows: [
-      { type:'class', label:'早自修', time:'07:30–07:55', cells: MORNING_CELLS },
-      { type:'class', label:'一',     time:'08:00–08:45', cells: MORNING_CELLS },
-      { type:'class', label:'二',     time:'09:10–09:55', cells:[
-        '科学|金珍宽','语文|池春阳','数学|张新新','科学|金珍宽','语文|池春阳'
-      ]},
-      { type:'class', label:'三',     time:'10:05–10:50', cells:[
-        '英语|施蓓蕾','英语|施蓓蕾','社会|林晨露','数学|张新新','社会|林晨露'
-      ]},
-      { type:'class', label:'四',     time:'11:10–11:45', cells:[
-        '美术|陈向东','科学|金珍宽','体育|陈雷迅','信息技术|周凡','音乐|姜素棉'
-      ]},
-      { type:'break', label:'午间',   time:'11:45–12:40', text:'午间休息 & 午饭' },
-      { type:'class', label:'午自修', time:'12:40–13:20', cells: NOON_SELF },
-      { type:'class', label:'五/一',  time:'13:30–14:15', cells:[
-        '社会|林晨露','体育|陈雷迅','科学|金珍宽','语文|池春阳','数学|张新新'
-      ]},
-      { type:'class', label:'六/二',  time:'14:25–15:15', cells:[
-        '语文|池春阳','数学|张新新','英语|施蓓蕾','社会|林晨露','科学|金珍宽'
-      ]},
-      { type:'class', label:'七/三',  time:'15:25–16:10', cells:[
-        '体育|陈雷迅','班会|张新新','社团|','英语|施蓓蕾','科学|金珍宽'
-      ]},
-      { type:'class', label:'托管/四', time:'16:20–17:00', cells: HOMEROOM },
-      { type:'break', label:'晚间',   time:'17:00–18:00', text:'晚修 & 晚饭 & 晚读' },
-      { type:'class', label:'晚自习一', time:'18:00–18:45', cells: EVENING_CELLS },
-      { type:'class', label:'晚自习二', time:'18:55–19:40', cells: EVENING_CELLS },
-      { type:'class', label:'晚自习三', time:'19:50–20:35', cells: EVENING_CELLS }
-    ]
-  };
-
-  /* ── 版本 3：Flash（无教师名） ── */
+  /* ── 版本 2：缩略（无教师名） ── */
   var FLASH = {
-    name: 'Flash',
-    desc: 'Flash 版 · 精简课程表',
+    name: '缩略',
+    desc: '缩略版 · 精简课程表',
     rows: [
       { type:'class', label:'早自修', time:'07:30–08:45', cells:[
         '数学|','社会|','语文|','科学|','英语|'
@@ -712,7 +741,6 @@
 
   var VERSIONS = {
     normal: NORMAL,
-    detailed: DETAILED,
     flash: FLASH
   };
 
@@ -1031,8 +1059,6 @@
     if (e.key === '1'){
       versionSwitch.querySelector('[data-version="normal"]').click();
     } else if (e.key === '2'){
-      versionSwitch.querySelector('[data-version="detailed"]').click();
-    } else if (e.key === '3'){
       versionSwitch.querySelector('[data-version="flash"]').click();
     } else if (e.key === 'f' || e.key === 'F'){
       viewSwitch.querySelector('[data-view="full"]').click();

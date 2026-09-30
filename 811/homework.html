@@ -2,10 +2,10 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
-<link rel="apple-touch-icon" href="../../apple-touch-icon.svg">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../apple-touch-icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>今日份美味 😋 作业</title>
+<title>八年(11)班作业</title>
 <style>
   :root{
     color-scheme: light dark;
@@ -48,6 +48,24 @@
     /* 背景光晕 */
     --glow-1: hsl(220 8% 60% / .16);
     --glow-2: hsl(220 8% 60% / .14);
+
+    /* ---------- 圆角（macOS 风格：小半径 + 层级化 + 同心嵌套） ----------
+       规范：.Skills/theme-plus/references/circle_angle.md
+       默认 rounded-md / rounded-lg，窗口最多 rounded-xl，禁止 rounded-2xl / rounded-3xl
+       以及按钮/输入框/卡片的 rounded-full；只有头像、开关、状态点才用胶囊。 */
+    --radius-xs:4px;      /* 标签、徽章（≤6px） */
+    --radius-sm:6px;      /* 小控件、行内代码块 */
+    --radius-md:8px;      /* 按钮、输入框 */
+    --radius-lg:10px;     /* 卡片、便签、浮层 */
+    --radius-xl:12px;     /* 窗口、弹窗 */
+    --radius-pill:999px;  /* 仅圆点、开关、状态标记 */
+
+    --radius-control:var(--radius-md);
+    --radius-button:var(--radius-md);
+    --radius-card:var(--radius-lg);
+    --radius-modal:var(--radius-xl);
+    --radius-badge:var(--radius-sm);
+    --radius-dot:var(--radius-pill);
 
     --serif:"Songti SC","Noto Serif SC",Georgia,"Times New Roman",serif;
     --sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
@@ -107,6 +125,15 @@
 
   /* ---------- 头部 ---------- */
   .head{margin-bottom:clamp(22px,3.6vw,36px)}
+  .head-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+
   .kicker{
     display:inline-flex;
     align-items:center;
@@ -115,7 +142,7 @@
     letter-spacing:.2em;
     text-transform:uppercase;
     color:var(--oak);
-    margin-bottom:16px;
+    margin-bottom:0;
   }
   .kicker::before{
     content:"";
@@ -124,6 +151,38 @@
     flex:none;
     transition:background .5s ease;
   }
+
+  /* ---------- 更多 811 工具（跳 /811/index.html） ---------- */
+  .more-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    min-height:34px;
+    padding:0 14px;
+    border:1px solid var(--tint-line);
+    border-radius:var(--radius-control);
+    background:var(--tint-soft);
+    color:var(--tint-text);
+    font-family:inherit;
+    font-size:13px;
+    letter-spacing:.03em;
+    text-decoration:none;
+    white-space:nowrap;
+    transition:
+      background .22s ease,
+      border-color .22s ease,
+      color .22s ease,
+      transform .15s ease;
+  }
+  .more-btn svg{width:15px;height:15px;flex:none}
+  .more-btn:hover{
+    background:var(--tint-card);
+    border-color:var(--tint-accent);
+    color:var(--ink);
+    transform:translateY(-1px);
+  }
+  .more-btn:active{transform:translateY(0) scale(.985)}
+  .more-btn:focus-visible{outline:2px solid var(--tint-accent);outline-offset:3px}
 
   h1{
     font-family:var(--serif);
@@ -165,7 +224,7 @@
   .progress-track{
     margin-top:16px;
     height:5px;
-    border-radius:999px;
+    border-radius:var(--radius-xs);
     background:rgba(46,42,38,.08);
     overflow:hidden;
   }
@@ -175,7 +234,7 @@
   .progress-fill{
     height:100%;
     width:0%;
-    border-radius:999px;
+    border-radius:var(--radius-xs);
     background:var(--tint-fill);
     transition:
       width .5s cubic-bezier(.2,.7,.2,1),
@@ -188,7 +247,7 @@
     align-items:center;
     gap:7px;
     padding:4px 12px;
-    border-radius:999px;
+    border-radius:var(--radius-badge);
     background:var(--tint-soft);
     border:1px solid var(--tint-line);
     color:var(--tint-text);
@@ -225,60 +284,6 @@
     .progress-fill{ transition:none; }
   }
 
-  /* ---------- 班级统计条 ---------- */
-  .stats{
-    display:flex;
-    align-items:center;
-    flex-wrap:wrap;
-    gap:clamp(14px,3.2vw,30px);
-    margin-top:16px;
-    padding:13px 18px;
-    border-radius:12px;
-    background:var(--tint-soft);
-    border:1px solid var(--tint-line);
-    transition:background .5s ease, border-color .5s ease;
-  }
-  .stats[hidden]{display:none}
-  .stat{
-    display:flex;
-    align-items:baseline;
-    gap:7px;
-  }
-  .stat-num{
-    font-family:var(--serif);
-    font-size:20px;
-    line-height:1;
-    color:var(--tint-text);
-    font-variant-numeric:tabular-nums;
-    transition:color .5s ease;
-  }
-  .stat-lbl{
-    font-size:12.5px;
-    color:var(--ink-soft);
-    letter-spacing:.03em;
-    white-space:nowrap;
-  }
-  .stat-sep{
-    width:1px;height:16px;flex:none;
-    background:var(--tint-line);
-    transition:background .5s ease;
-  }
-  .stats .stat-hint{
-    margin-left:auto;
-    font-size:11.5px;
-    color:var(--tint-text);
-    opacity:.72;
-    letter-spacing:.02em;
-    white-space:nowrap;
-  }
-  .stats.offline .stat-hint{ color:var(--ink-soft); opacity:.9 }
-  @media (max-width:560px){
-    .stats{gap:10px 16px; padding:12px 14px}
-    .stat-num{font-size:17px}
-    .stat-lbl{font-size:12px}
-    .stats .stat-hint{margin-left:0; width:100%; font-size:11px}
-  }
-
   /* ---------- 提示条 ---------- */
   .notice{
     display:none;
@@ -286,7 +291,7 @@
     gap:11px;
     padding:14px 18px;
     margin-bottom:18px;
-    border-radius:12px;
+    border-radius:var(--radius-card);
     background:rgba(192,138,62,.11);
     border:1px solid rgba(192,138,62,.28);
     color:#7A5619;
@@ -307,7 +312,7 @@
     font-size:12.5px;
     background:rgba(122,86,25,.10);
     padding:1px 6px;
-    border-radius:4px;
+    border-radius:var(--radius-xs);
   }
   @media (prefers-color-scheme: dark){
     .notice code{ background:rgba(224,181,122,.14); }
@@ -317,7 +322,7 @@
   .card{
     background:var(--paper);
     border:1px solid var(--tint-card);
-    border-radius:18px;
+    border-radius:var(--radius-card);
     overflow:hidden;
     box-shadow:
       0 1px 2px var(--shadow-1),
@@ -366,7 +371,7 @@
   }
   .subject .dot{
     width:9px;height:9px;
-    border-radius:50%;
+    border-radius:var(--radius-dot);
     background:var(--c);
     flex:none;
     box-shadow:0 0 0 3px color-mix(in srgb, var(--c) 18%, transparent);
@@ -384,7 +389,7 @@
     gap:11px;
     cursor:pointer;
     padding:2px 0;
-    border-radius:6px;
+    border-radius:var(--radius-sm);
     -webkit-tap-highlight-color:transparent;
     user-select:none;
   }
@@ -398,7 +403,7 @@
     width:17px;height:17px;
     margin-top:4px;
     border:1.5px solid var(--tint-box);
-    border-radius:5px;
+    border-radius:var(--radius-xs);
     display:flex;
     align-items:center;
     justify-content:center;
@@ -434,30 +439,23 @@
     text-decoration-thickness:1px;
     text-decoration-color:currentColor;
   }
-
-  /* 每道题右侧的「N 人已完成」 */
-  .tally{
-    flex:none;
-    margin-left:auto;
-    align-self:flex-start;
-    padding:3px 0 0 12px;
-    font-size:11.5px;
-    line-height:1.6;
-    letter-spacing:.02em;
-    color:var(--tint-text);
-    opacity:.78;
-    white-space:nowrap;
-    font-variant-numeric:tabular-nums;
-    transition:color .5s ease, opacity .2s ease;
+  
+  /* 新增：支持 Markdown 行内元素渲染 */
+  .text strong { font-weight: 600; }
+  .text code { 
+    font-family: "SF Mono", Menlo, Consolas, monospace; 
+    font-size: 0.9em; 
+    background: rgba(142,152,103,.1); 
+    padding: 2px 5px; 
+    border-radius: var(--radius-xs); 
   }
-  .hw-item:hover .tally{opacity:1}
 
   .empty{font-size:14.5px;color:var(--empty-text);letter-spacing:.04em}
 
   /* 骨架屏 */
   .skeleton{
     height:15px;
-    border-radius:6px;
+    border-radius:var(--radius-sm);
     background:linear-gradient(90deg, var(--skeleton-1), var(--skeleton-2), var(--skeleton-1));
     background-size:200% 100%;
     animation:shimmer 1.3s ease-in-out infinite;
@@ -475,7 +473,7 @@
     padding:14px 18px 15px 22px;
     background:#FDF7D9;
     border:1px solid rgba(190,155,65,.28);
-    border-radius:12px;
+    border-radius:var(--radius-card);
     box-shadow:
       0 1px 2px rgba(150,120,40,.06),
       0 8px 20px -14px rgba(150,120,40,.30);
@@ -488,7 +486,7 @@
     position:absolute;
     left:0; top:12px; bottom:12px;
     width:3px;
-    border-radius:0 3px 3px 0;
+    border-radius:0 var(--radius-xs) var(--radius-xs) 0;
     background:#E8C560;
     transition:background .3s ease;
   }
@@ -511,6 +509,24 @@
     word-break:break-word;
   }
 
+  /* 新增：笔记支持 Markdown 表格及列表样式 */
+  .note-text p { margin-bottom: 6px; }
+  .note-text p:last-child { margin-bottom: 0; }
+  .note-text ul { padding-left: 20px; margin-bottom: 6px; }
+  .note-text table { 
+    border-collapse: collapse; 
+    width: 100%; 
+    margin: 10px 0; 
+    font-size: 14px;
+  }
+  .note-text th, .note-text td { 
+    border: 1px solid rgba(190,155,65,.28); 
+    padding: 6px 12px; 
+    text-align: left; 
+    color: #5C4A1C;
+  }
+  .note-text th { background: rgba(232, 197, 96, 0.15); font-weight: 500; }
+
   @media (prefers-color-scheme: dark){
     .note{
       background:#2A2414;
@@ -522,6 +538,12 @@
     .note::before{ background:#C9A84C; }
     .note-label{ color:#C9A84C; }
     .note-text{ color:#E8DBA8; }
+    .note-text th, .note-text td { 
+      border-color: rgba(200,170,80,.22); 
+      color: #E8DBA8;
+    }
+    .note-text th { background: rgba(201, 168, 76, 0.1); }
+    .note-text code { background: rgba(224,181,122,.14); }
   }
 
   .foot{
@@ -560,7 +582,7 @@
     width:min(360px,100%);
     background:var(--paper);
     border:1px solid var(--line);
-    border-radius:18px;
+    border-radius:var(--radius-modal);
     padding:clamp(26px,5.4vw,34px);
     text-align:center;
     box-shadow:0 30px 64px -32px var(--shadow-3);
@@ -572,7 +594,7 @@
   .congrats-mark{
     width:54px;height:54px;
     margin:0 auto 16px;
-    border-radius:50%;
+    border-radius:var(--radius-dot);
     display:flex;
     align-items:center;
     justify-content:center;
@@ -628,7 +650,7 @@
     min-height:44px;
     padding:0 28px;
     border:0;
-    border-radius:999px;
+    border-radius:var(--radius-button);
     background:var(--cta-bg);
     color:#FFFCF7;
     font-family:inherit;
@@ -641,9 +663,27 @@
   .congrats-btn:active{transform:translateY(0) scale(.98)}
   .congrats-btn:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 
+  /* ---------- 连续曲率：支持时启用 squircle，不支持就退回小半径 ---------- */
+  @supports (corner-shape: squircle){
+    .card,
+    .note,
+    .notice,
+    .congrats-card,
+    .congrats-btn,
+    .more-btn,
+    .badge,
+    .box,
+    .hw-item,
+    .skeleton{
+      corner-shape:squircle;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce){
     .congrats{transition-duration:1ms}
     .congrats-card{transition-duration:1ms}
+    .more-btn{transition:none}
+    .more-btn:hover{transform:none}
     tbody tr{transition:none}
     .note{transition:none}
   }
@@ -660,7 +700,6 @@
     tbody td:first-child{padding-top:16px;padding-bottom:2px}
     tbody td:last-child{padding-bottom:16px}
     .subject{font-size:14.5px}
-    .tally{font-size:11px;padding-left:8px}
   }
 </style>
 </head>
@@ -669,8 +708,23 @@
 <main class="page">
 
   <header class="head">
-    <p class="kicker">Homework · 每日清单</p>
-    <h1>今日份美味 😋 作业</h1>
+    <div class="head-top">
+      <p class="kicker">Homework · 每日清单</p>
+
+      <!-- ★ 更多 811 工具 → /811/index.html -->
+      <a class="more-btn" href="/811/index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/>
+          <rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/>
+          <rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/>
+          <rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>
+        </svg>
+        <span>更多811工具</span>
+      </a>
+    </div>
+
+    <h1>八年(11)班作业</h1>
 
     <!-- ★ 子标题：来自 JSON 的 "title" 字段；没有就不显示 -->
     <p class="subtitle" id="subtitle" hidden></p>
@@ -682,25 +736,6 @@
     </div>
     <div class="progress-track" aria-hidden="true">
       <div class="progress-fill" id="progressFill"></div>
-    </div>
-
-    <!-- 班级统计：数据来自 hw-api.php -->
-    <div class="stats" id="stats" hidden aria-live="polite" aria-atomic="true">
-      <div class="stat">
-        <span class="stat-num" id="statPeople">—</span>
-        <span class="stat-lbl">人已打卡</span>
-      </div>
-      <span class="stat-sep"></span>
-      <div class="stat">
-        <span class="stat-num" id="statMarks">—</span>
-        <span class="stat-lbl">项累计完成</span>
-      </div>
-      <span class="stat-sep"></span>
-      <div class="stat">
-        <span class="stat-num" id="statAll">—</span>
-        <span class="stat-lbl">人全部通关</span>
-      </div>
-      <span class="stat-hint" id="statHint"></span>
     </div>
   </header>
 
@@ -736,10 +771,10 @@
   <!-- 便签：从 JSON 的 "笔记" 键读取；没有就不显示 -->
   <div class="note" id="note" hidden>
     <span class="note-label">Notes</span>
-    <p class="note-text" id="noteText"></p>
+    <div class="note-text" id="noteText"></div>
   </div>
 
-  <p class="foot">点一下前面的方框，就能打勾 ✦ 勾完自动同步给全班</p>
+  <p class="foot">点一下前面的方框，就能打勾 ✦ 勾完自动保存</p>
 
 </main>
 
@@ -816,10 +851,7 @@
     return extras;
   }
 
-  const PATHS = ['./data/homework.json', '/Skills/tools/data/homework.json', '/data/homework.json'];
-
-  /* ★ 云函数地址：与 homework.html 同目录 */
-  const API = './hw-api.php';
+  const PATHS = ['./data/homework.json', '/811/data/homework.json', '/data/homework.json'];
 
 /*         读取失败显示的默认作业          */
   const DEMO = {
@@ -914,17 +946,10 @@
   const congratsText = document.getElementById('congratsText');
   const congratsTitle = document.getElementById('congratsTitle');
 
-  /* ★ 统计相关 DOM */
-  const statsEl    = document.getElementById('stats');
-  const statPeople = document.getElementById('statPeople');
-  const statMarks  = document.getElementById('statMarks');
-  const statAll    = document.getElementById('statAll');
-  const statHint   = document.getElementById('statHint');
-
   let currentDate   = '';
-  let currentId     = '';      // ★ 统计命名空间：来自 JSON 的 "id"，没有则退回日期
+  let currentId     = '';
   let hasCelebrated = false;
-  let isDemoMode    = false;   // ★ 彩蛋触发条件：DEMO 状态
+  let isDemoMode    = false;
 
   /* ============ 工具 ============ */
   const esc = s => String(s).replace(/[&<>"']/g, c => ({
@@ -937,7 +962,6 @@
     return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
   }
 
-  /* 把任意日期写法收敛成 YYYY-MM-DD，云函数只认这个 */
   function toISODate(s){
     const m = String(s || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
     if(!m) return todayStr();
@@ -967,7 +991,6 @@
     return splitLines(v);
   }
 
-  /* FNV-1a → 8 位十六进制。云函数数据库的键只允许 ASCII，所以题目要哈希 */
   function fnv1a(str){
     let h = 0x811c9dc5;
     for(let i = 0; i < str.length; i++){
@@ -981,178 +1004,70 @@
     return fnv1a('hw1|' + subjectName + '|' + index + '|' + text);
   }
 
-  /* ============ 设备身份 ============ */
-  const UID_KEY = 'hw:uid';
-
-  function makeUid(){
-    return 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  /* ============ Markdown 轻量解析器 ============ */
+  // 解析行内 Markdown (加粗、斜体、行内代码)
+  function parseInlineMD(text) {
+    if (!text) return '';
+    return esc(text)
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`(.*?)`/g, '<code>$1</code>');
   }
 
-  function getUid(){
-    try{
-      let u = localStorage.getItem(UID_KEY);
-      if(!u){
-        u = makeUid();
-        localStorage.setItem(UID_KEY, u);
+  // 解析块级 Markdown (主要用于笔记中的表格、列表、段落)
+  function parseBlockMD(raw) {
+    if (!raw) return '';
+    const lines = String(raw).replace(/\\n/g, '\n').split('\n');
+    let html = '';
+    let inTable = false;
+    let inList = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i].trim();
+      if (!line) {
+        if (inTable) { html += '</table>'; inTable = false; }
+        if (inList) { html += '</ul>'; inList = false; }
+        continue;
       }
-      return u;
-    }catch(e){
-      return makeUid();
-    }
-  }
 
-  const UID = getUid();
-
-  /* ============ 云函数调用 ============ */
-  let apiDead = false;     // 后端一旦不可用就不再反复戳
-
-  async function callApi(query, payload){
-    if(apiDead) return null;
-    try{
-      let url = API;
-      const qs = new URLSearchParams(query || {}).toString();
-      if(qs) url += '?' + qs;
-
-      const res = await fetch(url, payload ? {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      } : { cache: 'no-store' });
-
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-
-      const ct = res.headers.get('content-type') || '';
-      if(ct.indexOf('json') === -1) throw new Error('response is not json');
-
-      const data = await res.json();
-      if(!data || data.ok !== true) throw new Error(data && data.error ? data.error : 'bad payload');
-      return data;
-    }catch(err){
-      apiDead = true;
-      return null;
-    }
-  }
-
-  /* 收集当前页面上已勾选的题目哈希 */
-  function collectDone(){
-    return Array.from(tbody.querySelectorAll('.hw-item.done'))
-      .map(el => el.getAttribute('data-h'))
-      .filter(Boolean);
-  }
-
-  function itemTotal(){
-    return tbody.querySelectorAll('.hw-item').length;
-  }
-
-  /* ============ 统计渲染 ============ */
-  function applyStats(d){
-    if(!d) return;
-
-    statsEl.hidden = false;
-    statsEl.classList.remove('offline');
-
-    statPeople.textContent = d.people   ?? 0;
-    statMarks.textContent  = d.marks    ?? 0;
-    statAll.textContent    = d.finished ?? 0;
-
-    const mine = Array.isArray(d.mine) ? d.mine.length : 0;
-    statHint.textContent = mine > 0
-      ? '你已贡献 ' + mine + ' 项'
-      : '还没人开头，你先来';
-
-    /* 每道题右侧标上「N 人已完成」 */
-    const items = d.items || {};
-    tbody.querySelectorAll('.hw-item').forEach(el => {
-      const h = el.getAttribute('data-h');
-      const n = h && items[h] ? items[h] : 0;
-      let tally = el.querySelector('.tally');
-
-      if(n > 0){
-        if(!tally){
-          tally = document.createElement('span');
-          tally.className = 'tally';
-          el.appendChild(tally);
-        }
-        tally.textContent = n + ' 人已完成';
-      }else if(tally){
-        tally.remove();
+      // 表格判断
+      if (line.startsWith('|') && line.endsWith('|')) {
+        if (!inTable) { html += '<table>'; inTable = true; }
+        if (line.includes('---')) continue; // 跳过表头分隔线
+        
+        const cells = line.split('|').slice(1, -1).map(c => `<td>${parseInlineMD(c.trim())}</td>`).join('');
+        html += `<tr>${cells}</tr>`;
+        continue;
+      } else {
+        if (inTable) { html += '</table>'; inTable = false; }
       }
-    });
-  }
 
-  /* 首次拉取：要回自己的记录 + 全班统计 */
-  async function pullStats(){
-    const d = await callApi({
-      action: 'stats',
-      id:     currentId,
-      date:   currentDate,
-      uid:    UID,
-      total:  itemTotal()
-    }, null);
-
-    if(!d){
-      /* 后端没通，安静退场，别吓着用户 */
-      statsEl.hidden = true;
-      return;
-    }
-
-    applyStats(d);
-
-    let needPush = false;
-
-    if(!Array.isArray(d.mine)){
-      /* 服务器上还没有我的记录 */
-      needPush = true;
-    }else if(mergeMine(d.mine)){
-      /* 服务器有、本地没有的勾，补回来 */
-      updateProgress(false);
-      needPush = true;
-    }
-
-    if(needPush) pushState(0);
-  }
-
-  function mergeMine(mine){
-    let changed = false;
-    mine.forEach(h => {
-      const el = tbody.querySelector('.hw-item[data-h="' + h + '"]');
-      if(el && !el.classList.contains('done')){
-        el.classList.add('done');
-        el.setAttribute('aria-checked', 'true');
-        setDone('hw:' + currentId + ':' + h, true);
-        changed = true;
+      // 列表判断
+      if (line.startsWith('- ') || line.startsWith('* ')) {
+        if (!inList) { html += '<ul>'; inList = true; }
+        html += `<li>${parseInlineMD(line.substring(2))}</li>`;
+        continue;
+      } else {
+        if (inList) { html += '</ul>'; inList = false; }
       }
-    });
-    return changed;
+
+      // 普通段落
+      html += `<p>${parseInlineMD(line)}</p>`;
+    }
+
+    if (inTable) html += '</table>';
+    if (inList) html += '</ul>';
+    return html;
   }
 
-  /* ============ 推送（防抖，别每点一下就打一次接口） ============ */
-  let pushTimer = null;
-
-  function pushState(delay){
-    clearTimeout(pushTimer);
-    pushTimer = setTimeout(async () => {
-      const d = await callApi({}, {
-        action: 'sync',
-        id:     currentId,
-        date:   currentDate,
-        uid:    UID,
-        total:  itemTotal(),
-        done:   collectDone()
-      });
-      if(d) applyStats(d);
-    }, typeof delay === 'number' ? delay : 420);
-  }
-
-  /* ============ 便签渲染 ============ */
+  /* ============ 渲染便签 ============ */
   function renderNote(raw){
-    const lines = splitLines(raw);
-    if(lines.length === 0){
+    if(raw === null || raw === undefined || String(raw).trim() === ''){
       noteEl.hidden = true;
-      noteTextEl.textContent = '';
+      noteTextEl.innerHTML = '';
       return;
     }
-    noteTextEl.textContent = lines.join('\n');
+    noteTextEl.innerHTML = parseBlockMD(raw);
     noteEl.hidden = false;
   }
 
@@ -1187,7 +1102,6 @@
     }
     if(!src || typeof src !== 'object') src = DEMO;
 
-    /* ★ 读取 title 与 id：顶层优先，其次 homework 对象内部 */
     const titleRaw = (data && data.title !== null && data.title !== undefined)
                        ? data.title
                        : src.title;
@@ -1196,12 +1110,10 @@
                        ? data.id
                        : src.id;
 
-    /* ★ id 是统计系统的支柱：有就用，没有退回日期；换 id 等于换一份统计 */
     currentId = (idRaw !== null && idRaw !== undefined && String(idRaw).trim() !== '')
                   ? String(idRaw).trim()
                   : currentDate;
 
-    /* ★ 子标题渲染：空字符串 / 只有空白 → 当作没有 */
     if(titleRaw !== null && titleRaw !== undefined && String(titleRaw).trim() !== ''){
       subtitleEl.textContent = String(titleRaw);
       subtitleEl.hidden = false;
@@ -1235,7 +1147,7 @@
       }else{
         contentHTML = '<ul class="hw-list">' + list.map((item, i) => {
           const h    = itemHash(sub.name, i, item);
-          const key  = `hw:${currentId}:${h}`;   // ★ 用 id 当命名空间
+          const key  = `hw:${currentId}:${h}`;
           const done = isDone(key);
           return `
             <li class="hw-item${done ? ' done' : ''}" data-key="${esc(key)}" data-h="${h}"
@@ -1246,7 +1158,7 @@
                         stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </span>
-              <span class="text">${esc(item)}</span>
+              <span class="text">${parseInlineMD(item)}</span>
             </li>`;
         }).join('') + '</ul>';
       }
@@ -1326,7 +1238,6 @@
     el.setAttribute('aria-checked', now ? 'true' : 'false');
     setDone(key, now);
     updateProgress(true);
-    pushState();                 // ★ 每次打勾都同步给服务器
   }
 
   /* ============ 事件绑定 ============ */
@@ -1360,13 +1271,11 @@
     lastFocus = document.activeElement;
 
     if(isDemoMode){
-      /* ★ 彩蛋：DEMO 状态下全部完成 → 完全反差的语气 */
       congrats.classList.add('easter');
       congratsTitle.textContent = '完成了...?';
       congratsText.textContent  = '真牛啊，你怎么做到的...\n滚吧，不诚实的孩子';
       congratsBtn.textContent   = '奴知晓了';
     }else{
-      /* 正常模式：庆祝语气 */
       congrats.classList.remove('easter');
       congratsTitle.textContent = '今日作业...已清零!好样的伙计!';
       congratsText.textContent  =
@@ -1416,17 +1325,9 @@
     darkQuery.addListener(onSchemeChange);
   }
 
-  /* 页面重新可见时刷一次统计（别人可能刚打了卡） */
-  document.addEventListener('visibilitychange', () => {
-    if(document.visibilityState !== 'visible') return;
-    if(!currentId || apiDead) return;
-    callApi({ action:'stats', id: currentId, date: currentDate, uid: UID, total: itemTotal() }, null)
-      .then(d => { if(d) applyStats(d); });
-  });
-
   /* ============ 启动 ============ */
   loadData().then(({ data, demo }) => {
-    isDemoMode = demo;      // ★ 记录当前是否 DEMO 状态
+    isDemoMode = demo;
     render(data);
 
     if(demo){
@@ -1435,15 +1336,11 @@
         '把 JSON 放到与网页同级的 <code>data/</code> 文件夹里刷新即可。';
       notice.classList.add('show');
     }
-
-    /* ★ 数据渲染完，再去问服务器要全班统计 */
-    pullStats();
   }).catch(err => {
-    isDemoMode = true;      // ★ 报错兜底也按 DEMO 处理
+    isDemoMode = true;
     render(DEMO);
     noticeText.textContent = '读取作业数据出错，已显示示例内容：' + err.message;
     notice.classList.add('show');
-    pullStats();
   });
 
 })();
