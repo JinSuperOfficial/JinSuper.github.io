@@ -3,9 +3,21 @@
 		{
 			"file": "../811/index.html",
 			"title": "811 工具箱",
-			"desc": "八年(11)班的工具中枢：作业、课程表都收在这里",
+			"desc": "八年(11)班的工具中枢：作业、课程表都在这里，以后新做的 811 玩意也往这儿放",
 			"kind": "page",
 			"icon": "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><rect x='3.5' y='3.5' width='7' height='7' rx='1.5'/><rect x='13.5' y='3.5' width='7' height='7' rx='1.5'/><rect x='3.5' y='13.5' width='7' height='7' rx='1.5'/><rect x='13.5' y='13.5' width='7' height='7' rx='1.5'/></svg>"
+		},
+		{
+			"file": "../811/homework.html",
+			"title": "美味的作业",
+			"desc": "读 811/data/homework.json 渲染每日清单，勾一下自动保存，全部勾完有惊喜",
+			"kind": "tool"
+		},
+		{
+			"file": "../811/classtable.html",
+			"title": "课程表",
+			"desc": "811 课表：基础版 / 缩略版两套，可切完整课表与今日课程，认得出现在上哪节",
+			"kind": "demo"
 		},
 		{
 			"file": "docs/docs.html",
@@ -26,12 +38,6 @@
 			"kind": "canvas"
 		},
 		{
-			"file": "../811/classtable.html",
-			"title": "课程表",
-			"desc": "让我看看有什么课程",
-			"kind": "demo"
-		},
-		{
 			"file": "docs/docs-static.html",
 			"title": "文档站（静态）",
 			"desc": "同样能读文档，但不依赖云函数，纯静态也能跑",
@@ -42,12 +48,6 @@
 			"title": "BLOG",
 			"desc": "那些奇妙的文章",
 			"kind": "doc"
-		},
-		{
-			"file": "../811/homework.html",
-			"title": "美味的作业",
-			"desc": "查看今天的作业",
-			"kind": "tool"
 		},
 		{
 			"file": "tools/htmlview.html",

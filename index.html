@@ -602,6 +602,18 @@ function encodePath(p){
   return String(p).split('/').map(encodeURIComponent).join('/');
 }
 
+/* 只给显示用：'Skills/../811/homework.html' → '811/homework.html'
+   （链接仍然用原始的 file 字段，别拿这个去 fetch） */
+function sitePath(p){
+  const segs = [];
+  for (const s of String(p).split('/')){
+    if (!s || s === '.') continue;
+    if (s === '..'){ segs.pop(); continue; }
+    segs.push(s);
+  }
+  return segs.join('/');
+}
+
 function esc(s){
   return String(s).replace(/[&<>"]/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'
@@ -825,7 +837,7 @@ function render(){
     const icon = it.icon || g.icon;
     const kind = it.kind || g.kind;
     const href = SKILLS_DIR + encodePath(it.file);
-    const displayPath = 'Skills/' + it.file;
+    const displayPath = sitePath('Skills/' + it.file);
     const num = String(i + 1).padStart(2, '0');
 
     return `

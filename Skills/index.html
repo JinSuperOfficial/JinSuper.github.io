@@ -510,6 +510,18 @@ function encPath(p){
   return String(p).split('/').map(encodeURIComponent).join('/');
 }
 
+/* 只给显示用：'../811/homework.html' → '811/homework.html'
+   （链接仍然走 DIR + encPath(file)，别拿这个去 fetch） */
+function sitePath(p){
+  const segs = [];
+  for (const s of String(p).split('/')){
+    if (!s || s === '.') continue;
+    if (s === '..'){ segs.pop(); continue; }
+    segs.push(s);
+  }
+  return segs.join('/');
+}
+
 function tick(el, to, dur = 600){
   const from = Number(el.dataset.from || 0);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -643,7 +655,7 @@ function render(){
         <a class="row" href="${href}" target="_blank" rel="noopener">
           <span class="num">${num}</span>
           <span class="ico" aria-hidden="true">${icon}</span>
-          <span class="name">${esc(it.file)}</span>
+          <span class="name">${esc(sitePath(it.file))}</span>
           <span class="label${it.title ? '' : ' empty'}">${
             esc(it.title || '（还没写描述）')
           }</span>
