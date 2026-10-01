@@ -269,6 +269,8 @@
     .card-go{display:none}
     .card-title{font-size:17px}
   }
+
+  .grid-empty{font-size:14px;letter-spacing:.04em;color:var(--ink-soft)}
 </style>
 </head>
 <body>
@@ -291,49 +293,13 @@
     <p class="subtitle">八年(11)班的日常都收在这儿：作业、课表，往后新做的小玩意也放这里。</p>
   </header>
 
-  <section class="grid">
-
-    <a class="card" href="./homework.html">
-      <span class="card-ico" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1Z"/>
-          <path d="M8 6H6.5A1.5 1.5 0 0 0 5 7.5v12A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 17.5 6H16"/>
-          <path d="m9 13.5 2 2 4-4"/>
-        </svg>
-      </span>
-      <span class="card-body">
-        <span class="card-title">美味的作业</span>
-        <span class="card-desc">读 data/homework.json 渲染每日清单，勾一下自动保存，全部勾完有惊喜。</span>
-      </span>
-      <span class="card-go" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 12h13"/><path d="m13 6 6 6-6 6"/>
-        </svg>
-      </span>
-    </a>
-
-    <a class="card" href="./classtable.html">
-      <span class="card-ico" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-             stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3.5" y="4.5" width="17" height="16" rx="2"/>
-          <path d="M3.5 9.5h17M8.5 9.5v11M15 9.5v11"/>
-        </svg>
-      </span>
-      <span class="card-body">
-        <span class="card-title">课程表</span>
-        <span class="card-desc">基础版与缩略版两套看法，能切完整课表和今日课程，还认得出「现在上哪节」。</span>
-      </span>
-      <span class="card-go" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 12h13"/><path d="m13 6 6 6-6 6"/>
-        </svg>
-      </span>
-    </a>
-
+  <section class="grid" id="tool-grid">
+    <noscript>
+      <p class="grid-empty">这份清单要用 JavaScript 渲染：
+        <a href="/811/homework.html">作业</a> ·
+        <a href="/811/classtable.html">课程表</a>
+      </p>
+    </noscript>
   </section>
 
   <footer class="foot">
@@ -345,6 +311,51 @@
   </footer>
 
 </main>
+
+<template id="tpl-tool-card">
+  <a class="card">
+    <span class="card-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round"></svg>
+    </span>
+    <span class="card-body">
+      <span class="card-title"></span>
+      <span class="card-desc"></span>
+    </span>
+    <span class="card-go" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h13"/><path d="m13 6 6 6-6 6"/>
+      </svg>
+    </span>
+  </a>
+</template>
+
+<script src="/lib/manifest.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  const M = window.JSManifest;
+  const grid = document.getElementById('tool-grid');
+
+  function showEmpty(text){
+    M.showEmpty(grid, text);
+  }
+
+  M.loadCollection('/811/tools.json', { collection: '811' }).then(function (col){
+    M.logProblems(col.problems, '811');
+
+    if (!col.ok){
+      showEmpty('清单没加载出来，检查 tools.json 路径或用本地服务器打开。');
+      return;
+    }
+    if (!col.items.length){ showEmpty('暂无工具'); return; }
+
+    M.renderCards(grid, col.items, { template: '#tpl-tool-card' });
+  });
+})();
+</script>
 
 </body>
 </html>

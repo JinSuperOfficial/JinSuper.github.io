@@ -415,6 +415,7 @@
 
 <div class="ctx" id="ctx" role="menu" aria-hidden="true"></div>
 
+<script src="/lib/manifest.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════
    目录地图 · 自动检测当前目录
@@ -444,6 +445,15 @@ function detectDir(){
 const DIR = detectDir();                  // 例：'/Skills/' 或 '/'
 const MANIFEST = DIR + 'skills.json';     // 例：'/Skills/skills.json'
 
+/* 站点运行时：清单归一 / 排序 / 图标 / 路径编码都在里面（见 MANIFEST.md） */
+const M = window.JSManifest;
+
+/** 列表里显示用的路径：Skills 自己的文件去掉前缀，站里其它位置显示完整路径 */
+function shownPath(href){
+  const p = M.sitePath(href);
+  return p.indexOf('Skills/') === 0 ? p.slice('Skills/'.length) : p;
+}
+
 /* ── 面包屑 ── */
 function renderPath(){
   const segs = DIR.split('/').filter(Boolean);
@@ -465,62 +475,9 @@ function renderPath(){
     '加文件 = 丢进 ' + DIR + ' + 清单写一行';
 }
 
-/* ── 图标 ── */
-const ICONS = {
-  canvas: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c2.6 0 3.4-10 6.6-10S13 15 16 15s2.4-4 5-4"/></svg>`,
-  color:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="9.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="9.5" cy="15" r="1.1" fill="currentColor" stroke="none"/></svg>`,
-  demo:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>`,
-  doc:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v6h6"/></svg>`,
-  game:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="11" rx="4"/><path d="M7 12h2M8 11v2M15.5 12h.01M17.5 13.5h.01"/></svg>`,
-  tool:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0 5 5L21 21H3l9.3-9.3a4 4 0 0 0 5-5l-2.6 2.6-2.2-2.2 2.6-2.6Z"/></svg>`,
-  page:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>`,
-};
-
-const RULES = [
-  { test: /function|plot|graph|canvas|chart/i, kind: 'canvas' },
-  { test: /color|palette|theme/i,              kind: 'color'  },
-  { test: /demo|sample|example/i,              kind: 'demo'   },
-  { test: /readme|doc|guide|manual/i,          kind: 'doc'    },
-  { test: /game|play/i,                        kind: 'game'   },
-  { test: /tool|util|calc/i,                   kind: 'tool'   },
-];
-
-function guessKind(file){
-  for (const r of RULES){
-    if (r.test.test(file)) return r.kind;
-  }
-  return 'page';
-}
-
-function iconFor(kind){
-  return ICONS[kind] || ICONS.page;
-}
-
-function titleFromFile(file){
-  let name = file.replace(/\.html?$/i, '').replace(/[-_]+/g, ' ');
-  name = name.replace(/\b\w/g, c => c.toUpperCase());
-  const map = {
-    'Function':'函数显示器','Plot':'函数显示器','Graph':'函数显示器',
-    'Color':'配色板','Palette':'配色板','Theme':'主题预览','Demo':'演示页',
-  };
-  return map[name] || name || file;
-}
-
-function encPath(p){
-  return String(p).split('/').map(encodeURIComponent).join('/');
-}
-
-/* 只给显示用：'../811/homework.html' → '811/homework.html'
-   （链接仍然走 DIR + encPath(file)，别拿这个去 fetch） */
-function sitePath(p){
-  const segs = [];
-  for (const s of String(p).split('/')){
-    if (!s || s === '.') continue;
-    if (s === '..'){ segs.pop(); continue; }
-    segs.push(s);
-  }
-  return segs.join('/');
-}
+/* ── 图标 / kind / 路径 ──
+   以前这里有一份 ICONS + RULES + guessKind + titleFromFile + encPath，五个页面各抄一份。
+   现在由站点运行时统一提供：M.iconSvg(name, 1.8) / it.kind / M.sitePath(href)。 */
 
 function tick(el, to, dur = 600){
   const from = Number(el.dataset.from || 0);
@@ -564,20 +521,12 @@ async function readManifest(){
     try { data = JSON.parse(text); }
     catch { return null; }
 
-    if (!data || !Array.isArray(data.items)) return null;
+    if (!data || (!Array.isArray(data) && !Array.isArray(data.items))) return null;
 
-    return data.items
-      .filter(it => it && typeof it.file === 'string' && it.file.trim())
-      .map(it => {
-        const file = it.file.trim();
-        return {
-          file,
-          title: it.title || titleFromFile(file),
-          desc: it.desc || '',
-          kind: it.kind || guessKind(file),
-          icon: it.icon || null,
-        };
-      });
+    /* 归一交给站点运行时：hidden 过滤、order 排序、id 去重、图标与路径换算都在里面 */
+    const col = M.normalizeCollection(data, { base: DIR, collection: 'skills' });
+    M.logProblems(col.problems, 'Skills');
+    return col.items;
   } catch {
     return null;
   }
@@ -616,7 +565,7 @@ function render(){
   const q = qEl.value.trim().toLowerCase();
 
   const rows = !q ? items : items.filter(it =>
-    (it.file + ' ' + it.title + ' ' + it.desc + ' ' + it.kind)
+    (it.href + ' ' + it.id + ' ' + it.title + ' ' + it.desc + ' ' + it.kind + ' ' + it.tags.join(' '))
       .toLowerCase().includes(q)
   );
 
@@ -627,11 +576,16 @@ function render(){
            <p>在 <code>${esc(DIR)}</code> 下建一个 <code>skills.json</code>，
               把文件写进去。格式如下。</p>
            <pre>{
+  "collection": "skills",
+  "title": "工具站",
+  "root": "/Skills/",
   "items": [
     {
-      "file": "standalone/function.html",
+      "id": "function",
       "title": "函数显示器",
       "desc": "一句话介绍",
+      "href": "/Skills/standalone/function.html",
+      "icon": "curve",
       "kind": "canvas"
     }
   ]
@@ -645,21 +599,20 @@ function render(){
   }
 
   listEl.innerHTML = rows.map((it, i) => {
-    const kind = it.kind || guessKind(it.file);
-    const icon = it.icon || iconFor(kind);
-    const href = DIR + encPath(it.file);
+    const icon = M.iconSvg(it.icon, 1.8);      /* 1.8：和这一页原来的描边粗细一致 */
     const num  = String(i + 1).padStart(2, '0');
 
     return `
       <li>
-        <a class="row" href="${href}" target="_blank" rel="noopener">
+        <a class="row" href="${it.href}" target="_blank" rel="noopener"
+           data-id="${esc(it.id)}" data-key="${esc(it.key)}" data-href="${esc(it.href)}">
           <span class="num">${num}</span>
           <span class="ico" aria-hidden="true">${icon}</span>
-          <span class="name">${esc(sitePath(it.file))}</span>
+          <span class="name">${esc(shownPath(it.href))}</span>
           <span class="label${it.title ? '' : ' empty'}">${
             esc(it.title || '（还没写描述）')
           }</span>
-          <span class="kind">${esc(kind)}</span>
+          <span class="kind">${esc(it.kind)}</span>
           <span class="arrow" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -701,7 +654,7 @@ const CTX_ICONS = {
 /* 在卡片行上右键 */
 function menuForRow(rowData){
   return [
-    { head: rowData.file },
+    { head: rowData.path },
 
     { icon: CTX_ICONS.open, label: '在新标签页打开',
       key: '↵', action: () => window.open(rowData.href, '_blank', 'noopener') },
@@ -710,11 +663,11 @@ function menuForRow(rowData){
       action: () => copyText(new URL(rowData.href, location.origin).href, '链接已复制') },
 
     { icon: CTX_ICONS.code, label: '复制文件名',
-      action: () => copyText(rowData.file, '文件名已复制') },
+      action: () => copyText(rowData.path, '文件名已复制') },
 
     { icon: CTX_ICONS.file, label: '查看源码',
       action: () => window.open(
-        DIR + 'viewer.html?f=' + encodeURIComponent(rowData.file),
+        DIR + 'viewer.html?f=' + encodeURIComponent(rowData.href),
         '_blank',
         'noopener'
       ) },
@@ -722,7 +675,7 @@ function menuForRow(rowData){
     { sep: true },
 
     { icon: CTX_ICONS.search, label: '过滤此文件',
-      action: () => { qEl.value = rowData.file; render(); qEl.focus(); } },
+      action: () => { qEl.value = rowData.path; render(); qEl.focus(); } },
 
     { icon: CTX_ICONS.reload, label: '重新读取清单',
       key: 'R', action: reload },
@@ -864,9 +817,8 @@ document.addEventListener('contextmenu', e => {
 
   const row = e.target.closest('.row');
   if (row){
-    const href = row.getAttribute('href');
-    const file = decodeURIComponent(href.split('/').pop() || '');
-    openCtx(e.clientX, e.clientY, menuForRow({ href, file }));
+    const href = row.dataset.href || row.getAttribute('href');
+    openCtx(e.clientX, e.clientY, menuForRow({ href, path: shownPath(href) }));
   } else {
     openCtx(e.clientX, e.clientY, menuForBlank());
   }

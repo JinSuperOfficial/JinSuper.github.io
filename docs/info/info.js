@@ -37,97 +37,101 @@ const esc = s => String(s).replace(/[&<>"]/g,
 
 /* ═══════════════════════════════════════════════════════
    01 · 目录树
+   ---------------------------------------------------
+   结构由 build/gen-site-index.mjs 扫盘生成（docs/info/site-index.js），
+   所以「站里有哪些文件」永远不会和现实脱节。
+   这里只保留两样扫不出来的东西：
+     · DESC —— 每个节点的说明文字（人工维护，按站点绝对路径索引）
+     · ICONS —— /asset/icon 的图标名单（第三方图标集，数量由校验器盯着）
    ═══════════════════════════════════════════════════════ */
 
-const TREE = {
-  name:'/', dir:true, desc:'网站根目录', open:true, children:[
+const TREE = window.SITE_INDEX || { name: '/', dir: true, open: true, children: [] };
 
-    { name:'404.html', desc:'404 错误页「所寻之处，一切皆空」，含返回 /Skills/ 的按钮' },
-    { name:'robots.txt', desc:'爬虫规则：放行 GPTBot / ClaudeBot 抓 /p/，其余全站允许；指向 sitemap' },
-    { name:'sk.json', desc:'根级映射表：HOMEWORK-TEMP / skills / reference 三个别名' },
-    { name:'skills.json', desc:'空文件 —— 根级旧清单，目前无内容，且未被任何页面引用' },
+const DESC = {
+  '/404.html': '404 错误页「所寻之处，一切皆空」，含返回 /Skills/ 的按钮',
+  '/robots.txt': '爬虫规则：放行 GPTBot / ClaudeBot 抓 /p/，其余全站允许；指向 sitemap',
+  '/sk.json': '文档站清单：分组 → 文档路径（相对 /p/），加文档改这里',
+  '/site.json': '站点级目录：有哪些 collection、sitemap 额外条目、校验忽略名单',
+  '/index.html': '百宝箱首页：读 site.json 找齐清单，按 collection 分组渲染卡片',
+  '/public.html': '空文件（占位，没有内容也没被引用）',
+  '/sitemap.xml': '站点地图（由 build/gen-site-index.mjs 生成，别手改）',
+  '/favicon.svg': '站点图标（由 build/make-favicon.mjs 从 logo.svg 生成）',
+  '/apple-touch-icon.svg': 'iOS 添加到主屏用的图标',
+  '/author.png': '作者头像（旧版首页遗留）',
 
-    { name:'asset/', dir:true, desc:'设计素材：图标、配色方案与技能文档', children:[
-      { name:'SKILL.md', desc:'better-theme 技能文档：反主流美学的设计规范（配色 / 布局 / 文案）' },
-      { name:'color-theme.md', desc:'配色库：21 组调色板，覆盖暖调大地 / 冷调自然 / 传统文化 / 现代极简 / 2026 趋势' },
-      { name:'功能.md', desc:'better-interaction 技能：滚动驱动、指针响应、微交互与动效规范' },
-      { name:'icon/', dir:true, desc:'598 枚 Ant Design 官方 SVG 图标 + 版权说明', children:[
-        { name:'home.svg', desc:'示例图标 · 主页' },
-        { name:'Function.svg', desc:'示例图标 · 函数' },
-        { name:'集合基本信息.txt', desc:'图标集合来源：iconfont cid=9402，整理者「竹尔」，非原创' },
-        { name:'作者主页-竹尔.url', desc:'指向图标整理者主页的快捷方式' },
-        { name:'…… 其余 595 枚', desc:'完整清单见本页「02 图标索引」', ghost:true }
-      ] }
-    ] },
+  '/lib/': '站点运行时：清单归一 + 图标注册表，四个卡片页共用这一份',
+  '/lib/manifest.js': '唯一清单读取器：归一 / 排序 / 去重 / 渲染 / 图标，浏览器与构建脚本共用',
+  '/lib/icons.js': '已废弃：图标注册表已并入 manifest.js，可以删掉',
 
-    { name:'811/', dir:true, desc:'八年(11)班专区：作业、课程表与工具入口', children:[
-      { name:'index.html', desc:'811 工具箱：作业 / 课程表入口，页脚链回百宝箱与工具站' },
-      { name:'homework.html', desc:'今日份美味作业：读 data/homework.json 渲染每日清单，带完成进度与色调系统' },
-      { name:'classtable.html', desc:'课程表 · 811班：基础版 / 缩略版两套，可切完整课表与今日课程' },
-      { name:'data/', dir:true, desc:'作业数据', children:[
-        { name:'homework.json', desc:'作业数据：按科目键 + 特殊字段「笔记」' }
-      ] }
-    ] },
+  '/811/': '八年(11)班专区：作业、课程表与工具入口',
+  '/811/index.html': '811 工具箱：读 811/tools.json 渲染卡片，页脚链回百宝箱与工具站',
+  '/811/tools.json': '811 专区清单：加工具只改这里',
+  '/811/homework.html': '今日份美味作业：读 data/homework.json，勾选状态存 localStorage',
+  '/811/classtable.html': '课程表 · 811班：基础版 / 缩略版两套，可切完整课表与今日课程',
+  '/811/data/': '作业数据目录',
+  '/811/data/homework.json': '作业数据：按科目键 + 特殊字段「笔记」',
 
-    { name:'Skills/', dir:true, desc:'工具站主目录：索引、清单、源码查看器', children:[
-      { name:'index.html', desc:'目录页：读 skills.json 渲染列表，带搜索、面包屑、自定义右键菜单' },
-      { name:'skills.json', desc:'工具清单：11 条 items，按 canvas → demo → doc → tool 分组' },
-      { name:'viewer.html', desc:'源码查看器：viewer.html?f=路径 高亮并查看任意页面源码' },
-      { name:'data/', dir:true, desc:'空目录（作业数据已迁往 /811/data）', children:[] },
+  '/Skills/': '工具站主目录：索引、清单、源码查看器',
+  '/Skills/index.html': '目录页：读 skills.json 渲染列表，带搜索、面包屑、自定义右键菜单',
+  '/Skills/skills.json': '工具站清单：加工具只改这里（格式见 MANIFEST.md）',
+  '/Skills/viewer.html': '源码查看器：viewer.html?f=路径 高亮并查看任意页面源码',
+  '/Skills/data/': '空目录（作业数据已迁往 /811/data）',
+  '/Skills/standalone/': '独立小应用',
+  '/Skills/standalone/function.html': '函数显示器：画函数 / 隐式 / 极坐标 / 参数方程，网格吸附、六套配色、JSON 导入导出',
+  '/Skills/docs/': '文档类页面与说明',
+  '/Skills/docs/docs.html': '文档站：跳转页 → /p/docs.html',
+  '/Skills/docs/blog.html': 'BLOG：跳转页 → /p/',
+  '/Skills/docs/备注.txt': 'kind 内置值说明：canvas / color / demo / doc / game / tool 的图标与适用场景',
+  '/Skills/tools/': '工具',
+  '/Skills/tools/homework-static.html': '作业页静态版：历史版本，读同一份 /811/data/homework.json',
+  '/Skills/tools/htmlview.html': 'HTML 在线运行：三栏编辑器，HTML / CSS / JS 分标签，实时预览与控制台',
+  '/Skills/tools/speedtest.html': '服务器性能测试：本机跑分 + 网络测速（延迟 / 抖动 / 下载 / 上传）',
+  '/Skills/tools/test_html_20260919_d04d4f.html': '单摆计算器：周期 T 与摆长 l 任一互算',
+  '/Skills/tools/hw-api.php': '作业统计云函数：热铁盒执行，GitHub Pages 上只会被当源码返回',
+  '/Skills/idea/': '创意 / 试验页（暂未列入清单）',
+  '/Skills/idea/moont.html': '月相演示器：三个视角看懂月球阴影',
+  '/Skills/idea/tihu.html': '海风骑行日 · 鹈鹕的自行车：纯 SVG 动画，IK 反解腿部',
+  '/Skills/idea/PelicanTest.html': '与 tihu.html 内容基本相同的另一版本',
 
-      { name:'standalone/', dir:true, desc:'独立小应用', children:[
-        { name:'function.html', desc:'函数显示器：画函数 / 隐式 / 极坐标 / 参数方程，网格吸附、六套配色、JSON 导入导出' }
-      ] },
-      { name:'docs/', dir:true, desc:'文档类页面与说明', children:[
-        { name:'docs.html', desc:'文档站：跳转页 → /p/docs.html' },
-        { name:'blog.html', desc:'BLOG：跳转页 → /p/' },
-        { name:'备注.txt', desc:'kind 内置值说明：canvas / color / demo / doc / game / tool 的图标与适用场景' }
-      ] },
-      { name:'tools/', dir:true, desc:'工具', children:[
-        { name:'homework-static.html', desc:'作业页静态版：历史版本，读同一份 /811/data/homework.json' },
-        { name:'htmlview.html', desc:'HTML 在线运行：三栏编辑器，HTML / CSS / JS 分标签，实时预览与控制台' },
-        { name:'speedtest.html', desc:'服务器性能测试：本机跑分 + 网络测速（延迟 / 抖动 / 下载 / 上传）' },
-        { name:'test_html_20260919_d04d4f.html', desc:'单摆计算器：周期 T 与摆长 l 任一互算' }
-      ] },
-      { name:'idea/', dir:true, desc:'创意 / 试验页（暂未列入清单）', children:[
-        { name:'moont.html', desc:'月相演示器：三个视角看懂月球阴影' },
-        { name:'tihu.html', desc:'海风骑行日 · 鹈鹕的自行车：纯 SVG 动画，IK 反解腿部' },
-        { name:'PelicanTest.html', desc:'与 tihu.html 内容基本相同的另一版本' }
-      ] }
-    ] },
+  '/p/': '文章 / 文档区',
+  '/p/index.html': 'para/ — 写点什么：文章列表页（BLOG 的实际入口）',
+  '/p/docs.html': '文档页：构建产物，模板在 build/template/docs.html，别直接改它',
+  '/p/docs-md.js': '文档站的浏览器端渲染器（构建产物）',
+  '/p/docs-md.css': '文档站样式（构建产物，含 KaTeX）',
+  '/p/docs-card.js': '文档站的 <card> 插件（构建时也会拷一份进 build/lib）',
+  '/p/fonts/': 'KaTeX 字体（20 个 woff2，站点不引用任何外部字体）',
+  '/p/raw.php': '云函数：取 .md 真原文，公式才完整；别删',
+  '/p/SKILL.md': 'better-theme 技能文档副本',
+  '/p/color-theme.md': '配色方案库副本',
+  '/p/temp-homework.md': '临时文件：英语作文题（家用机器人），尚未接入作业页',
+  '/p/TEST.md': '测试文件，内容仅 sss / # a',
+  '/p/para/': '文章源文件',
+  '/p/para/1SetUp.md': '启程篇',
+  '/p/para/homework.md': '本周作业：iframe 嵌 /811/homework.html',
 
-    { name:'p/', dir:true, desc:'文章 / 文档区', children:[
-      { name:'index.html', desc:'para/ — 写点什么：文章列表页（BLOG 的实际入口）' },
-      { name:'docs.html', desc:'文档页，含 sk.json 清单读取逻辑' },
-      { name:'SKILL.md', desc:'better-theme 技能文档副本' },
-      { name:'color-theme.md', desc:'配色方案库副本' },
-      { name:'temp-homework.md', desc:'临时文件：英语作文题（家用机器人），尚未接入作业页' },
-      { name:'TEST.md', desc:'测试文件，内容仅 sss / # a' },
-      { name:'para/', dir:true, desc:'文章源文件', children:[
-        { name:'First.md', desc:'首页欢迎文案：811-Studio 署名与说明' }
-      ] }
-    ] },
+  '/asset/': '设计素材：图标、配色方案与技能文档',
+  '/asset/SKILL.md': 'better-theme 技能文档：反主流美学的设计规范（配色 / 布局 / 文案）',
+  '/asset/color-theme.md': '配色库：21 组调色板，覆盖暖调大地 / 冷调自然 / 传统文化 / 现代极简 / 2026 趋势',
+  '/asset/功能.md': 'better-interaction 技能：滚动驱动、指针响应、微交互与动效规范',
+  '/asset/icon/': 'Ant Design 官方 SVG 图标库（iconfont cid=9402，整理者「竹尔」，非原创）',
 
-    { name:'old/', dir:true, desc:'历史归档', children:[
-      { name:'index.html', desc:'目录页旧版备份' },
-      { name:'func-v4.html', desc:'函数显示器 旧版 V4' },
-      { name:'func-v5.html', desc:'函数显示器 旧版 V5' },
-      { name:'skills.json', desc:'旧版清单：仅 func-v4 / func-v5 两条' }
-    ] },
+  '/docs/': '站点信息文档',
+  '/docs/info/': '站点信息页：目录地图 + 图标索引 + SVG 说明',
+  '/docs/info/index.html': '站点信息页（本页）',
+  '/docs/info/info.css': '本页样式表',
+  '/docs/info/info.js': '本页脚本：说明文字（DESC）+ 图标名单（ICONS）+ 渲染逻辑',
+  '/docs/info/site-index.js': '目录树数据（由 build/gen-site-index.mjs 生成，别手改）',
+  '/docs/sitemap.html': '整页快照旧版：内容与 /docs/info/ 重复，已改成跳转',
 
-    { name:'web/', dir:true, desc:'备选首页', children:[
-      { name:'index.html', desc:'百宝箱：常驻读取 /Skills/skills.json，渲染成卡片网格' },
-      { name:'bak.html', desc:'百宝箱旧版备份' }
-    ] },
+  '/old/': '历史归档（不维护）',
+  '/old/index.html': '目录页旧版备份',
+  '/old/func-v4.html': '函数显示器 旧版 V4',
+  '/old/func-v5.html': '函数显示器 旧版 V5',
+  '/old/skills.json': '旧版清单：仅 func-v4 / func-v5 两条',
 
-    { name:'docs/', dir:true, desc:'站点信息文档（当前页面所在）', children:[
-      { name:'info/', dir:true, desc:'你正在看的页面', open:true, children:[
-        { name:'index.html', desc:'站点信息页：目录地图 + 图标索引 + SVG 说明' },
-        { name:'info.css', desc:'本页样式表' },
-        { name:'info.js', desc:'本页脚本：目录树数据与图标清单' }
-      ] }
-    ] }
-  ]
+  '/web/': '备选首页（与根首页同构，样式不同）',
+  '/web/index.html': '百宝箱：同样读 /site.json 与各清单，按 collection 分组',
+  '/web/bak.html': '百宝箱旧版备份',
 };
 
 const ICO = {
@@ -153,6 +157,7 @@ function buildNode(node, parentPath){
   if (node.open) li.classList.add('is-open');
 
   const path = parentPath + node.name;
+  const desc = DESC[path] || node.desc || '';      /* 说明文字人工维护，结构来自生成数据 */
   const row = document.createElement('div');
   row.className = 'row';
   if (node.dir) row.setAttribute('role', 'treeitem');
@@ -161,20 +166,31 @@ function buildNode(node, parentPath){
     (node.dir ? `<span class="tw">${ICO.chev}</span>` : '<span class="tw"></span>') +
     `<span class="fi">${node.dir ? ICO.dir : ICO.file}</span>` +
     `<span class="nm">${esc(node.name)}</span>` +
-    `<span class="dq">${esc(node.desc || '')}</span>` +
+    `<span class="dq">${esc(desc)}</span>` +
     (node.ghost ? '' : `<button class="cp" type="button" data-path="${esc(path)}">复制</button>`);
 
   li.appendChild(row);
+
+  const toggle = () => row.addEventListener('click', e => {
+    if (e.target.closest('.cp')) return;
+    li.classList.toggle('is-open');
+  });
 
   if (node.dir && node.children && node.children.length){
     const ul = document.createElement('ul');
     node.children.forEach(c => ul.appendChild(buildNode(c, path)));
     li.appendChild(ul);
-
-    row.addEventListener('click', e => {
-      if (e.target.closest('.cp')) return;
-      li.classList.toggle('is-open');
-    });
+    toggle();
+  } else if (node.dir && node.count){
+    /* 文件太多的目录（比如 /asset/icon）：不铺开，只报个数 */
+    const ul = document.createElement('ul');
+    const ghost = document.createElement('li');
+    ghost.className = 'node';
+    ghost.innerHTML = '<div class="row"><span class="tw"></span><span class="fi"></span>' +
+      `<span class="nm">……</span><span class="dq">共 ${node.count} 个文件（太多了，不逐个铺开）</span></div>`;
+    ul.appendChild(ghost);
+    li.appendChild(ul);
+    toggle();
   }
 
   flatIndex.push({ node, path, li });
@@ -199,9 +215,9 @@ function nodeMatches(node, q){
 
 function applyTree(q){
   const qq = q.trim().toLowerCase();
-  flatIndex.forEach(({ node, li }) => {
-    const self = (node.name + ' ' + (node.desc || '')).toLowerCase().includes(qq);
-    const hit = nodeMatches(node, qq);
+  flatIndex.forEach(({ node, path, li }) => {
+    const self = (node.name + ' ' + (DESC[path] || node.desc || '')).toLowerCase().includes(qq);
+    const hit = nodeMatches(node, qq) || self;
     li.classList.toggle('is-hidden', !hit);
     if (qq && hit){
       if (node.dir) li.classList.add('is-open');
@@ -228,7 +244,9 @@ renderTree();
    02 · 图标索引
    ═══════════════════════════════════════════════════════ */
 
-/* 扁平清单：/asset/icon 下全部 SVG，共 598 枚（按文件名排序） */
+/* 扁平清单：/asset/icon 下全部 SVG（按文件名排序）。
+   这一份是人工维护的：它是第三方图标集的静态名单，几乎不变，
+   所以没跟着目录树一起生成；build/verify-manifests.mjs 会在数量对不上时提醒。 */
 const ICONS = [
 /* A */ '1_1','Batch_folding','CI-circle-fill','CI','CodeSandbox-circle-f','CodeSandbox-square-f','CodeSandbox','Console-SQL','Dollar-circle-fill','Dollar','EURO-circle-fill','EURO','Field-Binary','Field-String','Field-number','Field-time','Function','GIF','Gitlab-fill','Gitlab','HTML5-fill','HTML5','IE-circle-fill','IE-square-fill','IE','Import','Partition','Pound-circle-fill','Pound','QQ-circle-fill','QQ-square-fill','QQ','Report','Stored_procedure','USB-fill','USB','View','YUAN-circle-fill','YUAN','Youtube-fill','Youtube','account_book-fill','account_book','add_user','addteam','aim','alert-fill','alert','alibaba','align-center','align-left','align-right','alipay-circle-fill','alipay-square-fill','alipay','aliwangwang-fill','aliwangwang','amazon-circle-fill','amazon-square-fill','amazon','android-fill','android','ant-cloud','ant_design','apartment','api-fill','api','app_store-fill','app_store','apple-fill','apple','appstore_add','area_chart','arrawsalt','arrowdown','arrowleft','arrowright','arrowup','attachment','audio-fill','audio','audio_static','audit','backward','bank-fill','bank','bar_chart','barcode','batch_folding-fill','behance-circle-fill','behance-square-fill','behance','bell-fill','bell','bg-colors','block','bold','book-fill','book','border-bottom',
 /* B */ 'border-horizontal','border-inner','border-left','border-outer','border-right','border-top','border-verticle','border','box_plot-fill','box_plot','branches','bug-fill','bug','build-fill','build','bulb-fill','bulb','calculator-fill','calculator','calendar-check-fill','calendar-check','calendar-fill','calendar','camera-fill','camera','car-fill','car','caret-down','caret-left','caret-right','caret-up','carry_out-fill','carry_out','check-circle-fill','check-circle','check-square-fill','check-square','check','chrome-fill','chrome','clear','close-circle-fill','close-circle','close-square-fill','close-square','close','cloud-download','cloud-fill','cloud-server','cloud-sync','cloud-upload','cloud','cluster','code','code_library-fill','code_library','codepen-circle-fill','codepen-square-fill','codepen','collapse','colum-height','column-width','comment','compass-fill','compass','compress','contacts-fill','contacts','container-fill','container','control-fill','control','copyright-circle-fil','copyright','credit_card-fill','credit_card','crown-fill','crown','customerservice-fill','customerservice','dash','dashboard-fill','dashboard','database-fill','database','delete-fill','delete','delete_column','delete_row','delete_team','delete_user','deployment_unit','desktop','detail-fill','detail','diff-fill','diff','dingtalk-circle-fill','dingtalk-square-fill','dingtalk',
