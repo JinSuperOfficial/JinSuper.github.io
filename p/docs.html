@@ -2502,6 +2502,37 @@ function classifyContent(res){
   return 'raw';
 }
 
+/**
+ * 从归档产物里取出正文。
+ * ---------------------------------------------------
+ * 产物是完整 HTML（有 head、有自己的最小外壳、有页脚），
+ * 直接塞进阅读器会把 <html>/<head> 也一起塞进去。
+ * 但它内部结构是固定的：正文就是那个 class 为 md 的 div，
+ * 所以取这一段即可；万一结构变了（手工改过产物），退回整段 ——
+ * 浏览器的解析器会把非法嵌套的标签修好，读是不会读坏的。
+ *
+ * 注意：这段代码住在 String.raw 模板里，注释里不能出现反引号（见 build/README 的坑清单）。
+ */
+function extractArchiveBody(html){
+  var s = String(html || '');
+  var start = s.indexOf('<div class="md">');
+  if (start < 0) return s;
+  var from = start + '<div class="md">'.length;
+
+  /* 从正文起点往后找配对的 </div>：数一下嵌套层数 */
+  var depth = 1, i = from;
+  var re = /<div\b|<\/div>/gi;
+  re.lastIndex = from;
+  var m;
+  while ((m = re.exec(s))){
+    if (m[0].charAt(1) === '/'){ depth--; if (!depth){ i = m.index; break; } }
+    else depth++;
+  }
+  if (!i || i <= from) return s.slice(from).replace(/<\/div>[\s\S]*$/, '');
+
+  return s.slice(from, i);
+}
+
 /** 读文本：raw.php 优先，退回平台渲染版 */
 function loadText(doc, cb){
   if (rawCache[doc.path] != null){
@@ -2516,7 +2547,7 @@ function loadText(doc, cb){
     var waiting = rawInflight[doc.path] || [];
     delete rawInflight[doc.path];
     if (!err && text != null) rawCache[doc.path] = { text: text, fromPlatform: !!fromPlatform };
-    offLoading(false);
+    offLoading(false, doc);
     waiting.forEach(function(f){ f(err, text, !!fromPlatform); });
   };
 
@@ -2548,8 +2579,14 @@ function loadText(doc, cb){
     });
 }
 
-/** 顶栏那个角标：加载中 / static */
-function offLoading(on){
+/**
+ * 顶栏那个角标：加载中 / static / 已归档
+ * ---------------------------------------------------
+ * 归档文章（sk.json 指向 /p/archive/*.html 的那些）走的是预渲染稿，
+ * 正文不经过浏览器端渲染器，所以角标如实写「已归档」——
+ * 一眼能看出这一篇是成品还是现场渲染的。
+ */
+function offLoading(on, doc){
   if (!loadBadgeEl) return;
   if (on){
     loadBadgeEl.textContent = '';
@@ -2558,7 +2595,11 @@ function offLoading(on){
   } else {
     var busy = Object.keys(rawInflight).length > 0;
     if (busy) return;
-    loadBadgeEl.innerHTML = '<span class="load-dot" aria-hidden="true"></span>static';
+    var archived = !!(doc && doc.kind === 'html');
+    loadBadgeEl.innerHTML = '<span class="load-dot" aria-hidden="true"></span>' + (archived ? '已归档' : 'static');
+    loadBadgeEl.title = archived
+      ? '这一篇是归档预渲染稿，正文直接读成品，不再现场渲染'
+      : '正文由本地渲染器现场渲染，页面不请求任何外部服务';
   }
 }
 
@@ -2789,14 +2830,64 @@ function openDoc(p, fromHash){
     return;
   }
 
-  if (doc.kind === 'code' || doc.kind === 'html'){
+  if (doc.kind === 'code'){
     btnToggle.style.display = 'none';
     if (cachedText != null){ renderCodeView(cachedText); return; }
     showLoading(doc);
     loadText(doc, function(err, text){
       if (err || text == null){ showLoadError(doc, err); return; }
       renderCodeView(text);
-      docMetaEl.textContent = doc.kind === 'html' ? 'HTML 源码' : '纯文本';
+      docMetaEl.textContent = '纯文本';
+    });
+    return;
+  }
+
+  /*
+   * HTML 文档：/p/archive/ 下的是**归档预渲染稿**（发布控制台产出的成品），
+   * 当正文直接注入，不再当「HTML 源码」看。
+   * 判据是路径落在 /p/archive/ 下 —— sk.json 里登记的就是这个写法，
+   * 之外的手写 .html 仍然按源码显示（免得把一张独立页面糊进阅读器里）。
+   * 注释里同样不能出现反引号：整段住在 String.raw 模板里。
+   */
+  if (doc.kind === 'html'){
+    if (!/^archive\//.test(String(doc.path))){
+      btnToggle.style.display = 'none';
+      if (cachedText != null){ renderCodeView(cachedText); return; }
+      showLoading(doc);
+      loadText(doc, function(err, text){
+        if (err || text == null){ showLoadError(doc, err); return; }
+        renderCodeView(text);
+        docMetaEl.textContent = 'HTML 源码';
+      });
+      return;
+    }
+
+    btnToggle.style.display = 'none';
+    function showPrerendered(text){
+      if (!text || !text.trim()){ showLoadError(doc, new Error('产物是空的')); return; }
+      contentEl.innerHTML = '<div class="md">' + extractArchiveBody(text) + '</div>';
+      /* 后面这几步和 Markdown 路线共用：相对路径、代码组、选项卡、复制按钮、卡片兜底 */
+      fixURLs(contentEl);
+      fixChartBlocks(contentEl);
+      initCodeGroups(contentEl);
+      initTabs(contentEl);
+      addCodeCopyButtons(contentEl);
+      if (window.DocsCard && typeof window.DocsCard.enhance === 'function'){
+        try { window.DocsCard.enhance(contentEl); }catch(e){}
+      }
+      buildOutline();
+      appendDocNav();
+      contentEl.scrollTop = 0;
+      updateProgress();
+      docMetaEl.textContent = 'HTML · 归档预渲染';
+      offLoading(false, doc);
+    }
+
+    if (cachedText != null){ showPrerendered(cachedText); return; }
+    showLoading(doc);
+    loadText(doc, function(err, text){
+      if (err || text == null){ showLoadError(doc, err); return; }
+      showPrerendered(text);
     });
     return;
   }

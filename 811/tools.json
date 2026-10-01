@@ -20,6 +20,15 @@
       "icon": "calendar",
       "kind": "demo",
       "order": 20
+    },
+    {
+      "id": "english",
+      "title": "英语",
+      "desc": "Unit 1–5 的课文录音，点开就能听，一个单元连着播。",
+      "href": "/811/english.html",
+      "icon": "audio",
+      "kind": "tool",
+      "order": 30
     }
   ]
 }
