@@ -38,6 +38,32 @@
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   --ease:cubic-bezier(.2,.7,.2,1);
 
+  /* ── 圆角：macOS 风格层级 token ──
+     一个页面里只有这几档，别的写法一律不出现。
+     档位与用法见 .Skills/theme-plus/references/circle_angle.md：
+       4px 标签 / 徽章 · 6px 小控件 · 8px 按钮输入框 · 10px 卡片 · 12px 窗口弹窗
+     胶囊只留给开关、状态点、独立浮起的小按钮。
+     --radius-*   按组件取用（语义）
+     --radius-<层级>-px   …-px 是给嵌套元素做同心计算的数字版本
+     --curve       连续曲率开关：squircle 由 @supports 渐进增强，不支持就退回普通圆角 */
+  --radius-xs:4px;
+  --radius-sm:6px;
+  --radius-md:8px;
+  --radius-lg:10px;
+  --radius-xl:12px;
+  --radius-pill:999px;
+
+  --radius-window:var(--radius-xl);
+  --radius-card:var(--radius-lg);
+  --radius-control:var(--radius-md);
+  --radius-badge:var(--radius-xs);
+  --radius-pill-ctl:var(--radius-pill);
+  --radius-inner:var(--radius-sm);
+
+  /* 连续曲率：只在 @supports (corner-shape:squircle) 的浏览器里生效，
+     不支持就当它不存在，圆角退回上面这几档 */
+  --curve:squircle;
+
   --sidebar-w:280px;
   --bar-h:52px;
   --fs-md:15px;
@@ -264,7 +290,7 @@ body{
 .side-title .mark{
   width:26px;height:26px;flex:none;
   display:grid;place-items:center;
-  border-radius:6px;
+  border-radius:var(--radius-control);
   background:var(--accent-soft);
   border:1px solid var(--accent-line);
   color:var(--accent);
@@ -285,7 +311,7 @@ body{
   color:var(--faint);
   padding:2px 6px;
   background:color-mix(in srgb,var(--ink) 4%,transparent);
-  border-radius:3px;
+  border-radius:var(--radius-sm);
 }
 
 .side-collapse:hover{color:var(--ink);border-color:var(--dim)}
@@ -301,7 +327,7 @@ html.side-collapsed .sidebar{width:0;opacity:0;border-right-width:0;pointer-even
   padding:7px 28px 7px 30px;
   background:var(--raised);
   border:1px solid var(--line);
-  border-radius:5px;
+  border-radius:var(--radius-control);
   color:var(--ink);
   font-family:var(--mono);font-size:12px;
   outline:none;
@@ -341,7 +367,7 @@ x
   border:0;background:transparent;
   color:var(--faint);
   cursor:pointer;
-  border-radius:3px;
+  border-radius:var(--radius-sm);
   padding:0;
 }
 .search-clear.on{display:flex}
@@ -357,7 +383,7 @@ x
   scrollbar-color:var(--line) transparent;
 }
 .filelist::-webkit-scrollbar{width:8px}
-.filelist::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+.filelist::-webkit-scrollbar-thumb{background:var(--line);border-radius:var(--radius-badge)}
 .filelist::-webkit-scrollbar-thumb:hover{background:var(--dim)}
 
 .group-head{
@@ -385,7 +411,7 @@ x
 .file-item{
   display:flex;align-items:center;gap:9px;
   padding:7px 9px;
-  border-radius:5px;
+  border-radius:var(--radius-control);
   cursor:pointer;
   color:var(--ink);
   opacity:.72;
@@ -402,7 +428,7 @@ x
 }
 .file-item.active::before{
   content:'';position:absolute;left:0;top:6px;bottom:6px;
-  width:2px;border-radius:2px;
+  width:2px;border-radius:var(--radius-pill-ctl);
   background:var(--accent);
 }
 
@@ -424,7 +450,7 @@ x
   background:color-mix(in srgb,var(--accent) 30%,transparent);
   color:var(--ink);
   padding:0 1px;
-  border-radius:2px;
+  border-radius:var(--radius-badge);
 }
 
 .empty-side{
@@ -437,7 +463,7 @@ x
 .empty-side code{
   font-family:var(--mono);font-size:11.5px;
   background:color-mix(in srgb,var(--ink) 5%,transparent);
-  padding:1px 5px;border-radius:3px;
+  padding:1px 5px;border-radius:var(--radius-badge);
   color:var(--dim);
 }
 
@@ -522,7 +548,7 @@ html[data-glass="acrylic"]{
   padding:6px 11px;
   background:transparent;
   border:1px solid var(--line);
-  border-radius:5px;
+  border-radius:var(--radius-control);
   color:var(--dim);
   font-family:var(--mono);font-size:11.5px;
   cursor:pointer;
@@ -550,7 +576,7 @@ html[data-glass="acrylic"]{
 .content{padding-top:var(--bar-h)}
 .content::-webkit-scrollbar{width:11px;height:11px}
 .content::-webkit-scrollbar-thumb{
-  background:var(--line);border-radius:5px;
+  background:var(--line);border-radius:var(--radius-control);
   border:3px solid var(--bg);
 }
 .content::-webkit-scrollbar-thumb:hover{background:var(--dim)}
@@ -601,13 +627,13 @@ html[data-glass="acrylic"]{
   background:var(--md-code-inline);
   color:var(--accent);
   padding:.15em .4em;
-  border-radius:3px;
+  border-radius:var(--radius-badge);
   word-break:break-word;
 }
 .md pre{
   background:var(--md-code-bg);
   border:1px solid var(--line);
-  border-radius:7px;
+  border-radius:var(--radius-card);
   padding:14px 18px;
   overflow-x:auto;
   margin:1.2em 0;
@@ -619,8 +645,9 @@ html[data-glass="acrylic"]{
   color:var(--md-ink);
   padding:0;
   font-size:inherit;
-  border-radius:0;
   white-space:pre;
+  /* 内容自带底色时按同心公式收敛一圈；外层 pre 已经兜住圆角，这里只做兜底 */
+  border-radius:var(--radius-inner);
 }
 .md blockquote{
   margin:1.2em 0;
@@ -656,7 +683,7 @@ html[data-glass="acrylic"]{
 .md table th{font-weight:640;color:var(--ink)}
 .md img{
   max-width:100%;
-  border-radius:6px;
+  border-radius:var(--radius-control);
   border:1px solid var(--line);
   margin:1em 0;
 }
@@ -700,7 +727,7 @@ html[data-glass="acrylic"]{
 .img-view img{
   max-width:100%;
   max-height:calc(100dvh - 160px);
-  border-radius:6px;
+  border-radius:var(--radius-card);
   border:1px solid var(--line);
 }
 .frame-view{
@@ -738,7 +765,7 @@ html[data-glass="acrylic"]{
 .empty-main code{
   font-family:var(--mono);font-size:12px;
   background:color-mix(in srgb,var(--ink) 5%,transparent);
-  padding:2px 6px;border-radius:3px;
+  padding:2px 6px;border-radius:var(--radius-badge);
   color:var(--dim);
 }
 .empty-main pre{
@@ -746,7 +773,7 @@ html[data-glass="acrylic"]{
   color:var(--dim);
   background:color-mix(in srgb,var(--ink) 3%,transparent);
   border:1px solid var(--line);
-  border-radius:6px;
+  border-radius:var(--radius-card);
   padding:16px 18px;
   margin:20px auto 0;
   max-width:440px;
@@ -796,7 +823,7 @@ html[data-glass="acrylic"]{
 .drawer-bd::-webkit-scrollbar{width:10px}
 .drawer-bd::-webkit-scrollbar-thumb{
   background:var(--line);border:3px solid transparent;
-  background-clip:content-box;border-radius:8px;
+  background-clip:content-box;border-radius:var(--radius-control);
 }
 
 .group{padding:18px 0;border-bottom:1px solid var(--line-soft)}
@@ -820,7 +847,7 @@ html[data-glass="acrylic"]{
   display:flex;align-items:center;gap:9px;
   padding:9px 10px;
   border:1px solid var(--line);
-  border-radius:5px;
+  border-radius:var(--radius-control);
   background:transparent;
   cursor:pointer;
   text-align:left;
@@ -839,7 +866,7 @@ html[data-glass="acrylic"]{
 .theme-opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .swatch{
   width:22px;height:22px;flex:none;
-  border-radius:4px;
+  border-radius:var(--radius-xs);
   border:1px solid rgba(128,128,128,.28);
   background:linear-gradient(135deg,var(--sw-bg) 0 54%,var(--sw-accent) 54% 100%);
 }
@@ -850,21 +877,21 @@ input[type=range]{
   cursor:pointer;padding:0;margin:0;
 }
 input[type=range]::-webkit-slider-runnable-track{
-  height:2px;background:var(--line);border-radius:2px;
+  height:2px;background:var(--line);border-radius:var(--radius-pill-ctl);
 }
 input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none;
-  width:14px;height:14px;border-radius:50%;
+  width:14px;height:14px;border-radius:var(--radius-pill-ctl);
   background:var(--accent);
   border:0;margin-top:-6px;
   box-shadow:0 0 0 3px var(--accent-soft);
 }
-input[type=range]::-moz-range-track{height:2px;background:var(--line);border-radius:2px}
+input[type=range]::-moz-range-track{height:2px;background:var(--line);border-radius:var(--radius-pill-ctl)}
 input[type=range]::-moz-range-thumb{
-  width:14px;height:14px;border-radius:50%;
+  width:14px;height:14px;border-radius:var(--radius-pill-ctl);
   background:var(--accent);border:0;
 }
-input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:4px}
+input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:var(--radius-badge)}
 
 /* ── 设置里的选项按钮（顶栏效果 / 本页目录） ── */
 .opt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -872,7 +899,7 @@ input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4
   display:flex;flex-direction:column;align-items:center;gap:7px;
   padding:9px 8px;
   border:1px solid var(--line);
-  border-radius:5px;
+  border-radius:var(--radius-control);
   background:transparent;
   cursor:pointer;
   color:var(--dim);
@@ -886,13 +913,13 @@ input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4
 /* 效果预览：一条迷你顶栏浮在色块上，跟着当前不透明度实时变化 */
 .glass-chip{
   position:relative;width:100%;height:30px;flex:none;
-  border-radius:4px;overflow:hidden;
+  border-radius:var(--radius-sm);overflow:hidden;
   background:linear-gradient(112deg,
     var(--accent) 0%, var(--accent-line) 34%, var(--raised) 72%, var(--line) 100%);
 }
 .glass-chip i{
   position:absolute;left:4px;right:4px;top:4px;height:11px;
-  border-radius:3px;
+  border-radius:var(--radius-badge);
   background-color:color-mix(in srgb,var(--panel) var(--bar-alpha),transparent);
   background-image:var(--chip-sheen,none);
   background-size:var(--chip-size,auto);
@@ -915,7 +942,7 @@ input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4
   flex:none;
   padding:1px 8px 1px 7px;
   border:1px solid var(--line);
-  border-radius:999px;
+  border-radius:var(--radius-pill-ctl);
   background:color-mix(in srgb,var(--ink) 4%,transparent);
   color:var(--faint);
   font-family:var(--mono);font-size:11px;
@@ -924,7 +951,7 @@ input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4
 }
 .load-badge.on{ display:inline-flex }
 .load-dot{
-  width:6px;height:6px;flex:none;border-radius:50%;
+  width:6px;height:6px;flex:none;border-radius:var(--radius-pill-ctl);
   background:var(--accent);
   animation:loadPulse 1.05s var(--ease) infinite;
 }
@@ -954,7 +981,7 @@ input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4
   padding:9px 14px;
   background:var(--panel);
   border:1px solid var(--line);
-  border-radius:6px;
+  border-radius:var(--radius-control);
   font-family:var(--mono);font-size:12px;
   color:var(--ink);
   opacity:0;transform:translateY(6px);
@@ -998,7 +1025,7 @@ input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4
   flex:none;width:20px;height:20px;margin-right:8px;
   display:none;place-items:center;
   border:0;background:transparent;padding:0;
-  color:var(--faint);cursor:pointer;border-radius:4px;
+  color:var(--faint);cursor:pointer;border-radius:var(--radius-sm);
   transition:color .13s var(--ease),background .13s var(--ease);
 }
 .outline-x:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,transparent)}
@@ -1016,7 +1043,7 @@ html[data-outline="float"] .outline{
   z-index:105;
   padding:12px 6px 14px;
   border:1px solid var(--line);
-  border-radius:10px;
+  border-radius:var(--radius-window);
   background:color-mix(in srgb,var(--panel) var(--bar-alpha),transparent);
   -webkit-backdrop-filter:blur(20px) saturate(150%);
   backdrop-filter:blur(20px) saturate(150%);
@@ -1035,7 +1062,7 @@ html[data-outline="float"] .outline-head{margin-bottom:8px}
   display:none;align-items:center;gap:5px;
   padding:5px 10px;
   border:1px solid var(--line);
-  border-radius:999px;
+  border-radius:var(--radius-pill-ctl);
   background:color-mix(in srgb,var(--panel) 88%,transparent);
   -webkit-backdrop-filter:blur(12px) saturate(140%);
   backdrop-filter:blur(12px) saturate(140%);
@@ -1052,7 +1079,7 @@ html[data-outline="float"] .outline-head{margin-bottom:8px}
 .outline{padding-top:calc(var(--bar-h) + 14px)}
 .outline::-webkit-scrollbar{width:9px}
 .outline::-webkit-scrollbar-thumb{
-  background:var(--line);border-radius:5px;border:2px solid var(--bg);
+  background:var(--line);border-radius:var(--radius-control);border:2px solid var(--bg);
 }
 .outline-title{
   margin:0 0 12px;padding-left:10px;
@@ -1069,7 +1096,7 @@ html[data-outline="float"] .outline-head{margin-bottom:8px}
   color:var(--dim);
   text-decoration:none;
   border-left:2px solid transparent;
-  border-radius:0 4px 4px 0;
+  border-radius:0 var(--radius-xs) var(--radius-xs) 0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   transition:color .13s var(--ease),border-color .13s var(--ease),background .13s var(--ease);
 }
@@ -1105,7 +1132,7 @@ html[data-outline="float"] .outline-head{margin-bottom:8px}
 .doc-nav a{
   display:flex;flex-direction:column;gap:5px;
   padding:14px 16px;min-width:0;
-  border:1px solid var(--line);border-radius:7px;
+  border:1px solid var(--line);border-radius:var(--radius-card);
   text-decoration:none;
   transition:border-color .14s var(--ease),background .14s var(--ease);
 }
@@ -1125,7 +1152,7 @@ html[data-outline="float"] .outline-head{margin-bottom:8px}
 /* ═══════════ 返回顶部 ═══════════ */
 .totop{
   position:fixed;right:26px;bottom:26px;z-index:120;
-  width:40px;height:40px;border-radius:8px;
+  width:40px;height:40px;border-radius:var(--radius-card);
   display:grid;place-items:center;
   background:var(--panel);border:1px solid var(--line);
   color:var(--dim);cursor:pointer;padding:0;
@@ -1159,6 +1186,61 @@ html[data-outline="float"] .outline-head{margin-bottom:8px}
 }
 .group-head::after{display:none}
 .group-head{gap:6px}
+
+/* ═══════════ 连续曲率 · 同心嵌套 · 卡片 ═══════════
+   本站在用的是 macOS 那套「小半径 + 连续曲率」，不是 iOS 的小组件。
+   这一节只做三件事，颜色、间距、结构一概不动：
+
+   1) 支持 corner-shape 的浏览器把圆角修成 squircle（超椭圆），
+      不支持就原样退回上面的小半径 —— 纯渐进增强，不引任何依赖。
+      嵌套元素用更平的 superellipse(1.4)：内层曲率比外层收敛，
+      看起来才是同一个圆角里套出来的，而不是两条各画各的弧。
+
+   2) 把「有独立底色、又嵌在圆角容器里」的几块按同心公式重算一遍：
+      inner = max(0, outer − padding)，省得两种弧线打架。
+
+   3) <card> 的圆角统一到 --radius-card（卡片档 10px）。
+      它的样式由 p/docs-card.js 自己注入、自带 8px，
+      这里只提升优先级改圆角，色值和那条 Claude 橙竖条不动。 */
+
+@supports (corner-shape:squircle){
+  .md pre,.md .code-group,.md .tabs-tabs-wrapper,.md .md-toc,.md .table-of-contents,
+  .md .markdown-alert,.md .md-box,.md .md-spoiler,
+  .md img,.md-lightbox img,.img-view img{
+    corner-shape:var(--curve);
+  }
+}
+
+/* 只改圆角，不碰 docs-card.js 里的任何色值（含 hover 的橙竖条） */
+.md a.card,
+.md a.card:hover,
+.md a.card:focus-visible{
+  border-radius:var(--radius-card);
+}
+
+/* ── 同心嵌套：内层自己有底色 / 边框时才重算 ── */
+/* 代码组、选项卡里再塞 <pre>：外形圆角由容器承担，内层压平并去掉重复描边 */
+.md .code-group > pre,
+.md .tabs-tab-content > pre{
+  margin:0;
+  border:0;
+  background:transparent;
+  border-radius:var(--radius-inner);
+}
+/* 代码组只剩一层时外层圆角要传到底部，否则内层底色会从圆角外露出来 */
+.md .code-group[data-single="true"] .cg-panel > pre{
+  border-radius:0 0 calc(var(--radius-lg) - 2px) calc(var(--radius-lg) - 2px);
+}
+/* 告示 / 提示框 / 剧透：左边缘是 3px 色条，那一侧保持方角，只圆右侧 */
+.md .markdown-alert,
+.md .md-box,
+.md .md-spoiler{
+  border-radius:0 var(--radius-card) var(--radius-card) 0;
+}
+/* 浮层图片与灯箱：容器 12px，减去 1px 描边 + 内边距 */
+.md-lightbox img{
+  border-radius:calc(var(--radius-lg) - 2px);
+}
 
 /* ═══════════ 响应式 ═══════════ */
 
@@ -2246,7 +2328,80 @@ var settings = {
 
 var activePath = null;
 var codeMode = false;
+/* 侧栏分组（fillFromGroups 填）—— 深链接要找「目标在哪一组」时用它 */
+var groups = [];
 var collapsedGroups = {};
+
+/* ═══ 深链接：#文档路径 ═══
+   页面里的 <card href="/p/docs.html#idea%2F…"> 就是靠这个跳的：
+   点开时地址栏的 hash 变了，这里接住，正文当场换，不整页重载。
+   没有这段的话，点卡片只会改地址栏。
+
+   hash 里的路径按「清单里的 path」原样比对（如 idea/1.归途且慢.md），
+   渲染器拼卡片、侧栏列表也是同一套值，不需要额外映射。 */
+
+/* 把 hash / ?f= 里的写法收敛成「清单里的 path」：
+   去掉前导斜杠（卡片可能写成 /p/xxx.md），中文保持原样，
+   解码失败就按原样再试一次。 */
+function normWant(s){
+  var v = String(s == null ? '' : s).replace(/^\/+/, '');
+  try { return decodeURIComponent(v); }catch(e){ return v; }
+}
+
+/* 地址栏里的 hash（没有就 null） */
+function rawHashWant(){
+  var m = /^#(.+)$/.exec(String(location.hash || ''));
+  return m ? m[1] : null;
+}
+
+/* ?f= / ?file= 老式写法（没有就 null） */
+function queryWant(){
+  try {
+    var params = new URLSearchParams(location.search);
+    return params.get('f') || params.get('file') || null;
+  }catch(e){ return null; }
+}
+
+/* 按写法找清单里的那一篇。ALL 还没填好时返回 null ——
+   所以启动时必须在清单到位之后再调它。 */
+function findDoc(want){
+  if (!want) return null;
+  var w1 = normWant(want);
+  for (var i = 0; i < ALL.length; i++){
+    if (ALL[i].path === w1 || ALL[i].root === w1 || ALL[i].path === want) return ALL[i];
+  }
+  return null;
+}
+
+function docFromHash(){ return findDoc(rawHashWant()); }
+
+/* 目标在收起的组里就把它展开 —— 跳过去却看不见侧栏选中项很难受 */
+function revealInSidebar(doc){
+  var g = null;
+  for (var i = 0; i < GROUPS.length; i++){
+    if (GROUPS[i].items.indexOf(doc) >= 0){ g = GROUPS[i]; break; }
+  }
+  if (!g || !collapsedGroups[g.name]) return;
+  collapsedGroups[g.name] = false;
+  try { localStorage.setItem('docs.collapsed', JSON.stringify(collapsedGroups)); }catch(e){}
+}
+
+/* 地址栏 hash 变了：切到对应那篇。
+   hash 指向清单里没有的篇目时安静忽略，不弹错、不白屏。 */
+function syncFromHash(){
+  var doc = docFromHash();
+  if (!doc) return;
+  if (doc.path === activePath) return;
+
+  revealInSidebar(doc);
+  openDoc(doc.path, true);       /* hash 已经是这个了，别再写一次 */
+
+  /* 卡片通常在页面底部：换完正文把视口带回顶部，
+     不然人是从页脚开始读的。 */
+  try { contentEl.scrollTop = 0; }catch(e){}
+
+  toast('已切换：' + doc.name);
+}
 
 /**
  * 取文档原文。
@@ -2525,15 +2680,18 @@ function renderSidebar(){
   fileListEl.innerHTML = html;
 }
 
-/* ═══ 打开文档 ═══ */
-function openDoc(p, skipHash){
+/* ═══ 打开文档 ═══
+   fromHash = true 表示「地址栏已经是这个 hash 了」（页面内跳转 / 启动复原），
+   这时只换正文，不再写一次 hash，免得来回触发 hashchange。
+   其余调用（点侧栏、上一篇下一篇）用 pushState，浏览器后退键才能一篇篇退回去。 */
+function openDoc(p, fromHash){
   var doc = null;
   for (var i = 0; i < ALL.length; i++){ if (ALL[i].path === p){ doc = ALL[i]; break; } }
   if (!doc) return;
 
   activePath = p;
-  if (!skipHash){
-    try { history.replaceState(null, '', '#' + encodeURIComponent(p)); } catch(e){}
+  if (!fromHash){
+    try { history.pushState(null, '', '#' + encodeURIComponent(p)); } catch(e){}
   }
   document.title = doc.name + ' · JinSuper';
   renderSidebar();
@@ -2566,7 +2724,7 @@ function openDoc(p, skipHash){
     if (/\.(png|jpe?g|gif|webp|svg|bmp|ico|avif)$/.test(lower)){
       inner = '<div class="img-view"><img src="' + esc(u) + '" alt="' + esc(doc.name) + '"></div>';
     } else if (/\.(mp4|webm|ogv|mov|m4v)$/.test(lower)){
-      inner = '<div class="img-view"><video src="' + esc(u) + '" controls style="max-width:100%;max-height:calc(100dvh - 160px);border-radius:6px"></video></div>';
+      inner = '<div class="img-view"><video src="' + esc(u) + '" controls style="max-width:100%;max-height:calc(100dvh - 160px);border-radius:var(--radius-card)"></video></div>';
     } else if (/\.(mp3|wav|ogg|m4a|flac|aac)$/.test(lower)){
       inner = '<div class="img-view"><audio src="' + esc(u) + '" controls></audio></div>';
     } else if (/\.pdf$/.test(lower)){
@@ -3502,6 +3660,13 @@ window.addEventListener('keydown', function(e){
   }
 });
 
+/* ═══ 深链接：地址栏 hash 变了就切正文 ═══
+   两条路都会走到这里：
+     · 正文里的 <card> 指向 /p/docs.html#某篇.md —— 同页只换 hash，浏览器不重载
+     · 浏览器前进 / 后退键
+   hash 指向清单里没有的篇目时安静忽略，不弹错。 */
+window.addEventListener('hashchange', syncFromHash);
+
 /* ═══ 启动 ═══ */
 
 /* 供构建期自检使用：无副作用，也不属于页面必需接口 */
@@ -3517,19 +3682,11 @@ if (isNarrow()) setSideCollapsedEphemeral(true);
 else setSideCollapsed(settings.sideCollapsed);
 renderSidebar();
 
-/* 深链接支持：#文档路径；兼容 ?f= */
+/* 深链接支持：#文档路径；兼容 ?f= / ?file=（老链接还得能用）
+   注意顺序：清单是异步来的，所以「要打开哪一篇」必须等 fillFromGroups
+   填完再解析 —— 否则 ALL 还是空的，深链接会静默失效、落到第一篇。 */
 (function boot(){
-  var want = null;
-  try {
-    var m = /^#(.+)$/.exec(location.hash);
-    if (m) want = decodeURIComponent(m[1]);
-  }catch(e){}
-  if (!want){
-    try {
-      var params = new URLSearchParams(location.search);
-      want = params.get('f') || params.get('file');
-    }catch(e){}
-  }
+  var want = rawHashWant() || queryWant();
 
   loadManifest(function(err, groups){
     if (err || !groups || !groups.length){
@@ -3545,16 +3702,15 @@ renderSidebar();
     renderSidebar();
     btnSideCollapse.title = '收起文档列表 · 共 ' + ALL.length + ' 篇';
 
-    var hit = null;
-    if (want){
-      for (var i = 0; i < ALL.length; i++){
-        if (ALL[i].path === want || ALL[i].name === want || ALL[i].root === want){ hit = ALL[i]; break; }
-      }
-    }
+    /* 清单到位了，现在才谈得上「按 hash 定位」。 */
+    var hit = findDoc(want);
     if (!hit && ALL.length) hit = ALL[0];
 
-    if (hit) openDoc(hit.path, true);
-    else contentEl.innerHTML = '<div class="empty-main"><div class="inner">' +
+    if (hit){
+      /* 深链接落到的篇目：展开它在的组，方便一眼看到自己在哪 */
+      revealInSidebar(hit);
+      openDoc(hit.path, true);
+    } else contentEl.innerHTML = '<div class="empty-main"><div class="inner">' +
       '<h2>清单是空的</h2><p>往 <code>sk.json</code> 里加一行键值对即可。</p></div></div>';
   });
 })();

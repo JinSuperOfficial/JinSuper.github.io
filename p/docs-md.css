@@ -1263,7 +1263,7 @@ body {
   scrollbar-width:thin;scrollbar-color:var(--line) transparent;
 }
 .md .katex-display::-webkit-scrollbar{ height:8px }
-.md .katex-display::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px }
+.md .katex-display::-webkit-scrollbar-thumb{ background:var(--line); border-radius:var(--radius-badge) }
 .md .katex-error{ color:var(--accent); font-family:var(--mono); font-size:.92em }
 
 /* ── 代码高亮（highlight.js）：配色按明/暗主题各一套 ── */
@@ -1321,7 +1321,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
   margin:1.2em 0;padding:12px 16px;
   border:1px solid color-mix(in srgb,var(--md-hl) 26%,transparent);
   border-left:3px solid var(--md-hl);
-  border-radius:0 6px 6px 0;
+  border-radius:0 var(--radius-card) var(--radius-card) 0;
   background:color-mix(in srgb,var(--md-hl) 8%,transparent);
 }
 /* 标题里允许行内 Markdown，所以这里不能用 flex：
@@ -1338,7 +1338,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
 }
 .md .markdown-alert-title code,
 .md .md-box-title code{
-  font-size:.92em;padding:1px 5px;border-radius:4px;
+  font-size:.92em;padding:1px 5px;border-radius:var(--radius-badge);
   color:inherit;
   background:color-mix(in srgb,var(--md-hl) 15%,transparent);
 }
@@ -1360,7 +1360,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
   width:14px;height:14px;flex:none;
   margin:0 8px 0 0;padding:0;
   position:relative;vertical-align:-2px;
-  border:1px solid var(--dim);border-radius:3px;
+  border:1px solid var(--dim);border-radius:var(--radius-xs);
   background:transparent;cursor:default;
 }
 .md .task-list-item input[type=checkbox]:checked{
@@ -1397,7 +1397,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
 .md sub,.md sup{ font-size:.76em;line-height:0 }
 .md mark{
   background:color-mix(in srgb,var(--accent) 26%,transparent);
-  color:var(--ink);padding:0 2px;border-radius:3px;
+  color:var(--ink);padding:0 2px;border-radius:var(--radius-xs);
 }
 .md ins{ text-decoration:none;border-bottom:1px solid var(--accent-line) }
 .md abbr{ text-decoration:underline dotted;text-underline-offset:2px;cursor:help }
@@ -1405,7 +1405,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
 /* ── 目录 [[toc]] ── */
 .md .md-toc{
   margin:1.4em 0;padding:14px 18px;
-  border:1px solid var(--line);border-radius:8px;
+  border:1px solid var(--line);border-radius:var(--radius-card);
   background:color-mix(in srgb,var(--ink) 3%,transparent);
   font-size:13px;
 }
@@ -1425,7 +1425,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
 /* 兼容其它 TOC 插件的输出结构 */
 .md .table-of-contents{
   margin:1.4em 0;padding:14px 18px;
-  border:1px solid var(--line);border-radius:8px;
+  border:1px solid var(--line);border-radius:var(--radius-card);
   background:color-mix(in srgb,var(--ink) 3%,transparent);
   font-size:13px;
 }
@@ -1442,7 +1442,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
 /* ── 剧透 !!内容!! ── */
 .md .spoiler{
   background:var(--ink);color:transparent;
-  border-radius:3px;padding:0 3px;
+  border-radius:var(--radius-xs);padding:0 3px;
   cursor:pointer;
   transition:color .16s var(--ease),background .16s var(--ease);
 }
@@ -1485,7 +1485,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
 .md-lightbox.on{ opacity:1 }
 .md-lightbox img{
   max-width:100%;max-height:100%;
-  border-radius:8px;box-shadow:var(--shadow);cursor:zoom-out;
+  border-radius:var(--radius-control);box-shadow:var(--shadow);cursor:zoom-out;
 }
 
 /* ── 表情 ── */
@@ -1524,7 +1524,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
   margin:1.2em 0;
   border:1px solid var(--line);
   border-left:3px solid var(--accent-line);
-  border-radius:0 6px 6px 0;
+  border-radius:0 var(--radius-card) var(--radius-card) 0;
   overflow:hidden;
   background:color-mix(in srgb,var(--ink) 3%,transparent);
 }
@@ -1551,7 +1551,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
   flex:none;
   width:15px;height:15px;
   display:grid;place-items:center;
-  border-radius:3px;
+  border-radius:var(--radius-badge);
   border:1px solid var(--accent-line);
   background:var(--accent-soft);
   color:var(--accent);
@@ -1592,7 +1592,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
 .md .code-group{
   margin:1.2em 0;
   border:1px solid var(--line);
-  border-radius:7px;
+  border-radius:var(--radius-card);
   overflow:hidden;
   background:var(--md-code-bg);
 }
@@ -1613,7 +1613,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
   font-family:var(--mono);
   font-size:12px;
   cursor:pointer;
-  border-radius:4px 4px 0 0;
+  border-radius:var(--radius-xs) var(--radius-xs) 0 0;
   transition:color .14s var(--ease),border-color .14s var(--ease),background .14s var(--ease);
 }
 .md .cg-tab:hover{
@@ -1655,7 +1655,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
 .md .tabs-tabs-wrapper{
   margin:1.2em 0;
   border:1px solid var(--line);
-  border-radius:7px;
+  border-radius:var(--radius-card);
   overflow:hidden;
   background:color-mix(in srgb,var(--ink) 2%,transparent);
 }
@@ -1671,7 +1671,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
   padding:6px 12px;
   border:0;
   border-bottom:2px solid transparent;
-  border-radius:4px 4px 0 0;
+  border-radius:var(--radius-xs) var(--radius-xs) 0 0;
   background:transparent;
   color:var(--dim);
   font-family:inherit;
@@ -1685,7 +1685,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
 .md .tabs-tab-button code{
   font-size:.92em;
   padding:1px 4px;
-  border-radius:3px;
+  border-radius:var(--radius-badge);
   background:color-mix(in srgb,var(--ink) 8%,transparent);
 }
 .md .tabs-tab-button:hover{
@@ -1733,7 +1733,7 @@ html[data-theme="sepia"],html[data-theme="paper"],html[data-theme="moss"]{
   height:26px;
   padding:0 7px;
   border:1px solid transparent;
-  border-radius:5px;
+  border-radius:var(--radius-control);
   background:transparent;
   color:var(--faint);
   font-family:var(--mono);
