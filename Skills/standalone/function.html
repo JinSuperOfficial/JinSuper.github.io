@@ -5,16 +5,24 @@
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="apple-touch-icon" href="../../apple-touch-icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>函数显示器 · Plot</title>
+<title>函数图像生成器 · Plot</title>
 <style>
   :root{
-    --bg:#0E1214; --panel:#13181B; --raised:#191F23; --line:#232C31;
+    --bg:#0E1214; --panel:#13181B; --raised:#191F23; --raised-2:#1C2328; --line:#232C31;
     --ink:#E7E9E6; --dim:#7E8A90; --faint:#7d8a93;
     --accent:#D97757; --lime:#E1FCAD;
     --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
     --ease-out:cubic-bezier(.2,.7,.2,1);
     --ease-in:cubic-bezier(.4,0,1,1);
     --dur-fast:140ms; --dur-base:240ms; --dur-slow:500ms;
+
+    /* macOS 圆角层级 —— 克制、偏方、同心嵌套 */
+    --r-xs:4px;    /* 标签、徽章 */
+    --r-sm:6px;    /* 小按钮、输入框、分段控件 */
+    --r-md:8px;    /* 标准按钮、输入框、下拉框 */
+    --r-lg:10px;   /* 卡片、菜单、浮层 */
+    --r-xl:12px;   /* 窗口、主面板、模态框 */
+    --r-pill:999px;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
@@ -27,24 +35,35 @@
 
   /* ═══ 侧栏 ═══ */
   .panel{
-    width:370px;flex:none;display:flex;flex-direction:column;gap:20px;
+    width:372px;flex:none;display:flex;flex-direction:column;gap:20px;
     padding:22px 18px 18px;
     background:linear-gradient(180deg,#14191C 0%,#101417 100%);
     border-right:1px solid var(--line);
     overflow-y:auto;overscroll-behavior:contain;
   }
   .panel::-webkit-scrollbar{width:8px}
-  .panel::-webkit-scrollbar-thumb{background:#222A2F;border-radius:4px}
+  .panel::-webkit-scrollbar-thumb{background:#222A2F;border-radius:var(--r-xs)}
 
   .head{display:flex;gap:12px;align-items:center}
   .mark{
     width:38px;height:38px;flex:none;display:grid;place-items:center;
-    border-radius:6px;background:rgba(215,119,87,.12);
+    border-radius:var(--r-sm);background:rgba(215,119,87,.12);
     border:1px solid rgba(215,119,87,.28);color:var(--accent);
   }
   .mark svg{width:20px;height:20px}
-  h1{font-size:16px;font-weight:650;margin:0}
+  .head-text{flex:1;min-width:0}
+  h1{font-size:16px;font-weight:650;margin:0;letter-spacing:.005em}
   .head p{margin:3px 0 0;font-size:12px;color:var(--faint)}
+
+  .settings-btn{
+    width:34px;height:34px;flex:none;display:grid;place-items:center;
+    background:transparent;border:1px solid var(--line);border-radius:var(--r-sm);
+    color:#7A868D;cursor:pointer;
+    transition:all var(--dur-fast) var(--ease-out);
+  }
+  .settings-btn:hover{color:var(--ink);border-color:#3A464E;background:var(--raised-2)}
+  .settings-btn:active{transform:scale(.94)}
+  .settings-btn svg{width:16px;height:16px}
 
   .label{
     font-size:10.5px;font-weight:650;letter-spacing:.11em;text-transform:uppercase;
@@ -65,12 +84,12 @@
 
   .fn-row{
     min-height:0;overflow:hidden;display:flex;align-items:center;gap:6px;
-    background:var(--raised);border:1px solid var(--line);border-radius:6px;
+    background:var(--raised);border:1px solid var(--line);border-radius:var(--r-sm);
     padding:4px 6px 4px 4px;
     transition:border-color var(--dur-fast) var(--ease-out),
                background var(--dur-fast) var(--ease-out);
   }
-  .fn-row:focus-within{border-color:#39434A;background:#1C2328}
+  .fn-row:focus-within{border-color:#39434A;background:var(--raised-2)}
   .fn-row.error{border-color:rgba(215,119,87,.6)}
   .fn-row.error .fn-input{color:#F0A98F}
   .fn-row.pen-made{border-color:rgba(225,252,173,.28)}
@@ -79,16 +98,16 @@
 
   .type-badge{
     width:26px;height:26px;flex:none;display:grid;place-items:center;
-    background:#141A1E;border:1px solid var(--line);border-radius:5px;
+    background:#141A1E;border:1px solid var(--line);border-radius:var(--r-xs);
     color:#7A868D;font-family:var(--mono);font-size:11px;font-weight:600;
     cursor:pointer;
     transition:all var(--dur-fast) var(--ease-out);
   }
-  .type-badge:hover{color:var(--ink);border-color:#3A464E;background:#1C2328}
+  .type-badge:hover{color:var(--ink);border-color:#3A464E;background:var(--raised-2)}
   .type-badge:active{transform:scale(.94)}
 
   .swatch{
-    width:13px;height:13px;flex:none;border-radius:3px;padding:0;border:none;
+    width:13px;height:13px;flex:none;border-radius:var(--r-xs);padding:0;border:none;
     background:var(--c);cursor:pointer;
     box-shadow:0 0 0 1px rgba(255,255,255,.10) inset;
     transition:transform var(--dur-fast) var(--ease-out);
@@ -103,7 +122,7 @@
 
   .icon-btn{
     width:24px;height:24px;flex:none;display:grid;place-items:center;
-    background:transparent;border:none;border-radius:4px;color:#5C676E;cursor:pointer;
+    background:transparent;border:none;border-radius:var(--r-xs);color:#5C676E;cursor:pointer;
     transition:color var(--dur-fast) var(--ease-out),
                background var(--dur-fast) var(--ease-out),
                transform var(--dur-fast) var(--ease-out);
@@ -116,18 +135,112 @@
 
   .add-btn{
     width:100%;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:7px;
-    padding:10px;background:transparent;border:1px dashed #2C363C;border-radius:6px;
+    padding:10px;background:transparent;border:1px dashed #2C363C;border-radius:var(--r-sm);
     color:#78848A;font-size:12.5px;font-family:inherit;cursor:pointer;
     transition:all var(--dur-fast) var(--ease-out);
   }
   .add-btn:hover{border-color:rgba(215,119,87,.55);color:var(--accent);background:rgba(215,119,87,.05);transform:translateY(-1px)}
   .add-btn:active{transform:translateY(0) scale(.99)}
 
+  /* ═══ 常用公式入口 ═══ */
+  .formula-btn{
+    width:100%;display:flex;align-items:center;gap:10px;
+    padding:11px 13px;
+    background:linear-gradient(135deg, rgba(215,119,87,.10), rgba(215,119,87,.03));
+    border:1px solid rgba(215,119,87,.30);
+    border-radius:var(--r-sm);
+    color:var(--ink);font-size:13px;font-family:inherit;cursor:pointer;
+    transition:all var(--dur-fast) var(--ease-out);
+  }
+  .formula-btn:hover{
+    border-color:rgba(215,119,87,.62);
+    background:linear-gradient(135deg, rgba(215,119,87,.17), rgba(215,119,87,.06));
+    transform:translateY(-1px);
+  }
+  .formula-btn:active{transform:translateY(0) scale(.995)}
+  .formula-btn svg{width:16px;height:16px;color:var(--accent);flex:none}
+  .formula-btn .fb-text{flex:1;text-align:left;font-weight:500;letter-spacing:.005em}
+  .formula-btn kbd{
+    font-family:var(--mono);font-size:10px;padding:2px 5px;border-radius:var(--r-xs);
+    background:rgba(255,255,255,.06);color:#7E8A90;border:1px solid var(--line);
+  }
+
+  /* ═══ 点表格 ═══ */
+  .pt-toolbar{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+  .pt-swatch{
+    width:28px;height:28px;flex:none;border-radius:var(--r-xs);
+    background:var(--c);border:1px solid var(--line);cursor:pointer;padding:0;
+    box-shadow:0 0 0 1px rgba(255,255,255,.06) inset;
+    transition:transform var(--dur-fast) var(--ease-out);
+  }
+  .pt-swatch:hover{transform:scale(1.08)}
+  .pt-tool{
+    flex:1;padding:6px 10px;
+    background:var(--raised);border:1px solid var(--line);border-radius:var(--r-xs);
+    color:#8B959B;font-size:11.5px;font-family:inherit;cursor:pointer;
+    transition:all var(--dur-fast) var(--ease-out);
+  }
+  .pt-tool:hover{color:var(--ink);border-color:#3A464E;background:var(--raised-2)}
+  .pt-tool:active{transform:scale(.98)}
+
+  .pt-table-wrap{
+    max-height:212px;overflow-y:auto;
+    background:var(--raised);border:1px solid var(--line);
+    border-radius:var(--r-sm);
+    padding:4px;
+  }
+  .pt-table-wrap::-webkit-scrollbar{width:6px}
+  .pt-table-wrap::-webkit-scrollbar-thumb{background:#222A2F;border-radius:var(--r-xs)}
+
+  .pt-table{
+    width:100%;border-collapse:separate;border-spacing:0;
+    font-family:var(--mono);font-size:12px;table-layout:fixed;
+  }
+  .pt-table th{
+    font-size:9.5px;font-weight:650;letter-spacing:.09em;
+    color:#5C676E;text-align:left;padding:4px 6px;
+    text-transform:uppercase;
+  }
+  .pt-table th:first-child{width:22px;text-align:center}
+  .pt-table th:last-child{width:24px}
+  .pt-table td{padding:2px}
+  .pt-table td.pt-idx{
+    text-align:center;color:#4F5A61;font-size:10.5px;
+    padding:4px 0;font-variant-numeric:tabular-nums;
+  }
+  .pt-table td input{
+    width:100%;min-width:0;
+    padding:5px 7px;background:transparent;border:1px solid transparent;
+    border-radius:var(--r-xs);
+    color:var(--ink);font-family:var(--mono);font-size:12px;
+    outline:none;
+    transition:border-color var(--dur-fast) var(--ease-out),
+               background var(--dur-fast) var(--ease-out);
+  }
+  .pt-table td input:hover{background:rgba(255,255,255,.03)}
+  .pt-table td input:focus{border-color:#3A464E;background:#141A1E}
+  .pt-table input[type=number]::-webkit-outer-spin-button,
+  .pt-table input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none;margin:0; }
+  .pt-table input[type=number]{ -moz-appearance:textfield; }
+
+  .pt-empty{
+    text-align:center;color:#4F5A61;font-size:11px;
+    padding:14px 8px;font-family:inherit;
+  }
+
+  .pt-del{
+    width:22px;height:22px;display:grid;place-items:center;
+    background:transparent;border:none;border-radius:var(--r-xs);
+    color:#4F5A61;font-size:14px;line-height:1;cursor:pointer;
+    transition:all var(--dur-fast) var(--ease-out);
+  }
+  .pt-del:hover{color:#E08A6C;background:rgba(215,119,87,.10)}
+
   /* ═══ 快捷示例 ═══ */
   .chips{display:flex;flex-wrap:wrap;gap:6px}
   .chip{
     font-family:var(--mono);font-size:11.5px;padding:5px 9px;
-    background:var(--raised);border:1px solid var(--line);border-radius:5px;
+    background:var(--raised);border:1px solid var(--line);border-radius:var(--r-xs);
     color:#8B959B;cursor:pointer;
     transition:all var(--dur-fast) var(--ease-out);
   }
@@ -137,22 +250,22 @@
   .pen-panel{display:flex;gap:8px}
   .pen-toggle{
     flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
-    padding:9px 12px;background:var(--raised);border:1px solid var(--line);border-radius:6px;
+    padding:9px 12px;background:var(--raised);border:1px solid var(--line);border-radius:var(--r-sm);
     color:#8B959B;font-size:12.5px;font-family:inherit;cursor:pointer;
     transition:all var(--dur-fast) var(--ease-out);
   }
-  .pen-toggle:hover{border-color:#3A464E;color:var(--ink);background:#1C2328}
+  .pen-toggle:hover{border-color:#3A464E;color:var(--ink);background:var(--raised-2)}
   .pen-toggle.on{border-color:rgba(225,252,173,.55);color:var(--lime);background:rgba(225,252,173,.06)}
   .pen-toggle svg{width:14px;height:14px}
   .pen-icon{
     width:38px;display:grid;place-items:center;background:transparent;
-    border:1px solid var(--line);border-radius:6px;color:#78848A;cursor:pointer;
+    border:1px solid var(--line);border-radius:var(--r-sm);color:#78848A;cursor:pointer;
     transition:all var(--dur-fast) var(--ease-out);
   }
   .pen-icon svg{width:15px;height:15px}
   .pen-icon:hover{color:var(--ink);border-color:#3A464E}
   .pen-clear{
-    padding:9px 12px;background:transparent;border:1px solid var(--line);border-radius:6px;
+    padding:9px 12px;background:transparent;border:1px solid var(--line);border-radius:var(--r-sm);
     color:#78848A;font-size:12.5px;font-family:inherit;cursor:pointer;
     transition:all var(--dur-fast) var(--ease-out);
   }
@@ -161,11 +274,11 @@
   .pen-row{display:flex;align-items:center;gap:10px;margin-top:12px}
   .pen-row-label{
     font-size:10.5px;color:var(--faint);letter-spacing:.09em;
-    text-transform:uppercase;flex:none;width:38px;
+    text-transform:uppercase;flex:none;width:46px;
   }
   .pen-colors{display:flex;gap:6px;flex:1}
   .pen-color{
-    width:20px;height:20px;border-radius:4px;border:2px solid transparent;
+    width:20px;height:20px;border-radius:var(--r-xs);border:2px solid transparent;
     background:var(--c);cursor:pointer;padding:0;
     transition:transform var(--dur-fast) var(--ease-out),
                box-shadow var(--dur-fast) var(--ease-out);
@@ -175,7 +288,7 @@
 
   .pen-size{
     flex:1;height:4px;-webkit-appearance:none;appearance:none;
-    background:#2A343A;border-radius:2px;outline:none;cursor:pointer;
+    background:#2A343A;border-radius:var(--r-xs);outline:none;cursor:pointer;
   }
   .pen-size::-webkit-slider-thumb{
     -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
@@ -185,15 +298,18 @@
     width:14px;height:14px;border-radius:50%;background:var(--ink);border:none;cursor:pointer;
   }
 
-  /* ═══ 设置 ═══ */
+  /* ═══ 设置行（弹窗内） ═══ */
   .setting-row{
-    display:flex;align-items:center;gap:10px;padding:6px 0;
-    font-size:12.5px;color:#8B959B;
+    display:flex;align-items:center;gap:10px;padding:8px 0;
+    font-size:13px;color:#8B959B;
   }
   .setting-row label{flex:1;cursor:pointer}
+  .setting-row .desc{
+    display:block;font-size:11px;color:#56626A;margin-top:2px;font-family:inherit;
+  }
   .switch{
     position:relative;width:32px;height:18px;flex:none;
-    background:#222A2F;border-radius:9px;cursor:pointer;
+    background:#222A2F;border-radius:var(--r-pill);cursor:pointer;
     transition:background var(--dur-fast) var(--ease-out);
     border:1px solid var(--line);
   }
@@ -207,8 +323,8 @@
   .switch.on::after{transform:translateX(14px);background:var(--accent)}
 
   .num-input{
-    width:64px;padding:5px 8px;background:var(--raised);
-    border:1px solid var(--line);border-radius:5px;
+    width:70px;padding:5px 8px;background:var(--raised);
+    border:1px solid var(--line);border-radius:var(--r-sm);
     color:var(--ink);font-family:var(--mono);font-size:12px;
     outline:none;text-align:right;
     transition:border-color var(--dur-fast) var(--ease-out);
@@ -219,11 +335,11 @@
   /* ═══ 配色方案 ═══ */
   .palette-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
   .palette-item{
-    padding:6px 5px;background:var(--raised);border:1px solid var(--line);border-radius:5px;
+    padding:6px 5px;background:var(--raised);border:1px solid var(--line);border-radius:var(--r-sm);
     cursor:pointer;display:flex;flex-direction:column;gap:4px;align-items:center;
     transition:all var(--dur-fast) var(--ease-out);
   }
-  .palette-item:hover{border-color:#3A464E;background:#1C2328;transform:translateY(-1px)}
+  .palette-item:hover{border-color:#3A464E;background:var(--raised-2);transform:translateY(-1px)}
   .palette-item:active{transform:translateY(0) scale(.98)}
   .palette-swatches{display:flex;gap:2px;width:100%;justify-content:center}
   .palette-swatches i{width:8px;height:8px;border-radius:2px;display:block}
@@ -232,7 +348,7 @@
   .random-row{display:flex;gap:8px;margin-top:8px}
   .random-btn{
     flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
-    padding:8px 12px;background:var(--raised);border:1px solid var(--line);border-radius:5px;
+    padding:8px 12px;background:var(--raised);border:1px solid var(--line);border-radius:var(--r-sm);
     color:#8B959B;font-size:12px;font-family:inherit;cursor:pointer;
     transition:all var(--dur-fast) var(--ease-out);
   }
@@ -243,20 +359,20 @@
   .data-tools{display:flex;gap:8px}
   .data-btn{
     flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
-    padding:9px 12px;background:var(--raised);border:1px solid var(--line);border-radius:6px;
+    padding:9px 12px;background:var(--raised);border:1px solid var(--line);border-radius:var(--r-sm);
     color:#8B959B;font-size:12.5px;font-family:inherit;cursor:pointer;
     transition:all var(--dur-fast) var(--ease-out);
   }
-  .data-btn:hover{border-color:#3A464E;color:var(--ink);background:#1C2328}
+  .data-btn:hover{border-color:#3A464E;color:var(--ink);background:var(--raised-2)}
   .data-btn svg{width:13px;height:13px}
 
   .footnote{
-    margin-top:auto;padding-top:6px;font-size:11px;line-height:1.7;
+    margin-top:auto;padding-top:10px;font-size:11px;line-height:1.75;
     color:#4F5A61;border-top:1px solid var(--line);
   }
   .footnote code{
     font-family:var(--mono);color:#6E7A80;
-    background:rgba(255,255,255,.035);padding:1px 4px;border-radius:3px;
+    background:rgba(255,255,255,.035);padding:1px 4px;border-radius:var(--r-xs);
   }
 
   /* ═══ 画布 ═══ */
@@ -267,7 +383,7 @@
     position:absolute;top:16px;right:16px;display:flex;gap:16px;
     padding:8px 13px;background:rgba(14,18,20,.82);
     backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    border:1px solid var(--line);border-radius:6px;
+    border:1px solid var(--line);border-radius:var(--r-sm);
     font-family:var(--mono);font-size:12px;color:var(--dim);
     pointer-events:none;font-variant-numeric:tabular-nums;
   }
@@ -276,11 +392,11 @@
   .zoombar{
     position:absolute;left:16px;bottom:16px;display:flex;gap:3px;padding:4px;
     background:rgba(14,18,20,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    border:1px solid var(--line);border-radius:6px;
+    border:1px solid var(--line);border-radius:var(--r-sm);
   }
   .zoombar button{
     min-width:30px;height:28px;padding:0 9px;display:grid;place-items:center;
-    background:transparent;border:none;border-radius:4px;
+    background:transparent;border:none;border-radius:var(--r-xs);
     color:#8B959B;font-size:14px;font-family:inherit;cursor:pointer;
     transition:all var(--dur-fast) var(--ease-out);
   }
@@ -291,7 +407,7 @@
     position:absolute;right:16px;bottom:16px;display:flex;flex-direction:column;gap:6px;
     padding:10px 13px;min-width:170px;background:rgba(14,18,20,.86);
     backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    border:1px solid var(--line);border-radius:6px;
+    border:1px solid var(--line);border-radius:var(--r-sm);
     font-family:var(--mono);font-size:11.5px;
     opacity:0;transform:translateY(6px);
     transition:opacity var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out);
@@ -309,7 +425,7 @@
   .pen-badge{
     position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:8px;
     padding:7px 12px;background:rgba(225,252,173,.10);
-    border:1px solid rgba(225,252,173,.35);border-radius:6px;
+    border:1px solid rgba(225,252,173,.35);border-radius:var(--r-sm);
     font-size:12px;color:var(--lime);pointer-events:none;
     opacity:0;transform:translateY(-6px);
     transition:opacity var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out);
@@ -317,7 +433,7 @@
   .pen-badge.show{opacity:1;transform:none}
   .pen-badge svg{width:13px;height:13px;flex:none}
   .pen-badge kbd{
-    font-family:var(--mono);font-size:10px;padding:1px 4px;border-radius:3px;
+    font-family:var(--mono);font-size:10px;padding:1px 4px;border-radius:var(--r-xs);
     background:rgba(225,252,173,.14);color:var(--lime);
   }
 
@@ -325,7 +441,7 @@
   .type-menu{
     position:fixed;z-index:200;
     background:rgba(20,25,28,.98);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-    border:1px solid var(--line);border-radius:8px;padding:5px;
+    border:1px solid var(--line);border-radius:var(--r-md);padding:5px;
     box-shadow:0 12px 32px -8px rgba(0,0,0,.6);
     opacity:0;transform:translateY(-4px) scale(.97);transform-origin:top left;
     pointer-events:none;
@@ -334,16 +450,16 @@
   .type-menu.show{opacity:1;transform:none;pointer-events:auto}
   .type-item{
     display:flex;align-items:center;gap:10px;
-    padding:7px 10px;border-radius:5px;cursor:pointer;
+    padding:7px 10px;border-radius:var(--r-xs);cursor:pointer;
     color:#8B959B;font-size:12.5px;
     transition:all var(--dur-fast) var(--ease-out);
-    min-width:160px;
+    min-width:170px;
   }
   .type-item:hover{background:rgba(255,255,255,.06);color:var(--ink)}
   .type-item.on{color:var(--accent)}
   .type-item-icon{
     width:22px;height:22px;flex:none;display:grid;place-items:center;
-    background:rgba(255,255,255,.04);border-radius:4px;
+    background:rgba(255,255,255,.04);border-radius:var(--r-xs);
     font-family:var(--mono);font-size:11px;font-weight:600;
   }
   .type-item.on .type-item-icon{background:rgba(215,119,87,.14);color:var(--accent)}
@@ -353,7 +469,7 @@
   .toast{
     position:fixed;left:50%;bottom:24px;transform:translate(-50%,10px);
     padding:9px 16px;background:rgba(20,25,28,.96);
-    border:1px solid var(--line);border-radius:6px;
+    border:1px solid var(--line);border-radius:var(--r-sm);
     font-size:12.5px;color:var(--ink);
     opacity:0;pointer-events:none;z-index:300;max-width:80vw;
     transition:opacity var(--dur-base) var(--ease-out),transform var(--dur-base) var(--ease-out);
@@ -361,11 +477,191 @@
   .toast.show{opacity:1;transform:translate(-50%,0)}
   .toast.error{border-color:rgba(215,119,87,.6);color:#F0A98F}
 
+  /* ═══ 模态 ═══ */
+  .modal-backdrop{
+    position:fixed;inset:0;z-index:250;
+    display:grid;place-items:center;padding:20px;
+    background:rgba(8,11,12,.68);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    opacity:0;pointer-events:none;
+    transition:opacity var(--dur-base) var(--ease-out);
+  }
+  .modal-backdrop.show{opacity:1;pointer-events:auto}
+
+  .modal{
+    width:min(900px,100%);
+    max-height:min(680px,calc(100dvh - 40px));
+    display:flex;flex-direction:column;
+    background:linear-gradient(180deg,#171E22 0%,#121A1D 100%);
+    border:1px solid #2A343A;
+    border-radius:var(--r-xl);
+    box-shadow:0 32px 80px -24px rgba(0,0,0,.8);
+    overflow:hidden;
+    transform:translateY(10px) scale(.985);
+    transition:transform var(--dur-base) var(--ease-out);
+  }
+  .modal-backdrop.show .modal{transform:none}
+
+  .modal-head{
+    display:flex;align-items:center;gap:12px;
+    padding:15px 16px 14px 20px;
+    border-bottom:1px solid var(--line);
+    flex:none;
+  }
+  .modal-head h2{
+    margin:0;font-size:14.5px;font-weight:600;letter-spacing:.01em;
+  }
+  .modal-head .mh-sub{
+    font-size:11.5px;color:#5C676E;margin-left:2px;
+  }
+  .modal-head .mh-spacer{flex:1}
+
+  .modal-body{display:flex;flex:1;min-height:0}
+
+  /* ── 设置弹窗 ── */
+  .modal.settings-modal{
+    width:min(420px,100%);
+    max-height:min(560px,calc(100dvh - 40px));
+  }
+  .settings-body{
+    padding:6px 20px 22px;
+    overflow-y:auto;
+  }
+  .settings-body::-webkit-scrollbar{width:8px}
+  .settings-body::-webkit-scrollbar-thumb{background:#222A2F;border-radius:var(--r-xs)}
+  .settings-group{padding:14px 0 4px}
+  .settings-group + .settings-group{border-top:1px solid var(--line);margin-top:8px}
+  .settings-group-label{
+    font-size:10.5px;font-weight:650;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:6px;
+  }
+  .settings-hint{
+    font-size:11.5px;color:#4F5A61;line-height:1.65;margin-top:10px;
+    padding:9px 11px;background:rgba(255,255,255,.025);
+    border:1px solid var(--line);border-radius:var(--r-sm);
+  }
+  .settings-hint code{
+    font-family:var(--mono);color:#6E7A80;
+    background:rgba(255,255,255,.04);padding:1px 4px;border-radius:var(--r-xs);
+  }
+
+  /* ── 公式弹窗 ── */
+  .formula-nav{
+    width:200px;flex:none;padding:10px;
+    border-right:1px solid var(--line);
+    overflow-y:auto;
+    display:flex;flex-direction:column;gap:2px;
+  }
+  .formula-nav::-webkit-scrollbar{width:6px}
+  .formula-nav::-webkit-scrollbar-thumb{background:#222A2F;border-radius:var(--r-xs)}
+  .formula-nav button{
+    display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+    width:100%;padding:9px 11px;text-align:left;
+    background:transparent;border:none;border-radius:var(--r-sm);
+    color:#8B959B;font-family:inherit;cursor:pointer;
+    transition:all var(--dur-fast) var(--ease-out);
+  }
+  .formula-nav button:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+  .formula-nav button.on{background:rgba(215,119,87,.12);color:var(--accent)}
+  .formula-nav .fn-name{font-size:13px;font-weight:500;letter-spacing:.005em}
+  .formula-nav .fn-sub{font-size:11px;color:#56626A}
+  .formula-nav button.on .fn-sub{color:rgba(215,119,87,.72)}
+
+  .formula-detail{
+    flex:1;min-width:0;overflow-y:auto;
+    padding:20px 22px 24px;
+  }
+  .formula-detail::-webkit-scrollbar{width:8px}
+  .formula-detail::-webkit-scrollbar-thumb{background:#222A2F;border-radius:var(--r-xs)}
+
+  .formula-head{
+    padding:14px 16px;
+    background:rgba(255,255,255,.028);
+    border:1px solid var(--line);
+    border-radius:var(--r-lg);
+    margin-bottom:18px;
+  }
+  .formula-title{font-size:14px;font-weight:600;margin:0 0 9px;color:var(--ink)}
+  .formula-math{
+    font-family:var(--mono);font-size:13.5px;line-height:1.65;
+    color:var(--lime);letter-spacing:.01em;word-break:break-word;
+  }
+  .formula-desc{font-size:12px;color:#7E8A90;margin-top:9px;line-height:1.7}
+
+  .calc-grid{
+    display:grid;grid-template-columns:repeat(auto-fit, minmax(96px, 1fr));
+    gap:8px;margin-bottom:14px;
+  }
+  .calc-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .calc-field span{
+    font-size:11px;color:#6B767C;font-family:var(--mono);
+    padding-left:1px;
+  }
+  .calc-field input{
+    width:100%;padding:8px 10px;
+    background:var(--raised);border:1px solid var(--line);
+    border-radius:var(--r-sm);
+    color:var(--ink);font-family:var(--mono);font-size:13px;
+    outline:none;
+    transition:border-color var(--dur-fast) var(--ease-out);
+  }
+  .calc-field input:focus{border-color:#3E4A52}
+
+  .calc-out{
+    padding:14px 16px;
+    background:rgba(225,252,173,.045);
+    border:1px solid rgba(225,252,173,.18);
+    border-radius:var(--r-lg);
+    display:flex;flex-direction:column;gap:9px;
+    min-height:62px;justify-content:center;
+  }
+  .calc-out-row{display:flex;align-items:baseline;gap:10px;font-family:var(--mono);font-size:13px}
+  .calc-out-row .k{color:#7E8A90;min-width:44px;font-size:12px;flex:none}
+  .calc-out-row .v{color:var(--lime);font-size:14px;font-weight:500;word-break:break-word}
+  .calc-out-row .v.bad{color:#E08A6C}
+  .calc-out-row .note{color:#6B767C;font-size:11.5px;font-family:inherit}
+  .calc-out .hint{color:#6B767C;font-size:12px}
+
+  .mark-btn{
+    margin-top:14px;
+    display:inline-flex;align-items:center;gap:7px;
+    padding:8px 14px;border-radius:var(--r-sm);
+    background:rgba(225,252,173,.07);
+    border:1px solid rgba(225,252,173,.28);
+    color:var(--lime);font-size:12.5px;font-family:inherit;cursor:pointer;
+    transition:all var(--dur-fast) var(--ease-out);
+  }
+  .mark-btn:hover{background:rgba(225,252,173,.13);border-color:rgba(225,252,173,.5)}
+  .mark-btn:active{transform:scale(.98)}
+  .mark-btn svg{width:13px;height:13px}
+
+  .examples-label{
+    font-size:10.5px;font-weight:650;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--faint);margin:20px 0 9px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .examples-label::after{content:'';flex:1;height:1px;background:var(--line)}
+  .example-list{display:flex;flex-wrap:wrap;gap:6px}
+  .example-chip{
+    padding:6px 10px;background:var(--raised);border:1px solid var(--line);
+    border-radius:var(--r-xs);color:#8B959B;font-size:12px;
+    font-family:inherit;cursor:pointer;
+    transition:all var(--dur-fast) var(--ease-out);
+  }
+  .example-chip:hover{
+    border-color:rgba(215,119,87,.45);color:var(--accent);
+    background:rgba(215,119,87,.05);transform:translateY(-1px);
+  }
+
   /* ═══ 焦点 ═══ */
   button:focus-visible,.add-btn:focus-visible,.chip:focus-visible,
   .fn-input:focus-visible,.pen-toggle:focus-visible,.pen-clear:focus-visible,
   .pen-icon:focus-visible,.data-btn:focus-visible,.num-input:focus-visible,
-  .type-badge:focus-visible,.random-btn:focus-visible,.palette-item:focus-visible{
+  .type-badge:focus-visible,.random-btn:focus-visible,.palette-item:focus-visible,
+  .formula-btn:focus-visible,.example-chip:focus-visible,.mark-btn:focus-visible,
+  .formula-nav button:focus-visible,.calc-field input:focus-visible,
+  .pt-tool:focus-visible,.pt-del:focus-visible,.pt-swatch:focus-visible,
+  .settings-btn:focus-visible{
     outline:2px solid var(--accent);outline-offset:2px;
   }
   .fn-input:focus-visible{outline-offset:0}
@@ -382,6 +678,7 @@
     transition-duration:.01ms !important;scroll-behavior:auto !important}
     .reveal{opacity:1}
   }
+
   @media (max-width:880px){
     .app{flex-direction:column}
     .panel{width:100%;border-right:none;border-bottom:1px solid var(--line);
@@ -389,6 +686,16 @@
     .stage{flex:1;min-height:0}
     .legend{display:none}
     .pen-badge{display:none}
+  }
+
+  @media (max-width:720px){
+    .modal-body{flex-direction:column}
+    .formula-nav{
+      width:auto;flex-direction:row;overflow-x:auto;overflow-y:hidden;
+      border-right:none;border-bottom:1px solid var(--line);padding:8px;
+    }
+    .formula-nav button{flex:none;width:auto;white-space:nowrap}
+    .formula-detail{padding:16px 16px 20px}
   }
 </style>
 </head>
@@ -404,10 +711,17 @@
           <path d="M3 17c2.6 0 3.4-10 6.6-10S13 15 16 15s2.4-4 5-4"/>
         </svg>
       </div>
-      <div>
-        <h1>函数显示器</h1>
-        <p>公式、隐式、极坐标、参数、点</p>
+      <div class="head-text">
+        <h1>函数图像生成器</h1>
+        <p>函数 · 隐式 · 极坐标 · 参数 · 点 · 竖直线</p>
       </div>
+      <button class="settings-btn" id="settingsBtn" title="设置" aria-label="打开设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
     </header>
 
     <section class="reveal" style="--i:1">
@@ -423,11 +737,46 @@
     </section>
 
     <section class="reveal" style="--i:2">
+      <div class="label">常用公式</div>
+      <button class="formula-btn" id="formulaBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2.5"/>
+          <path d="M8 8h2M8 12h2M8 16h2M14 8h2M14 12h2M14 16h2"/>
+        </svg>
+        <span class="fb-text">打开公式计算器</span>
+        <kbd>F</kbd>
+      </button>
+    </section>
+
+    <section class="reveal" style="--i:3">
+      <div class="label">点表格</div>
+      <div class="pt-toolbar">
+        <button class="pt-swatch" id="ptColor" title="换个颜色" aria-label="切换点颜色"></button>
+        <button class="pt-tool" id="ptAdd">+ 一行</button>
+        <button class="pt-tool" id="ptClear">清空</button>
+      </div>
+      <div class="pt-table-wrap">
+        <table class="pt-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>x</th>
+              <th>y</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="ptBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="reveal" style="--i:4">
       <div class="label">随手试试</div>
       <div class="chips" id="chips"></div>
     </section>
 
-    <section class="reveal" style="--i:3">
+    <section class="reveal" style="--i:5">
       <div class="label">画笔 · 两点定直线</div>
       <div class="pen-panel">
         <button class="pen-toggle" id="penToggle" aria-pressed="false">
@@ -455,25 +804,7 @@
       </div>
     </section>
 
-    <section class="reveal" style="--i:4">
-      <div class="label">设置</div>
-      <div class="setting-row">
-        <div class="switch" id="swSnap" role="switch" aria-checked="false" tabindex="0"></div>
-        <label for="swSnap">网格吸附</label>
-        <input class="num-input" id="snapStep" type="number" value="0.5" min="0.01" step="0.1"
-               aria-label="吸附步长">
-      </div>
-      <div class="setting-row">
-        <div class="switch on" id="swGrid" role="switch" aria-checked="true" tabindex="0"></div>
-        <label for="swGrid">显示网格</label>
-      </div>
-      <div class="setting-row">
-        <div class="switch on" id="swTicks" role="switch" aria-checked="true" tabindex="0"></div>
-        <label for="swTicks">显示刻度</label>
-      </div>
-    </section>
-
-    <section class="reveal" style="--i:5">
+    <section class="reveal" style="--i:6">
       <div class="label">配色方案</div>
       <div class="palette-grid" id="paletteGrid"></div>
       <div class="random-row">
@@ -489,7 +820,7 @@
       </div>
     </section>
 
-    <section class="reveal" style="--i:6">
+    <section class="reveal" style="--i:7">
       <div class="label">数据</div>
       <div class="data-tools">
         <button class="data-btn" id="exportBtn">
@@ -510,11 +841,11 @@
       <input type="file" id="fileInput" accept=".json,application/json" hidden>
     </section>
 
-    <div class="footnote reveal" style="--i:7">
-      点左侧徽章切换图形类型。条件用花括号：<code>x{0&lt;x&lt;1}</code>。<br>
-      隐式直接写 <code>x^2+y^2-4</code>；极坐标写 <code>1+cos(t)</code>；
-      参数写 <code>cos(t), sin(t)</code>。<br>
-      按 <code>B</code> 开画笔，<code>Esc</code> 取消起点，<code>Ctrl+Z</code> 撤销。
+    <div class="footnote reveal" style="--i:8">
+      点左侧徽章切换图形类型。直接写 <code>x=0</code> 画竖直线。<br>
+      条件用花括号：<code>x{0&lt;x&lt;1}</code>；隐式写 <code>x^2+y^2-4</code>；
+      极坐标写 <code>1+cos(t)</code>；参数写 <code>cos(t), sin(t)</code>。<br>
+      按 <code>F</code> 开公式面板，<code>B</code> 开画笔（默认吸附网格、可画竖直线），<code>Ctrl+Z</code> 撤销。
     </div>
 
   </aside>
@@ -548,6 +879,76 @@
 
 <div class="type-menu" id="typeMenu"></div>
 <div class="toast" id="toast"></div>
+
+<!-- ═══ 设置弹窗 ═══ -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsHeading">
+    <header class="modal-head">
+      <h2 id="settingsHeading">设置</h2>
+      <span class="mh-spacer"></span>
+      <button class="icon-btn" id="settingsClose" aria-label="关闭">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+    <div class="settings-body">
+
+      <div class="settings-group">
+        <div class="settings-group-label">网格</div>
+        <div class="setting-row">
+          <div class="switch on" id="swGrid" role="switch" aria-checked="true" tabindex="0"></div>
+          <label for="swGrid">显示网格</label>
+        </div>
+        <div class="setting-row">
+          <div class="switch on" id="swTicks" role="switch" aria-checked="true" tabindex="0"></div>
+          <label for="swTicks">显示刻度</label>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-label">吸附</div>
+        <div class="setting-row">
+          <div class="switch" id="swSnap" role="switch" aria-checked="false" tabindex="0"></div>
+          <label for="swSnap">网格吸附</label>
+          <input class="num-input" id="snapStep" type="number" value="0.5" min="0.01" step="0.1"
+                 aria-label="吸附步长">
+        </div>
+        <div class="settings-hint">
+          开启画笔时会自动打开吸附，方便把点对齐到格点。<br>
+          步长 <code>0.5</code> 表示吸附到 0.5 的整数倍。
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-label">视图</div>
+        <div class="setting-row">
+          <label style="flex:none">重置视图</label>
+          <button class="pt-tool" id="resetViewBtn" style="flex:0 0 auto;min-width:100px">回到原点 · 1×</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 公式弹窗 ═══ -->
+<div class="modal-backdrop" id="formulaModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="formulaHeading">
+    <header class="modal-head">
+      <h2 id="formulaHeading">常用公式</h2>
+      <span class="mh-sub">填几个数，右边直接出结果</span>
+      <span class="mh-spacer"></span>
+      <button class="icon-btn" id="formulaClose" aria-label="关闭">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+    <div class="modal-body">
+      <nav class="formula-nav" id="formulaNav" aria-label="公式列表"></nav>
+      <div class="formula-detail" id="formulaDetail"></div>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ═══════════════════════════════════════════════════
@@ -819,7 +1220,7 @@ const TYPES = {
   y: {
     key:'y', label:'函数', icon:'y', sub:'y = f(x)',
     vars:['x'], placeholder:'sin(x)',
-    hint:'只含 x',
+    hint:'只含 x；写 x=… 会自动变竖直线',
   },
   implicit: {
     key:'implicit', label:'隐函数', icon:'◇', sub:'f(x,y)=0',
@@ -849,6 +1250,7 @@ const TYPES = {
 
 const PALETTE = ['#D97757','#E1FCAD','#7EC8C8','#C9A84C','#C5B8D4','#A8B89A'];
 const PEN_COLORS = ['#E1FCAD','#D97757','#7EC8C8','#C9A84C','#C5B8D4','#E7E9E6'];
+const PT_COLORS = ['#E1FCAD','#D97757','#7EC8C8','#C9A84C','#C5B8D4','#E7E9E6'];
 
 const COLOR_POOL = [
   '#D97757','#E1FCAD','#7EC8C8','#C9A84C','#C5B8D4','#A8B89A',
@@ -869,6 +1271,15 @@ const state = {
   funcs: [],
   view: { cx:0, cy:0, scale:56 },
   settings: { snap:false, snapStep:0.5, showGrid:true, showTicks:true },
+  pointTable: {
+    color: PT_COLORS[0],
+    visible: true,
+    points: [
+      { x: 0, y: 0 },
+      { x: 1, y: 1 },
+      { x: 2, y: 4 },
+    ],
+  },
 };
 
 const pen = {
@@ -889,15 +1300,15 @@ function makeFunc(typeKey, expr, source){
     source: source || 'manual',
     fn: null,
     error: null,
+    vertical: false,
     _from: 1, _start: 0, _dur: 180,
   };
 }
 
 function recompile(f){
-  f.fn = null; f.error = null;
+  f.fn = null; f.error = null; f.vertical = false;
   const t = TYPES[f.type];
   if (!t){ f.error = '未知类型'; return; }
-
   if (!f.expr || !f.expr.trim()){ f.error = '空的'; return; }
 
   try {
@@ -913,7 +1324,16 @@ function recompile(f){
       const parts = splitTopLevel(f.expr.replace(/^\(|\)$/g, ''));
       if (parts.length !== 2) throw new Error('点要写成 "a, b"');
       const ax = compile(parts[0], []), ay = compile(parts[1], []);
-      f.fn = (...a) => [ax(), ay()];
+      f.fn = () => [ax(), ay()];
+    } else if (f.type === 'y'){
+      // 「x = …」不是函数，是一条竖直线（或以 y 为自变量的曲线）
+      const m = f.expr.match(/^\s*x\s*=\s*(.+)$/is);
+      if (m){
+        f.vertical = true;
+        f.fn = compile(m[1], ['y']);
+      } else {
+        f.fn = compile(f.expr, t.vars);
+      }
     } else {
       f.fn = compile(f.expr, t.vars);
     }
@@ -951,6 +1371,14 @@ const penColors= document.getElementById('penColors');
 const penSize  = document.getElementById('penSize');
 const typeMenu = document.getElementById('typeMenu');
 const toastEl  = document.getElementById('toast');
+
+const ptBody   = document.getElementById('ptBody');
+const ptColorBtn = document.getElementById('ptColor');
+
+const settingsModal = document.getElementById('settingsModal');
+const settingsBtn   = document.getElementById('settingsBtn');
+const settingsClose = document.getElementById('settingsClose');
+const resetViewBtn  = document.getElementById('resetViewBtn');
 
 const ICON_EYE_ON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/></svg>`;
 const ICON_EYE_OFF= `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l16 16"/><path d="M9.6 5.7A9.6 9.6 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-3.3 4"/><path d="M6.5 7.7A17 17 0 0 0 2 12s3.6 6.5 10 6.5a9.9 9.9 0 0 0 4-.8"/><path d="M10.2 10.3a2.6 2.6 0 0 0 3.6 3.6"/></svg>`;
@@ -1123,17 +1551,13 @@ function closeTypeMenu(){
 document.addEventListener('click', e => {
   if (!typeMenu.contains(e.target)) closeTypeMenu();
 });
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && typeMenu.classList.contains('show')){
-    closeTypeMenu();
-    e.stopPropagation();
-  }
-}, true);
 
 /* ── 快捷示例 ── */
 const CHIPS = [
   { type:'y',          expr:'sin(x)/x' },
   { type:'y',          expr:'e^(-x^2)' },
+  { type:'y',          expr:'x=0' },
+  { type:'y',          expr:'y=0' },
   { type:'implicit',   expr:'x^2+y^2-4' },
   { type:'implicit',   expr:'x^2/9+y^2/4-1' },
   { type:'polar',      expr:'1+cos(t)' },
@@ -1165,7 +1589,106 @@ CHIPS.forEach(c => {
 });
 
 /* ═══════════════════════════════════════════════════
-   7. 画笔 UI
+   7. 点表格
+   ═══════════════════════════════════════════════════ */
+
+function syncPtColorUI(){
+  ptColorBtn.style.setProperty('--c', state.pointTable.color);
+}
+
+function renderPointTable(){
+  const t = state.pointTable;
+
+  if (t.points.length === 0){
+    ptBody.innerHTML = `<tr><td colspan="4" class="pt-empty">还没有点，点「+ 一行」加一个</td></tr>`;
+  } else {
+    ptBody.innerHTML = t.points.map((p, i) => `
+      <tr>
+        <td class="pt-idx">${i+1}</td>
+        <td><input type="number" step="any" inputmode="decimal"
+                   value="${Number.isFinite(p.x) ? p.x : ''}"
+                   data-i="${i}" data-k="x" aria-label="第 ${i+1} 行 x"></td>
+        <td><input type="number" step="any" inputmode="decimal"
+                   value="${Number.isFinite(p.y) ? p.y : ''}"
+                   data-i="${i}" data-k="y" aria-label="第 ${i+1} 行 y"></td>
+        <td><button class="pt-del" data-i="${i}" aria-label="删除第 ${i+1} 行">×</button></td>
+      </tr>
+    `).join('');
+  }
+
+  ptBody.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const i = +e.target.dataset.i;
+      const k = e.target.dataset.k;
+      const v = parseFloat(e.target.value);
+      state.pointTable.points[i][k] = isFinite(v) ? v : null;
+      requestRender();
+      updateHUD();
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter'){
+        e.preventDefault();
+        const all = Array.from(ptBody.querySelectorAll('input'));
+        const idx = all.indexOf(e.target);
+        if (idx === all.length - 1){
+          addPointRow();
+        } else if (idx >= 0 && idx < all.length - 1){
+          all[idx + 1].focus();
+          all[idx + 1].select();
+        }
+      }
+    });
+  });
+
+  ptBody.querySelectorAll('.pt-del').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const i = +e.target.dataset.i;
+      state.pointTable.points.splice(i, 1);
+      renderPointTable();
+      requestRender();
+      updateHUD();
+    });
+  });
+
+  syncPtColorUI();
+}
+
+function addPointRow(){
+  state.pointTable.points.push({ x: null, y: null });
+  renderPointTable();
+  const rows = ptBody.querySelectorAll('tr');
+  const last = rows[rows.length - 1];
+  const inp = last && last.querySelector('input');
+  if (inp) inp.focus();
+  requestRender();
+}
+
+document.getElementById('ptAdd').addEventListener('click', addPointRow);
+
+document.getElementById('ptClear').addEventListener('click', () => {
+  if (state.pointTable.points.length === 0){
+    toast('表格已经是空的');
+    return;
+  }
+  const n = state.pointTable.points.length;
+  state.pointTable.points = [];
+  renderPointTable();
+  requestRender();
+  updateHUD();
+  toast('已清空 ' + n + ' 个点');
+});
+
+ptColorBtn.addEventListener('click', () => {
+  const i = PT_COLORS.indexOf(state.pointTable.color);
+  state.pointTable.color = PT_COLORS[(i + 1) % PT_COLORS.length];
+  syncPtColorUI();
+  requestRender();
+});
+
+renderPointTable();
+
+/* ═══════════════════════════════════════════════════
+   8. 画笔 UI
    ═══════════════════════════════════════════════════ */
 
 PEN_COLORS.forEach((c, i) => {
@@ -1192,6 +1715,7 @@ function updatePenBadge(){
 }
 
 function setPenActive(v){
+  const wasActive = pen.active;
   pen.active = v;
   pen.pending = null;
   pen.cursor = null;
@@ -1199,6 +1723,14 @@ function setPenActive(v){
   penToggle.setAttribute('aria-pressed', String(v));
   penToggleText.textContent = v ? '画笔已开启' : '开启画笔';
   canvas.style.cursor = v ? 'cell' : 'crosshair';
+
+  /* 画笔开启时自动打开网格吸附 */
+  if (v && !wasActive && !state.settings.snap){
+    state.settings.snap = true;
+    syncSettingsUI();
+    toast('已自动开启网格吸附');
+  }
+
   updatePenBadge();
   requestRender();
 }
@@ -1239,7 +1771,7 @@ document.getElementById('penClear').addEventListener('click', () => {
 });
 
 /* ═══════════════════════════════════════════════════
-   8. 设置
+   9. 设置（弹窗）
    ═══════════════════════════════════════════════════ */
 
 function bindSwitch(el, key, onChange){
@@ -1283,8 +1815,48 @@ function snapPoint(p){
   return { x: Math.round(p.x / s) * s, y: Math.round(p.y / s) * s };
 }
 
+/* 设置弹窗开关 */
+let settingsLastFocus = null;
+
+function openSettings(){
+  settingsLastFocus = document.activeElement;
+  settingsModal.classList.add('show');
+  requestAnimationFrame(() => settingsClose.focus());
+}
+
+function closeSettings(){
+  if (!settingsModal.classList.contains('show')) return;
+  settingsModal.classList.remove('show');
+  if (settingsLastFocus && typeof settingsLastFocus.focus === 'function'){
+    settingsLastFocus.focus();
+  }
+}
+
+settingsBtn.addEventListener('click', openSettings);
+settingsClose.addEventListener('click', closeSettings);
+settingsModal.addEventListener('click', e => {
+  if (e.target === settingsModal) closeSettings();
+});
+settingsModal.addEventListener('keydown', e => {
+  if (e.key !== 'Tab') return;
+  const items = settingsModal.querySelectorAll(
+    'button, input, [href], select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  if (!items.length) return;
+  const first = items[0], last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+});
+
+resetViewBtn.addEventListener('click', () => {
+  state.view.cx = 0; state.view.cy = 0; state.view.scale = 56;
+  requestRender();
+  updateHUD();
+  toast('视图已重置');
+});
+
 /* ═══════════════════════════════════════════════════
-   9. 配色方案 + 随机
+   10. 配色方案 + 随机
    ═══════════════════════════════════════════════════ */
 
 const paletteGrid = document.getElementById('paletteGrid');
@@ -1310,7 +1882,6 @@ PALETTE_PRESETS.forEach(p => {
 document.getElementById('randomColors').addEventListener('click', () => {
   if (state.funcs.length === 0) return;
   const pool = [...COLOR_POOL];
-  // 洗牌
   for (let i = pool.length - 1; i > 0; i--){
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
@@ -1321,7 +1892,475 @@ document.getElementById('randomColors').addEventListener('click', () => {
 });
 
 /* ═══════════════════════════════════════════════════
-   10. 画布尺寸 & 变换
+   11. 常用公式面板
+   ═══════════════════════════════════════════════════ */
+
+const FORMULAS = [
+  {
+    id:'distance',
+    name:'两点坐标公式',
+    sub:'求两点间距离',
+    kind:'distance',
+    formula:'d = √[ (x₂ − x₁)² + (y₂ − y₁)² ]',
+    desc:'把 A、B 两点当作直角三角形的两个顶点，斜边长度就是两点距离。',
+    vars:['x1','y1','x2','y2'],
+    labels:{ x1:'x₁', y1:'y₁', x2:'x₂', y2:'y₂' },
+    default:{ x1:0, y1:0, x2:3, y2:4 },
+    examples:[
+      { name:'(0,0) → (3,4)',  values:{ x1:0,  y1:0, x2:3, y2:4 } },
+      { name:'(−2,1) → (5,3)', values:{ x1:-2, y1:1, x2:5, y2:3 } },
+      { name:'水平两点',       values:{ x1:1,  y1:2, x2:7, y2:2 } },
+    ],
+  },
+  {
+    id:'midpoint',
+    name:'两点中点公式',
+    sub:'求线段中点',
+    kind:'midpoint',
+    formula:'M = ( (x₁ + x₂) / 2 , (y₁ + y₂) / 2 )',
+    desc:'横坐标取平均、纵坐标取平均，得到的点就是线段中点。',
+    vars:['x1','y1','x2','y2'],
+    labels:{ x1:'x₁', y1:'y₁', x2:'x₂', y2:'y₂' },
+    default:{ x1:-2, y1:1, x2:6, y2:5 },
+    examples:[
+      { name:'(0,0) 与 (4,6)',   values:{ x1:0,  y1:0,  x2:4, y2:6 } },
+      { name:'(−3,−2) 与 (5,8)', values:{ x1:-3, y1:-2, x2:5, y2:8 } },
+    ],
+  },
+  {
+    id:'linear',
+    name:'两点求解析式',
+    sub:'过两点的一次函数',
+    kind:'linear',
+    formula:'y = kx + b，k = (y₂ − y₁)/(x₂ − x₁)，b = y₁ − k·x₁',
+    desc:'先由两点算出斜率 k，再拿任意一点代入求 b，直线解析式就出来了。',
+    vars:['x1','y1','x2','y2'],
+    labels:{ x1:'x₁', y1:'y₁', x2:'x₂', y2:'y₂' },
+    default:{ x1:1, y1:3, x2:4, y2:9 },
+    examples:[
+      { name:'(1,3) 与 (4,9)',  values:{ x1:1,  y1:3,  x2:4, y2:9 } },
+      { name:'(0,2) 与 (5,−3)', values:{ x1:0,  y1:2,  x2:5, y2:-3 } },
+      { name:'两点横坐标相同',  values:{ x1:2,  y1:1,  x2:2, y2:7 } },
+    ],
+  },
+  {
+    id:'slope',
+    name:'斜率 k',
+    sub:'两点定斜率',
+    kind:'slope',
+    formula:'k = (y₁ − y₂) / (x₁ − x₂) = Δy / Δx',
+    desc:'纵坐标之差除以横坐标之差。Δx 为 0 时斜率不存在，就是一条竖直线。',
+    vars:['x1','y1','x2','y2'],
+    labels:{ x1:'x₁', y1:'y₁', x2:'x₂', y2:'y₂' },
+    default:{ x1:1, y1:3, x2:4, y2:9 },
+    examples:[
+      { name:'(1,3) 与 (4,9)',   values:{ x1:1,  y1:3,  x2:4, y2:9 } },
+      { name:'(−1,5) 与 (2,−4)', values:{ x1:-1, y1:5,  x2:2, y2:-4 } },
+      { name:'竖直线 Δx = 0',    values:{ x1:2,  y1:1,  x2:2, y2:7 } },
+    ],
+  },
+  {
+    id:'intercept',
+    name:'初始值 b',
+    sub:'直线在 y 轴上的截距',
+    kind:'intercept',
+    formula:'b = y₁ − k·x₁，k = (y₂ − y₁)/(x₂ − x₁)',
+    desc:'b 就是直线与 y 轴交点的纵坐标，也就是 x = 0 时的函数值。',
+    vars:['x1','y1','x2','y2'],
+    labels:{ x1:'x₁', y1:'y₁', x2:'x₂', y2:'y₂' },
+    default:{ x1:1, y1:3, x2:4, y2:9 },
+    examples:[
+      { name:'(1,3) 与 (4,9)', values:{ x1:1, y1:3, x2:4, y2:9 } },
+      { name:'(2,0) 与 (0,4)', values:{ x1:2, y1:0, x2:0, y2:4 } },
+      { name:'(−1,−1) 与 (3,7)', values:{ x1:-1, y1:-1, x2:3, y2:7 } },
+    ],
+  },
+  {
+    id:'pointLineDistance',
+    name:'点到直线距离',
+    sub:'点与 Ax + By + C = 0',
+    kind:'pointLineDistance',
+    formula:'d = |A·x₀ + B·y₀ + C| / √(A² + B²)',
+    desc:'把点坐标代入直线一般式，取绝对值，再除以法向量长度 √(A²+B²)。',
+    vars:['x0','y0','A','B','C'],
+    labels:{ x0:'x₀', y0:'y₀', A:'A', B:'B', C:'C' },
+    default:{ x0:1, y0:2, A:1, B:-1, C:0 },
+    examples:[
+      { name:'点(1,2) 到 y=x',    values:{ x0:1, y0:2, A:1, B:-1, C:0 } },
+      { name:'点(0,0) 到 x+y−2=0', values:{ x0:0, y0:0, A:1, B:1, C:-2 } },
+      { name:'点(3,4) 到 y 轴',    values:{ x0:3, y0:4, A:1, B:0, C:0 } },
+      { name:'点(2,1) 到 y=−2',    values:{ x0:2, y0:1, A:0, B:1, C:2 } },
+    ],
+  },
+  {
+    id:'twoLines',
+    name:'两直线关系',
+    sub:'平行 / 垂直 / 夹角',
+    kind:'twoLines',
+    formula:'k₁ = k₂ → 平行；k₁k₂ = −1 → 垂直；tan θ = |(k₂−k₁)/(1+k₁k₂)|',
+    desc:'比较两条直线的斜率：相等就平行，乘积为 −1 就垂直，否则计算夹角。',
+    vars:['k1','b1','k2','b2'],
+    labels:{ k1:'k₁', b1:'b₁', k2:'k₂', b2:'b₂' },
+    default:{ k1:1, b1:0, k2:-1, b2:2 },
+    examples:[
+      { name:'y=x 与 y=−x+2',      values:{ k1:1,   b1:0, k2:-1, b2:2 } },
+      { name:'y=2x+1 与 y=2x−3',   values:{ k1:2,   b1:1, k2:2,  b2:-3 } },
+      { name:'y=0.5x 与 y=−2x+1',  values:{ k1:0.5, b1:0, k2:-2, b2:1 } },
+      { name:'y=3x 与 y=3x',       values:{ k1:3,   b1:0, k2:3,  b2:0 } },
+    ],
+  },
+];
+
+const formulaModal  = document.getElementById('formulaModal');
+const formulaNav    = document.getElementById('formulaNav');
+const formulaDetail = document.getElementById('formulaDetail');
+const formulaClose  = document.getElementById('formulaClose');
+
+let activeFormula = FORMULAS[0].id;
+const formulaValues = {};
+let lastFocus = null;
+
+function getVals(f){
+  if (!formulaValues[f.id]){
+    const o = {};
+    for (const k of f.vars) o[k] = String(f.default[k]);
+    formulaValues[f.id] = o;
+  }
+  return formulaValues[f.id];
+}
+
+function readVals(f){
+  const o = getVals(f), out = {};
+  for (const k of f.vars){
+    const n = parseFloat(o[k]);
+    if (!isFinite(n)) return null;
+    out[k] = n;
+  }
+  return out;
+}
+
+function fmtNum(v, dec = 4){
+  if (!isFinite(v)) return '—';
+  const r = Math.round(v * Math.pow(10, dec)) / Math.pow(10, dec);
+  if (Math.abs(r) < 1e-12) return '0';
+  let s = r.toFixed(dec);
+  if (s.includes('.')) s = s.replace(/0+$/, '').replace(/\.$/, '');
+  return s === '-0' ? '0' : s;
+}
+
+function formatLine(k, b){
+  let s = 'y = ';
+  if (Math.abs(k) < 1e-12){
+    s += fmtNum(b);
+  } else {
+    if (Math.abs(k - 1) < 1e-12)      s += 'x';
+    else if (Math.abs(k + 1) < 1e-12) s += '−x';
+    else                              s += fmtNum(k) + 'x';
+    if (Math.abs(b) > 1e-12) s += (b > 0 ? ' + ' : ' − ') + fmtNum(Math.abs(b));
+  }
+  return s;
+}
+
+/* 生成 y = kx + b 的表达式（给表达式列表用） */
+function lineExprFromKB(k, b){
+  if (Math.abs(k) < 1e-12) return fmtNum(b);
+  let core;
+  if (Math.abs(k - 1) < 1e-12)      core = 'x';
+  else if (Math.abs(k + 1) < 1e-12) core = '-x';
+  else                              core = fmtNum(k) + '*x';
+  if (Math.abs(b) > 1e-12) core += (b > 0 ? '+' : '') + fmtNum(b);
+  return core;
+}
+
+function computeFormula(kind, v){
+  const { x1, y1, x2, y2 } = v;
+  const dx = (x2 ?? 0) - (x1 ?? 0), dy = (y2 ?? 0) - (y1 ?? 0);
+
+  switch(kind){
+    case 'distance': {
+      return [
+        { label:'d',  value: fmtNum(Math.hypot(dx, dy)) },
+        { label:'Δx', value: fmtNum(dx) },
+        { label:'Δy', value: fmtNum(dy) },
+      ];
+    }
+    case 'midpoint': {
+      return [
+        { label:'M', value: `( ${fmtNum((x1+x2)/2)} , ${fmtNum((y1+y2)/2)} )` },
+        { label:'x', value: fmtNum((x1+x2)/2) },
+        { label:'y', value: fmtNum((y1+y2)/2) },
+      ];
+    }
+    case 'linear': {
+      if (Math.abs(dx) < 1e-12)
+        return [{ label:'解析式', value:`x = ${fmtNum(x1)}`, note:'两点横坐标相同，是一条竖直线' }];
+      const k = dy / dx, b = y1 - k * x1;
+      return [
+        { label:'解析式', value: formatLine(k, b) },
+        { label:'k', value: fmtNum(k) },
+        { label:'b', value: fmtNum(b) },
+      ];
+    }
+    case 'slope': {
+      if (Math.abs(dx) < 1e-12)
+        return [{ label:'k', value:'不存在', bad:true, note:'Δx = 0，竖直线没有斜率' }];
+      return [
+        { label:'k',  value: fmtNum(dy / dx) },
+        { label:'Δy', value: fmtNum(dy) },
+        { label:'Δx', value: fmtNum(dx) },
+      ];
+    }
+    case 'intercept': {
+      if (Math.abs(dx) < 1e-12)
+        return [{ label:'b', value:'不存在', bad:true, note:'竖直线不与 y 轴相交' }];
+      const k = dy / dx, b = y1 - k * x1;
+      return [
+        { label:'b', value: fmtNum(b) },
+        { label:'k', value: fmtNum(k) },
+        { label:'交点', value: `( 0 , ${fmtNum(b)} )` },
+      ];
+    }
+    case 'pointLineDistance': {
+      const { x0, y0, A, B, C } = v;
+      const denom = Math.sqrt(A*A + B*B);
+      if (denom < 1e-12)
+        return [{ label:'d', value:'—', bad:true, note:'A、B 不能同时为 0' }];
+      const num = A*x0 + B*y0 + C;
+      const d = Math.abs(num) / denom;
+      return [
+        { label:'d',  value: fmtNum(d) },
+        { label:'分子', value: fmtNum(num), note:'A·x₀ + B·y₀ + C' },
+        { label:'分母', value: fmtNum(denom), note:'√(A² + B²)' },
+      ];
+    }
+    case 'twoLines': {
+      const { k1, b1, k2, b2 } = v;
+      const EPS = 1e-9;
+      const parallel = Math.abs(k1 - k2) < EPS;
+      const same = parallel && Math.abs(b1 - b2) < EPS;
+      const perpendicular = Math.abs(1 + k1*k2) < EPS;
+
+      let relation, angleText, note = '';
+      if (same){ relation = '重合'; angleText = '0°'; note = '两条线完全一样'; }
+      else if (parallel){ relation = '平行'; angleText = '0°'; note = '没有交点'; }
+      else if (perpendicular){ relation = '垂直'; angleText = '90°'; note = 'k₁·k₂ = −1'; }
+      else {
+        relation = '相交';
+        const tan = Math.abs((k2 - k1) / (1 + k1*k2));
+        angleText = fmtNum(Math.atan(tan) * 180 / Math.PI, 2) + '°';
+      }
+
+      return [
+        { label:'关系', value: relation },
+        { label:'夹角', value: angleText, note },
+        { label:'k₂−k₁', value: fmtNum(k2 - k1) },
+        { label:'1+k₁k₂', value: fmtNum(1 + k1*k2) },
+      ];
+    }
+  }
+  return [];
+}
+
+function updateCalcOut(f){
+  const out = formulaDetail.querySelector('#calcOut');
+  if (!out) return;
+  const v = readVals(f);
+  if (!v){
+    out.innerHTML = `<div class="calc-out-row"><span class="hint">把输入框都填上，结果会实时更新</span></div>`;
+    return;
+  }
+  const rows = computeFormula(f.kind, v);
+  out.innerHTML = rows.map(r => `
+    <div class="calc-out-row">
+      <span class="k">${esc(r.label)}</span>
+      <span class="v ${r.bad ? 'bad' : ''}">${esc(r.value)}</span>
+      ${r.note ? `<span class="note">${esc(r.note)}</span>` : ''}
+    </div>
+  `).join('');
+}
+
+/* 依据公式类型返回「在图上标出」的动作 */
+function makeMarkButton(f){
+  const twoPointKinds = ['distance','midpoint','slope','linear','intercept'];
+  if (twoPointKinds.includes(f.kind)){
+    return {
+      text: '在图上标出这两点',
+      run(v){
+        const a = addFunc('point', `${v.x1}, ${v.y1}`, 'manual');
+        a.color = '#E1FCAD';
+        const b = addFunc('point', `${v.x2}, ${v.y2}`, 'manual');
+        b.color = '#D97757';
+        renderList(a.id);
+        requestRender(); updateHUD();
+        toast('已在图上标出两点');
+        closeFormula();
+      }
+    };
+  }
+  if (f.kind === 'pointLineDistance'){
+    return {
+      text: '标出点与直线',
+      run(v){
+        const { x0, y0, A, B, C } = v;
+        let lineExpr;
+        if (Math.abs(B) < 1e-12){
+          lineExpr = `x=${fmtNum(-C/A)}`;
+        } else {
+          lineExpr = lineExprFromKB(-A/B, -C/B);
+        }
+        const pf = addFunc('point', `${x0}, ${y0}`, 'manual');
+        pf.color = '#D97757';
+        const lf = addFunc('y', lineExpr, 'manual');
+        lf.color = '#7EC8C8';
+        renderList(pf.id);
+        requestRender(); updateHUD();
+        toast('已标出点与直线');
+        closeFormula();
+      }
+    };
+  }
+  if (f.kind === 'twoLines'){
+    return {
+      text: '画出两条直线',
+      run(v){
+        const f1 = addFunc('y', lineExprFromKB(v.k1, v.b1), 'manual');
+        f1.color = '#D97757';
+        const f2 = addFunc('y', lineExprFromKB(v.k2, v.b2), 'manual');
+        f2.color = '#7EC8C8';
+        renderList(f1.id);
+        requestRender(); updateHUD();
+        toast('已画出两条直线');
+        closeFormula();
+      }
+    };
+  }
+  return null;
+}
+
+function renderFormulaNav(){
+  formulaNav.innerHTML = FORMULAS.map(f => `
+    <button data-id="${f.id}" class="${f.id === activeFormula ? 'on' : ''}"
+            aria-current="${f.id === activeFormula}">
+      <span class="fn-name">${esc(f.name)}</span>
+      <span class="fn-sub">${esc(f.sub)}</span>
+    </button>
+  `).join('');
+  formulaNav.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      activeFormula = b.dataset.id;
+      renderFormulaNav();
+      renderFormulaDetail();
+    });
+  });
+}
+
+function renderFormulaDetail(){
+  const f = FORMULAS.find(x => x.id === activeFormula);
+  if (!f) return;
+  const o = getVals(f);
+  const mb = makeMarkButton(f);
+
+  formulaDetail.innerHTML = `
+    <div class="formula-head">
+      <div class="formula-title">${esc(f.name)}</div>
+      <div class="formula-math">${esc(f.formula)}</div>
+      <div class="formula-desc">${esc(f.desc)}</div>
+    </div>
+
+    <div class="calc-grid">
+      ${f.vars.map(k => `
+        <label class="calc-field">
+          <span>${esc(f.labels[k])}</span>
+          <input type="number" step="any" inputmode="decimal"
+                 data-var="${k}" value="${esc(o[k])}"
+                 aria-label="${esc(f.labels[k])}">
+        </label>
+      `).join('')}
+    </div>
+
+    <div class="calc-out" id="calcOut" aria-live="polite"></div>
+
+    ${mb ? `
+      <button class="mark-btn" id="markBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="2.4"/>
+          <path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>
+        </svg>
+        ${esc(mb.text)}
+      </button>
+    ` : ''}
+
+    <div class="examples-label">实例</div>
+    <div class="example-list">
+      ${f.examples.map((e, i) =>
+        `<button class="example-chip" data-ex="${i}">${esc(e.name)}</button>`).join('')}
+    </div>
+  `;
+
+  formulaDetail.querySelectorAll('input[data-var]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      getVals(f)[inp.dataset.var] = inp.value;
+      updateCalcOut(f);
+    });
+  });
+
+  formulaDetail.querySelectorAll('.example-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ex = f.examples[Number(btn.dataset.ex)];
+      if (!ex) return;
+      const oo = getVals(f);
+      for (const k of f.vars) oo[k] = String(ex.values[k]);
+      renderFormulaDetail();
+    });
+  });
+
+  const markBtn = formulaDetail.querySelector('#markBtn');
+  if (markBtn && mb){
+    markBtn.addEventListener('click', () => {
+      const freshV = readVals(f);
+      if (!freshV){ toast('先把输入框填完整', 'error'); return; }
+      mb.run(freshV);
+    });
+  }
+
+  updateCalcOut(f);
+}
+
+function openFormula(){
+  lastFocus = document.activeElement;
+  renderFormulaNav();
+  renderFormulaDetail();
+  formulaModal.classList.add('show');
+  requestAnimationFrame(() => formulaClose.focus());
+}
+
+function closeFormula(){
+  if (!formulaModal.classList.contains('show')) return;
+  formulaModal.classList.remove('show');
+  if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+}
+
+document.getElementById('formulaBtn').addEventListener('click', openFormula);
+formulaClose.addEventListener('click', closeFormula);
+
+formulaModal.addEventListener('click', e => {
+  if (e.target === formulaModal) closeFormula();
+});
+
+formulaModal.addEventListener('keydown', e => {
+  if (e.key !== 'Tab') return;
+  const items = formulaModal.querySelectorAll(
+    'button, input, [href], select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  if (!items.length) return;
+  const first = items[0], last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+});
+
+/* ═══════════════════════════════════════════════════
+   12. 画布尺寸 & 变换
    ═══════════════════════════════════════════════════ */
 
 let W = 0, H = 0;
@@ -1363,7 +2402,7 @@ const s2wY = sy => state.view.cy - (sy - H / 2) / state.view.scale;
 const screenToWorld = (sx, sy) => ({ x: s2wX(sx), y: s2wY(sy) });
 
 /* ═══════════════════════════════════════════════════
-   11. 渲染
+   13. 渲染
    ═══════════════════════════════════════════════════ */
 
 let needsRender = false;
@@ -1516,14 +2555,17 @@ function draw(){
   for (const f of state.funcs){
     if (f.alpha <= 0.002 || !f.fn || !f.visible) continue;
     switch(f.type){
-      case 'y':          drawY(f);         break;
-      case 'implicit':   drawImplicit(f);  break;
-      case 'polar':      drawPolar(f);     break;
-      case 'parametric': drawParametric(f);break;
-      case 'point':      drawPoint(f);     break;
+      case 'y':          drawY(f);          break;
+      case 'implicit':   drawImplicit(f);   break;
+      case 'polar':      drawPolar(f);      break;
+      case 'parametric': drawParametric(f); break;
+      case 'point':      drawPoint(f);      break;
     }
   }
   ctx.globalAlpha = 1;
+
+  /* 点表格 */
+  drawPointTable();
 
   /* 画笔预览 / 悬停 */
   if (pen.active) drawPenPreview();
@@ -1532,6 +2574,8 @@ function draw(){
 
 /* ── y = f(x) ── */
 function drawY(f){
+  if (f.vertical){ drawVertical(f); return; }
+
   ctx.beginPath();
   const { cx, cy, scale } = state.view;
   let prevSy = null;
@@ -1549,6 +2593,31 @@ function drawY(f){
     if (prevSy === null || Math.abs(sy - prevSy) > H*3) ctx.moveTo(i, sy);
     else ctx.lineTo(i, sy);
     prevSy = sy;
+  }
+
+  strokeCurve(f);
+}
+
+/* ── 竖直线 x = f(y) ── */
+function drawVertical(f){
+  ctx.beginPath();
+  const { cx, cy, scale } = state.view;
+
+  const yTop = cy + H/2/scale;
+  const yBot = cy - H/2/scale;
+  const steps = Math.max(2, Math.ceil(H / 1.5));
+
+  let started = false;
+  for (let i = 0; i <= steps; i++){
+    const y = yBot + (yTop - yBot) * i / steps;
+    let x;
+    try { x = f.fn(y); } catch { x = NaN; }
+    if (typeof x !== 'number' || !isFinite(x)){ started = false; continue; }
+    const sx = (x - cx)*scale + W/2;
+    const sy = H/2 - (y - cy)*scale;
+    if (!isFinite(sx) || !isFinite(sy)){ started = false; continue; }
+    if (!started){ ctx.moveTo(sx, sy); started = true; }
+    else ctx.lineTo(sx, sy);
   }
 
   strokeCurve(f);
@@ -1624,7 +2693,6 @@ function drawImplicit(f){
   }
 
   ctx.beginPath();
-  const P = [];
 
   for (let j = 0; j < rows - 1; j++){
     for (let i = 0; i < cols - 1; i++){
@@ -1653,14 +2721,13 @@ function drawImplicit(f){
       const tLeft   = v00 / (v00 - v01);
 
       const top    = { x: x0 + (x1-x0)*tTop,    y: y0 };
-      const right  = { x: x1,                    y: y0 + (y1-y0)*tRight };
+      const right  = { x: x1,                   y: y0 + (y1-y0)*tRight };
       const bottom = { x: x0 + (x1-x0)*tBottom, y: y1 };
-      const left   = { x: x0,                    y: y0 + (y1-y0)*tLeft };
+      const left   = { x: x0,                   y: y0 + (y1-y0)*tLeft };
 
       const seg = (a, b) => {
         ctx.moveTo(a.x, a.y);
         ctx.lineTo(b.x, b.y);
-        P.push(a, b);
       };
 
       switch (code){
@@ -1711,6 +2778,37 @@ function drawPoint(f){
   ctx.arc(sx, sy, 4.5, 0, Math.PI*2);
   ctx.fillStyle = f.color;
   ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+/* ── 点表格 ── */
+function drawPointTable(){
+  const t = state.pointTable;
+  if (!t.visible || t.points.length === 0) return;
+
+  for (const p of t.points){
+    if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) continue;
+    const sx = w2sX(p.x), sy = w2sY(p.y);
+    if (sx < -30 || sx > W+30 || sy < -30 || sy > H+30) continue;
+
+    ctx.globalAlpha = 0.18;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 10, 0, Math.PI*2);
+    ctx.fillStyle = t.color;
+    ctx.fill();
+
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 4.5, 0, Math.PI*2);
+    ctx.fillStyle = t.color;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(sx, sy, 5.3, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(14,18,20,.72)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+  }
   ctx.globalAlpha = 1;
 }
 
@@ -1825,7 +2923,7 @@ function drawHover(){
 
   for (const f of state.funcs){
     if (f.alpha <= 0.002 || !f.fn || !f.visible) continue;
-    if (f.type !== 'y') continue;
+    if (f.type !== 'y' || f.vertical) continue;
 
     let y;
     try { y = f.fn(hx); } catch { continue; }
@@ -1848,7 +2946,7 @@ function drawHover(){
 }
 
 /* ═══════════════════════════════════════════════════
-   12. HUD
+   14. HUD
    ═══════════════════════════════════════════════════ */
 
 function fmtShort(v){
@@ -1874,7 +2972,7 @@ function updateHUD(){
   hudX.textContent = fmtShort(hx);
   hudY.textContent = fmtShort(hy);
 
-  const live = state.funcs.filter(f => f.visible && f.fn && f.type === 'y');
+  const live = state.funcs.filter(f => f.visible && f.fn && f.type === 'y' && !f.vertical);
   if (live.length === 0){ legendEl.classList.remove('show'); return; }
 
   legendEl.innerHTML = live.map(f => {
@@ -1891,14 +2989,20 @@ function updateHUD(){
 }
 
 /* ═══════════════════════════════════════════════════
-   13. 交互
+   15. 交互
    ═══════════════════════════════════════════════════ */
 
 let drag = null;
 
+/* ★ 支持竖直线：dx ≈ 0 时生成 x = 常数 {y 范围} */
 function buildLineExpr(p1, p2){
   const dx = p2.x - p1.x, dy = p2.y - p1.y;
-  if (Math.abs(dx) < 1e-9) return null;
+
+  // 竖直线：x = 常数，y 限定在线段两端之间
+  if (Math.abs(dx) < 1e-9){
+    const minY = Math.min(p1.y, p2.y), maxY = Math.max(p1.y, p2.y);
+    return `x=(${nf(p1.x)}){${nf(minY)}<=y&&y<=${nf(maxY)}}`;
+  }
 
   const k = dy / dx;
   const b = p1.y - k * p1.x;
@@ -1949,19 +3053,14 @@ function handlePenClick(mx, my){
     (world.y - pen.pending.y) * state.view.scale
   );
 
-  let expr, isDot = false, msg;
+  let expr, msg;
 
   if (pixelDist < 8){
-    isDot = true;
     expr = buildDotExpr(pen.pending, pen.size);
     msg = '已生成一个点';
   } else {
+    // 支持竖直线：buildLineExpr 内部已处理 dx≈0
     expr = buildLineExpr(pen.pending, world);
-    if (!expr){
-      toast('垂直线没法写成 y=f(x)，换个位置', 'error');
-      requestRender();
-      return;
-    }
     msg = '已生成一条线段';
   }
 
@@ -2065,12 +3164,12 @@ document.querySelector('.zoombar').addEventListener('click', e => {
 });
 
 /* ═══════════════════════════════════════════════════
-   14. 导出 / 导入
+   16. 导出 / 导入
    ═══════════════════════════════════════════════════ */
 
 function exportJSON(){
   const data = {
-    version: 3,
+    version: 4,
     app: 'function-plot',
     exported: new Date().toISOString(),
     view: {
@@ -2083,6 +3182,13 @@ function exportJSON(){
       snapStep: state.settings.snapStep,
       showGrid: state.settings.showGrid,
       showTicks: state.settings.showTicks,
+    },
+    pointTable: {
+      color: state.pointTable.color,
+      visible: state.pointTable.visible,
+      points: state.pointTable.points
+        .filter(p => Number.isFinite(p.x) && Number.isFinite(p.y))
+        .map(p => ({ x: p.x, y: p.y })),
     },
     functions: state.funcs.map(f => ({
       type: f.type,
@@ -2103,7 +3209,7 @@ function exportJSON(){
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  toast('已导出 · ' + data.functions.length + ' 条');
+  toast('已导出 · ' + data.functions.length + ' 条 · ' + data.pointTable.points.length + ' 点');
 }
 
 function importJSON(file){
@@ -2134,13 +3240,29 @@ function importJSON(file){
         syncSettingsUI();
       }
 
+      /* 点表格 */
+      if (data.pointTable && typeof data.pointTable === 'object'){
+        const pt = data.pointTable;
+        if (Array.isArray(pt.points)){
+          state.pointTable.points = pt.points
+            .filter(p => p && isFinite(Number(p.x)) && isFinite(Number(p.y)))
+            .map(p => ({ x: Number(p.x), y: Number(p.y) }));
+        }
+        if (typeof pt.color === 'string' && /^#[0-9a-f]{3,8}$/i.test(pt.color)){
+          state.pointTable.color = pt.color;
+        }
+        if (typeof pt.visible === 'boolean'){
+          state.pointTable.visible = pt.visible;
+        }
+        renderPointTable();
+      }
+
       if (Array.isArray(data.functions)){
         state.funcs = [];
         for (const item of data.functions){
           if (!item) continue;
           const type = TYPES[item.type] ? item.type : 'y';
           let expr = item.expr;
-          // 兼容 v2 参数方程存在 expr2 里
           if (type === 'parametric' && item.expr2 && !String(expr).includes(',')){
             expr = String(expr) + ', ' + String(item.expr2);
           }
@@ -2158,7 +3280,7 @@ function importJSON(file){
       pen.cursor = null;
 
       renderList(); requestRender(); updateHUD(); updatePenBadge();
-      toast('导入成功 · ' + state.funcs.length + ' 条');
+      toast('导入成功 · ' + state.funcs.length + ' 条 · ' + state.pointTable.points.length + ' 点');
     } catch(e){
       toast('导入出错：' + e.message, 'error');
     }
@@ -2188,7 +3310,7 @@ fileInput.addEventListener('change', e => {
 });
 
 /* ═══════════════════════════════════════════════════
-   15. 键盘
+   17. 键盘
    ═══════════════════════════════════════════════════ */
 
 window.addEventListener('keydown', e => {
@@ -2196,7 +3318,21 @@ window.addEventListener('keydown', e => {
   const inField = tag === 'INPUT' || tag === 'TEXTAREA';
 
   if (e.key === 'Escape'){
-    if (typeMenu.classList.contains('show')) return; // 已在菜单里处理
+    if (settingsModal.classList.contains('show')){
+      e.preventDefault();
+      closeSettings();
+      return;
+    }
+    if (formulaModal.classList.contains('show')){
+      e.preventDefault();
+      closeFormula();
+      return;
+    }
+    if (typeMenu.classList.contains('show')){
+      closeTypeMenu();
+      e.stopPropagation();
+      return;
+    }
     if (pen.pending){
       e.preventDefault();
       pen.pending = null; pen.cursor = null;
@@ -2221,14 +3357,28 @@ window.addEventListener('keydown', e => {
     return;
   }
 
+  if ((e.key === 'f' || e.key === 'F') && !e.metaKey && !e.ctrlKey && !e.altKey){
+    e.preventDefault();
+    if (formulaModal.classList.contains('show')) closeFormula();
+    else openFormula();
+    return;
+  }
+
   if ((e.key === 'b' || e.key === 'B') && !e.metaKey && !e.ctrlKey && !e.altKey){
     e.preventDefault();
     setPenActive(!pen.active);
+    return;
+  }
+
+  if ((e.key === ',' && (e.metaKey || e.ctrlKey))){
+    e.preventDefault();
+    if (settingsModal.classList.contains('show')) closeSettings();
+    else openSettings();
   }
 });
 
 /* ═══════════════════════════════════════════════════
-   16. 启动
+   18. 启动
    ═══════════════════════════════════════════════════ */
 
 syncSettingsUI();

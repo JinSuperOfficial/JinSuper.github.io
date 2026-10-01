@@ -220,6 +220,15 @@ window.SITE_INDEX = {
       "dir": true,
       "children": [
         {
+          "name": "archive/",
+          "dir": true,
+          "children": [
+            {
+              "name": "TEST.html"
+            }
+          ]
+        },
+        {
           "name": "asset/",
           "dir": true,
           "children": [
@@ -317,9 +326,6 @@ window.SITE_INDEX = {
               "name": "1SetUp.md"
             },
             {
-              "name": "First.md"
-            },
-            {
               "name": "homework.md"
             }
           ]
@@ -368,9 +374,6 @@ window.SITE_INDEX = {
         },
         {
           "name": "temp-homework.md"
-        },
-        {
-          "name": "TEST.md"
         },
         {
           "name": "viewer.html"
