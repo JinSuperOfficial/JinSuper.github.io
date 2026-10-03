@@ -13,15 +13,6 @@
       "order": 10
     },
     {
-      "id": "function",
-      "title": "函数显示器",
-      "desc": "画函数、隐式、极坐标、参数方程，两点定直线画笔，网格吸附，六套配色，全套 JSON 导入导出",
-      "href": "/Skills/standalone/function.html",
-      "icon": "curve",
-      "kind": "canvas",
-      "order": 20
-    },
-    {
       "id": "moont",
       "title": "月相演示器",
       "desc": "三个视角看懂月球的阴影变化：太阳系、地球视角、地面观察",

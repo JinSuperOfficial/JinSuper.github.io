@@ -68,6 +68,7 @@ const DESC = {
   '/811/tools.json': '811 专区清单：加工具只改这里',
   '/811/homework.html': '今日份美味作业：读 data/homework.json，勾选状态存 localStorage',
   '/811/classtable.html': '课程表 · 811班：基础版 / 缩略版两套，可切完整课表与今日课程',
+  '/811/function.html': 'Plot 图像计算器：瑞士国际主义亮/暗/绿三套主题，函数 / 隐式 / 极坐标 / 参数方程，自变量可用任意单个字母，坐标轴标签自定义，触屏双指缩放-平移-轻点撤回',
   '/811/data/': '作业数据目录',
   '/811/data/homework.json': '作业数据：按科目键 + 特殊字段「笔记」',
 
@@ -76,8 +77,6 @@ const DESC = {
   '/Skills/skills.json': '工具站清单：加工具只改这里（格式见 MANIFEST.md）',
   '/Skills/viewer.html': '源码查看器：viewer.html?f=路径 高亮并查看任意页面源码',
   '/Skills/data/': '空目录（作业数据已迁往 /811/data）',
-  '/Skills/standalone/': '独立小应用',
-  '/Skills/standalone/function.html': '函数显示器：画函数 / 隐式 / 极坐标 / 参数方程，网格吸附、六套配色、JSON 导入导出',
   '/Skills/docs/': '文档类页面与说明',
   '/Skills/docs/docs.html': '文档站：跳转页 → /p/docs.html',
   '/Skills/docs/blog.html': 'BLOG：跳转页 → /p/',

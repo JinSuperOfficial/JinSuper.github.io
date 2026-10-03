@@ -127,6 +127,9 @@ window.SITE_INDEX = {
           "name": "english.html"
         },
         {
+          "name": "function.html"
+        },
+        {
           "name": "homework.html"
         },
         {
