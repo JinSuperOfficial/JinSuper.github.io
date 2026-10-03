@@ -880,6 +880,21 @@
   }
   .toolbar::-webkit-scrollbar{height:6px}
   .toolbar::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:var(--r-xs)}
+
+  /* 收起 / 展开工具栏（真机上横滑经常滑不动，所以给了这个开关） */
+  .toolbar-toggle{
+    flex:none;display:grid;place-items:center;
+    width:26px;height:26px;margin-right:4px;padding:0;
+    background:transparent;border:1px solid var(--line);border-radius:var(--r-sm);
+    color:var(--ink-2);cursor:pointer;
+    transition:color var(--dur-fast) var(--ease-out),background var(--dur-fast) var(--ease-out);
+  }
+  .toolbar-toggle:hover{color:var(--ink);background:rgba(var(--tint-rgb),.06)}
+  .toolbar-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .toolbar-toggle svg{width:14px;height:14px;transition:transform var(--dur-base) var(--ease-out)}
+  .toolbar.collapsed .toolbar-toggle svg{transform:rotate(-90deg)}
+  .toolbar.collapsed{flex-wrap:nowrap;overflow:hidden}
+  .toolbar.collapsed .tool-group:not(.primary){display:none}
   .tool-group{display:flex;align-items:center;gap:2px;padding:0 6px;border-right:1px solid var(--line)}
   .tool-group:last-child{border-right:none}
   .tool{
@@ -990,6 +1005,20 @@
   }
   .tools-index-link:hover{border-color:rgba(var(--accent-rgb),.55);color:var(--accent);
                           background:rgba(var(--accent-rgb),.06)}
+
+  /* ═══ 导出图片：预览框（透明底用棋盘格衬出来） ═══ */
+  .shot-preview-wrap{
+    margin-top:14px;padding:8px;border:1px solid var(--line);border-radius:var(--r-lg);
+    background-color:var(--surface);
+    background-image:
+      linear-gradient(45deg, rgba(var(--tint-rgb),.07) 25%, transparent 25%, transparent 75%, rgba(var(--tint-rgb),.07) 75%),
+      linear-gradient(45deg, rgba(var(--tint-rgb),.07) 25%, transparent 25%, transparent 75%, rgba(var(--tint-rgb),.07) 75%);
+    background-size:16px 16px;
+    background-position:0 0, 8px 8px;
+    display:grid;place-items:center;min-height:70px;
+  }
+  .shot-preview{max-width:100%;max-height:180px;display:block;border-radius:var(--r-sm)}
+  .shot-q{flex:none;font-family:var(--mono);font-size:11.5px;color:var(--ink-3);min-width:34px;text-align:right}
   #tvPointsTools .pt-tool{white-space:nowrap}
 
   /* ═══ 公式计算器：取点 + 标线 ═══ */
@@ -1080,14 +1109,16 @@
     .tb-btn .tb-label{display:none}
     .tb-btn{padding:8px 9px}
     .tableview{max-height:32dvh}
-    .toolbar{padding:4px 8px}
-    .toolbar::-webkit-scrollbar{height:3px}
-    .toolbar::-webkit-scrollbar-thumb{background:var(--line-2)}
+    .toolbar{padding:4px 8px;flex-wrap:wrap;overflow:visible;row-gap:4px}
     /* 窄屏工具栏只留图标（13 个按钮 + 文字太挤） */
     .tool span{display:none}
     .tool{padding:7px 8px}
     .tool svg{width:16px;height:16px}
     .toolbar .tool-group{padding:0 4px}
+    /* 收起时还是单行：不给滑动，直接藏 */
+    .toolbar.collapsed{flex-wrap:nowrap;overflow:hidden}
+    /* 展开后换行，靠页面纵向滚动就能看全，不用横滑 */
+    .toolbar:not(.collapsed) .tool-group{border-right:none;padding:0 3px}
     /* 输入栏和表格区在手机上别抢地方 */
     .input-bar{margin-top:8px}
     .footnote{display:none}
@@ -1161,9 +1192,15 @@
       </button>
   </header>
 
-  <!-- 工具栏：对标 GeoGebra 的工具分组 -->
+  <!-- 工具栏：对标 GeoGebra 的工具分组；窄屏可收起 -->
   <div class="toolbar" id="toolbar" role="toolbar" aria-label="工具">
-    <div class="tool-group">
+    <button class="toolbar-toggle" id="toolbarToggle" type="button"
+            aria-expanded="true" aria-controls="toolbar"
+            title="收起 / 展开工具栏" aria-label="收起工具栏">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="tool-group primary">
       <button class="tool on" data-tool="move" title="拖动平移视图" aria-pressed="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
              stroke-linecap="round" stroke-linejoin="round">
@@ -1362,7 +1399,7 @@
       <code>Curve(cos(t),sin(t),t,0,2pi)</code>。<br>
       自变量只认单个字母：<code>a=54b+cos(b)</code>、<code>u^2+v^2-4</code> 都行，每条各写各的。<br>
       触屏：双指捏合缩放、双指拖动平移、双指轻点撤回；坐标轴标签在设置里改。<br>
-      按 <code>F</code> 开公式面板，<code>B</code> 开画笔（默认吸附网格、可画竖直线），<code>Ctrl+Z</code> 撤销。
+      按 <code>F</code> 开公式面板，<code>B</code> 开画笔（默认吸附网格、可画竖直线），<code>P</code> 导出图片（无界面），<code>Ctrl+Z</code> 撤销。
     </div>
 
     <form class="input-bar" id="inputBar" autocomplete="off">
@@ -1489,6 +1526,7 @@
   <button class="menu-item" type="button" data-act="new" role="menuitem">新建（清空重来）</button>
   <button class="menu-item" type="button" data-act="open" role="menuitem">打开…（导入 JSON）</button>
   <button class="menu-item" type="button" data-act="save" role="menuitem">保存（导出 JSON）</button>
+  <button class="menu-item" type="button" data-act="shot" role="menuitem">导出图片…（PNG / JPG / WebP）</button>
   <button class="menu-item" type="button" data-act="share" role="menuitem">复制本页链接</button>
   <button class="menu-item" type="button" data-act="more" role="menuitem">更多 811 工具</button>
   <button class="menu-item" type="button" data-act="help" role="menuitem">帮助 / 语法速查</button>
@@ -1501,6 +1539,7 @@
   <button class="menu-item" type="button" data-act="fit" role="menuitem">适应视图</button>
   <button class="menu-item" type="button" data-act="reset" role="menuitem">回到原点 · 1×</button>
   <button class="menu-item" type="button" data-act="axes" role="menuitem">坐标轴标签…</button>
+  <button class="menu-item" type="button" data-act="shot" role="menuitem">导出图片…</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1535,6 +1574,11 @@
                stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
           导出 LaTeX
         </button>
+        <button class="data-btn" id="expShot" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2"/><path d="m4 18 5-5 3.5 3.5L16 13l4 4"/></svg>
+          导出图片
+        </button>
         <button class="data-btn" id="impBtn" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V5"/><path d="m7 10 5-5 5 5"/><path d="M5 20h14"/></svg>
@@ -1558,6 +1602,88 @@
       <div class="tools-grid" id="toolsGrid"></div>
       <div class="tv-empty hidden" id="toolsEmpty">
         清单没读到 —— 用 http 打开（<code>部署.cmd serve</code>）才能读 <code>/811/tools.json</code>。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 导出图片弹窗 ═══ -->
+<div class="modal-backdrop" id="shotModal">
+  <div class="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="shotHeading">
+    <header class="modal-head">
+      <h2 id="shotHeading">导出图片</h2>
+      <span class="mh-sub">纯图像，不含界面</span>
+      <span class="mh-spacer"></span>
+      <button class="icon-btn" id="shotClose" aria-label="关闭">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+    <div class="settings-body">
+
+      <div class="settings-group">
+        <div class="settings-group-label">预设</div>
+        <div class="seg" id="shotPreset" role="group" aria-label="预设">
+          <button class="seg-btn" type="button" data-preset="view">和屏幕一样</button>
+          <button class="seg-btn" type="button" data-preset="image">只有图像</button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-label">画什么</div>
+        <div class="setting-row">
+          <div class="switch on" id="shotGrid" role="switch" aria-checked="true" tabindex="0"></div>
+          <label for="shotGrid">网格</label>
+        </div>
+        <div class="setting-row">
+          <div class="switch on" id="shotAxes" role="switch" aria-checked="true" tabindex="0"></div>
+          <label for="shotAxes">坐标系（含刻度与轴标签）</label>
+        </div>
+        <div class="setting-row">
+          <label for="shotBg" style="flex:none">背景</label>
+          <select class="pp-sel" id="shotBg" style="max-width:170px" aria-label="背景">
+            <option value="theme">跟随主题</option>
+            <option value="transparent">透明</option>
+            <option value="paper">纯白</option>
+            <option value="dark">纯黑</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-label">格式</div>
+        <div class="seg" id="shotFormat" role="radiogroup" aria-label="格式">
+          <button class="seg-btn" type="button" data-format="png" role="radio" aria-checked="true">PNG</button>
+          <button class="seg-btn" type="button" data-format="jpeg" role="radio" aria-checked="false" tabindex="-1">JPG</button>
+          <button class="seg-btn" type="button" data-format="webp" role="radio" aria-checked="false" tabindex="-1">WebP</button>
+        </div>
+        <div class="setting-row">
+          <label style="flex:none">倍率</label>
+          <div class="seg" id="shotScale" role="radiogroup" aria-label="倍率">
+            <button class="seg-btn" type="button" data-scale="1" role="radio" aria-checked="false" tabindex="-1">1×</button>
+            <button class="seg-btn" type="button" data-scale="2" role="radio" aria-checked="true">2×</button>
+            <button class="seg-btn" type="button" data-scale="3" role="radio" aria-checked="false" tabindex="-1">3×</button>
+          </div>
+        </div>
+        <div class="setting-row" id="shotQualityRow">
+          <label for="shotQuality" style="flex:none">质量</label>
+          <input type="range" class="pen-size" id="shotQuality" min="0.5" max="1" step="0.01" value="0.92"
+                 aria-label="图片质量">
+          <span class="shot-q" id="shotQualityVal">0.92</span>
+        </div>
+        <div class="settings-hint" id="shotInfo">—</div>
+      </div>
+
+      <div class="shot-preview-wrap">
+        <img class="shot-preview" id="shotPreview" alt="导出预览">
+      </div>
+
+      <div class="data-tools" style="margin-top:12px">
+        <button class="data-btn" id="shotDownload" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+          下载图片
+        </button>
       </div>
     </div>
   </div>
@@ -2222,7 +2348,8 @@ addFunc('y', '', 'manual', 0);
 
 const stage    = document.getElementById('stage');
 const canvas   = document.getElementById('cv');
-const ctx      = canvas.getContext('2d');
+/* let 而不是 const：导出图片时会临时把 ctx 换成离屏画布的 2d（见 renderShotCanvas） */
+let ctx        = canvas.getContext('2d');
 const fnList   = document.getElementById('fnList');
 const hudX     = document.getElementById('hudX');
 const hudY     = document.getElementById('hudY');
@@ -3615,6 +3742,9 @@ formulaModal.addEventListener('keydown', e => {
 
 let W = 0, H = 0;
 let noisePattern = null;
+/* 导出图片时的渲染覆盖：非 null 表示「这一帧是画给导出用的」。
+   实时画面恒为 null，draw() 在 null 时与以前逐字节一致。 */
+let renderOverride = null;
 
 function buildNoise(){
   const c = document.createElement('canvas');
@@ -3736,16 +3866,25 @@ function draw(){
   if (!W || !H) return;
   const { cx, cy, scale } = state.view;
   const S = state.settings;
+  const RO = renderOverride;                 /* 导出时才有值 */
 
   /* 背景 */
-  const g = ctx.createRadialGradient(W*.62, H*.12, 0, W*.62, H*.12, Math.max(W,H)*.95);
-  g.addColorStop(0, CV.bg1);
-  g.addColorStop(.55, CV.bg2);
-  g.addColorStop(1, CV.bg3);
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, H);
+  if (!RO || !RO.transparent){
+    if (RO && RO.solid){
+      ctx.fillStyle = RO.solid;
+      ctx.fillRect(0, 0, W, H);
+    } else {
+      const g = ctx.createRadialGradient(W*.62, H*.12, 0, W*.62, H*.12, Math.max(W,H)*.95);
+      g.addColorStop(0, CV.bg1);
+      g.addColorStop(.55, CV.bg2);
+      g.addColorStop(1, CV.bg3);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
 
-  if (noisePattern){
+  /* 噪点只给实时画面（导出图要干净、可复现） */
+  if (!RO && noisePattern){
     ctx.globalAlpha = 0.028;
     ctx.fillStyle = noisePattern;
     ctx.fillRect(0, 0, W, H);
@@ -3756,7 +3895,7 @@ function draw(){
   const yMin = cy - H/2/scale, yMax = cy + H/2/scale;
 
   /* 网格 */
-  if (S.showGrid){
+  if (RO ? RO.grid : S.showGrid){
     const major = niceStep(scale, 88);
     const minor = major / 5;
 
@@ -3793,15 +3932,18 @@ function draw(){
   const y0 = H/2 - (0 - cy)*scale;
   const x0 = W/2 + (0 - cx)*scale;
 
-  ctx.strokeStyle = CV.axis;
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  if (y0 >= -1 && y0 <= H+1){ ctx.moveTo(0, Math.round(y0)+.5); ctx.lineTo(W, Math.round(y0)+.5); }
-  if (x0 >= -1 && x0 <= W+1){ ctx.moveTo(Math.round(x0)+.5, 0); ctx.lineTo(Math.round(x0)+.5, H); }
-  ctx.stroke();
+  const showAxes = RO ? !!RO.axes : true;
+  if (showAxes){
+    ctx.strokeStyle = CV.axis;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    if (y0 >= -1 && y0 <= H+1){ ctx.moveTo(0, Math.round(y0)+.5); ctx.lineTo(W, Math.round(y0)+.5); }
+    if (x0 >= -1 && x0 <= W+1){ ctx.moveTo(Math.round(x0)+.5, 0); ctx.lineTo(Math.round(x0)+.5, H); }
+    ctx.stroke();
+  }
 
   /* 刻度 */
-  if (S.showTicks){
+  if (RO ? RO.axes : S.showTicks){
     const major = niceStep(scale, 88);
     ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, monospace';
     ctx.fillStyle = CV.tick;
@@ -3826,7 +3968,7 @@ function draw(){
   }
 
   /* 坐标轴标签 */
-  drawAxisLabels(x0, y0);
+  if (showAxes) drawAxisLabels(x0, y0);
 
   /* 曲线 */
   for (const f of state.funcs){
@@ -3855,10 +3997,12 @@ function draw(){
   /* 自动交点 */
   drawAutoIntersections();
 
-  /* 数值表标记 / 画笔预览 / 悬停 */
-  drawVtHighlight();
-  if (pen.active) drawPenPreview();
-  else drawHover();
+  /* 数值表标记 / 画笔预览 / 悬停：都是界面，导出时不画 */
+  if (!RO){
+    drawVtHighlight();
+    if (pen.active) drawPenPreview();
+    else drawHover();
+  }
 }
 
 /* ── 自动交点：所有可见曲线两两求交，画成小圆点 ── */
@@ -5207,6 +5351,7 @@ menuPop.addEventListener('click', e => {
   if (act === 'new') newPlot();
   else if (act === 'open') fileInput.click();
   else if (act === 'save') exportJSON();
+  else if (act === 'shot') openShot();
   else if (act === 'share') copyShareLink();
   else if (act === 'more') openTools();
   else if (act === 'help') showHelp();
@@ -5262,12 +5407,7 @@ function objectsForExport(){
   return rows;
 }
 function downloadFile(name, text, mime){
-  const blob = new Blob([text], { type: mime || 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = name;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadBlob(name, new Blob([text], { type: mime || 'text/plain;charset=utf-8' }));
 }
 const fileStamp = () => new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
 
@@ -5333,6 +5473,7 @@ toolsModal.addEventListener('click', e => { if (e.target === toolsModal) closeTo
 document.getElementById('expJson').addEventListener('click', exportJSON);
 document.getElementById('expCsv').addEventListener('click', exportCSV);
 document.getElementById('expTex').addEventListener('click', exportTeX);
+document.getElementById('expShot').addEventListener('click', () => { closeTools(); openShot(); });
 document.getElementById('impBtn').addEventListener('click', () => fileInput.click());
 
 /* 工具清单走站点统一的 /lib/manifest.js，不自己解析 */
@@ -5481,6 +5622,7 @@ ctxMenu.addEventListener('click', e => {
   else if (act === 'fit') fitView();
   else if (act === 'reset'){ state.view.cx = 0; state.view.cy = 0; state.view.scale = 56; }
   else if (act === 'axes'){ closeCtxMenu(); openSettings(); return; }
+  else if (act === 'shot'){ closeCtxMenu(); openShot(); return; }
   syncSettingsUI(); syncToolUI(); requestRender(); updateHUD();
   if (act === 'grid' || act === 'ticks') openCtxMenu(parseFloat(ctxMenu.style.left), parseFloat(ctxMenu.style.top));
   else closeCtxMenu();
@@ -6250,6 +6392,316 @@ function buildConstruct(){
 }
 
 /* ═══════════════════════════════════════════════════
+   16h. 导出图片：无 UI 截图（PNG / JPG / WebP）
+   ═══════════════════════════════════════════════════ */
+
+/* 选项是临时的：不进 localStorage、不进导出的 JSON */
+var shotOpts = { format:'png', scale:2, grid:true, axes:true, bg:'theme', quality:0.92 };
+
+function shotPreset(kind){
+  if (kind === 'image'){ shotOpts.grid = false; shotOpts.axes = false; shotOpts.bg = 'transparent'; }
+  else { shotOpts.grid = true; shotOpts.axes = true; shotOpts.bg = 'theme'; }
+  syncShotUI();
+}
+
+/* 从 <style> 里抠出三套主题的 --plot-*：导成纯白/纯黑底时要配对应主题的线色 */
+let THEME_CANVAS = null;
+function themeCanvasColors(){
+  if (THEME_CANVAS) return THEME_CANVAS;
+  const out = {};
+  try {
+    const css = Array.from(document.querySelectorAll('style')).map(s => s.textContent || '').join('\n');
+    for (const name of THEMES){
+      const sel = (name === 'swiss-light')
+        ? ':root, :root[data-theme="swiss-light"]{'
+        : ':root[data-theme="' + name + '"]{';
+      const i = css.indexOf(sel);
+      if (i < 0) continue;
+      const end = css.indexOf('}', i);
+      const body = css.slice(i, end < 0 ? css.length : end);
+      const vars = {};
+      for (const m of body.matchAll(/--(plot-[a-z0-9-]+)\s*:\s*([^;}]+)/g)) vars[m[1]] = m[2].trim();
+      if (Object.keys(vars).length) out[name] = vars;
+    }
+  } catch(e){}
+  THEME_CANVAS = out;
+  return out;
+}
+
+function canvasColorsFor(themeName){
+  const v = themeCanvasColors()[themeName];
+  if (!v) return CV;
+  const pick = (k, fb) => v[k] || fb;
+  return {
+    bg1: pick('plot-bg-1', CV.bg1), bg2: pick('plot-bg-2', CV.bg2), bg3: pick('plot-bg-3', CV.bg3),
+    grid1: pick('plot-grid-1', CV.grid1), grid2: pick('plot-grid-2', CV.grid2),
+    axis: pick('plot-axis', CV.axis), cross: pick('plot-cross', CV.cross),
+    tick: pick('plot-tick', CV.tick), ink: pick('plot-ink', CV.ink), chip: pick('plot-chip', CV.chip),
+  };
+}
+
+/* 选项 → 「这次怎么画、存成什么」（纯逻辑，测试主要盯这里） */
+function shotPlan(){
+  const format = ['png','jpeg','webp'].includes(shotOpts.format) ? shotOpts.format : 'png';
+  let bg = ['theme','transparent','paper','dark'].includes(shotOpts.bg) ? shotOpts.bg : 'theme';
+  if (format === 'jpeg' && bg === 'transparent') bg = 'paper';     /* JPG 没有透明通道 */
+  const scale = Math.min(4, Math.max(1, Math.round(Number(shotOpts.scale) || 1)));
+  return {
+    format,
+    mime: 'image/' + format,
+    ext: format === 'jpeg' ? 'jpg' : format,
+    quality: format === 'png' ? undefined : Math.min(1, Math.max(0.3, Number(shotOpts.quality) || 0.92)),
+    grid: !!shotOpts.grid,
+    axes: !!shotOpts.axes,
+    bg,
+    solid: bg === 'paper' ? '#FFFFFF' : (bg === 'dark' ? '#0F1012' : null),
+    transparent: bg === 'transparent',
+    palette: bg === 'paper' ? canvasColorsFor('swiss-light')
+           : bg === 'dark'  ? canvasColorsFor('swiss-dark')
+           : CV,
+    /* 白/黑底时曲线也跟着换成对应主题的配色，不然暗色的浅青线在白底上几乎看不见 */
+    curvePalette: bg === 'paper' ? THEME_PALETTE['swiss-light']
+                : bg === 'dark'  ? THEME_PALETTE['swiss-dark']
+                : null,
+    scale,
+    width: Math.max(1, Math.round(W * scale)),
+    height: Math.max(1, Math.round(H * scale)),
+  };
+}
+
+/* 离屏画一张：临时换渲染目标，finally 全部还原，实时画面不受影响 */
+function renderShotCanvas(plan){
+  if (!W || !H) return null;
+  const off = document.createElement('canvas');
+  off.width = plan.width;
+  off.height = plan.height;
+  let octx = null;
+  try { octx = off.getContext('2d'); } catch(e){ octx = null; }
+  if (!octx) return null;
+
+  const savedCtx = ctx, savedW = W, savedH = H, savedNoise = noisePattern;
+  const savedCV = CV, savedSel = selectedId;
+  /* 白/黑底：曲线配色临时换成对应主题那套（导出完还原，不碰用户的选择） */
+  const remap = plan.curvePalette && plan.curvePalette !== curvePalette;
+  const savedColors = remap ? state.funcs.map(f => f.color) : null;
+  const savedPtColor = remap ? state.pointTable.color : null;
+  try {
+    if (remap){
+      state.funcs.forEach((f, i) => {
+        const idx = curvePalette.indexOf(savedColors[i]);
+        if (idx >= 0) f.color = plan.curvePalette[idx % plan.curvePalette.length];
+      });
+      const pi = curvePalette.indexOf(savedPtColor);
+      if (pi >= 0) state.pointTable.color = plan.curvePalette[pi % plan.curvePalette.length];
+    }
+    ctx = octx;
+    W = plan.width / plan.scale;        /* 逻辑尺寸还是舞台大小，只是乘了倍率 */
+    H = plan.height / plan.scale;
+    CV = plan.palette;
+    noisePattern = null;
+    selectedId = null;                  /* 选中光环也是界面 */
+    renderOverride = plan;
+    octx.setTransform(plan.scale, 0, 0, plan.scale, 0, 0);
+    draw();
+  } finally {
+    renderOverride = null;
+    ctx = savedCtx; W = savedW; H = savedH; noisePattern = savedNoise;
+    CV = savedCV; selectedId = savedSel;
+    if (remap){
+      state.funcs.forEach((f, i) => { f.color = savedColors[i]; });
+      state.pointTable.color = savedPtColor;
+    }
+  }
+  return off;
+}
+
+/* ── 编码 + 下载 ── */
+function downloadBlob(name, blob){
+  let url = null;
+  try { url = URL.createObjectURL(blob); } catch(e){ url = null; }
+  if (!url){ toast('这个浏览器不给下载图片', 'error'); return false; }
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => { try { URL.revokeObjectURL(url); } catch(e){} }, 1000);
+  return true;
+}
+
+function exportShot(){
+  if (!W || !H){ toast('画布还没准备好', 'error'); return; }
+  const plan = shotPlan();
+  const c = renderShotCanvas(plan);
+  if (!c){ toast('画不出图（拿不到画布上下文）', 'error'); return; }
+  if (typeof c.toBlob !== 'function'){ toast('这个浏览器不支持导出图片', 'error'); return; }
+  try {
+    c.toBlob(blob => {
+      if (!blob){ toast('导出失败，换个格式试试', 'error'); return; }
+      const mime = blob.type || plan.mime;
+      const ext = mime.includes('webp') ? 'webp' : (mime.includes('jpeg') ? 'jpg' : 'png');
+      const fell = mime !== plan.mime;      /* 浏览器把它换成了别的格式（Safari 的 WebP） */
+      if (downloadBlob('plot-' + fileStamp() + '.' + ext, blob)){
+        toast((fell ? '这个浏览器不支持 ' + plan.ext.toUpperCase() + '，改存了 ' + ext.toUpperCase()
+                    : '已导出 ' + ext.toUpperCase()) +
+              ' · ' + plan.width + '×' + plan.height + (plan.transparent ? ' · 透明底' : ''));
+      }
+    }, plan.mime, plan.quality);
+  } catch(e){
+    toast('导出失败：' + ((e && e.message) || e), 'error');
+  }
+}
+
+/* ── 弹窗 ── */
+const shotModal = document.getElementById('shotModal');
+let shotLastFocus = null;
+
+const SHOT_BG_NAME = { theme:'跟随主题', transparent:'透明底', paper:'纯白底', dark:'纯黑底' };
+
+function syncShotUI(){
+  const q = id => document.getElementById(id);
+  const setSw = (el, on) => {
+    if (!el) return;
+    el.classList.toggle('on', !!on);
+    el.setAttribute('aria-checked', String(!!on));
+  };
+  setSw(q('shotGrid'), shotOpts.grid);
+  setSw(q('shotAxes'), shotOpts.axes);
+
+  const bg = q('shotBg');
+  if (bg) bg.value = shotOpts.bg;
+
+  document.querySelectorAll('#shotFormat .seg-btn').forEach(b => {
+    const on = b.dataset.format === shotOpts.format;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-checked', String(on));
+    b.setAttribute('tabindex', on ? '0' : '-1');
+  });
+  const sc = Math.min(4, Math.max(1, Math.round(Number(shotOpts.scale) || 1)));
+  document.querySelectorAll('#shotScale .seg-btn').forEach(b => {
+    const on = Number(b.dataset.scale) === sc;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-checked', String(on));
+    b.setAttribute('tabindex', on ? '0' : '-1');
+  });
+
+  const qual = q('shotQuality');
+  if (qual) qual.value = String(shotOpts.quality);
+  const qv = q('shotQualityVal');
+  if (qv) qv.textContent = Number(shotOpts.quality).toFixed(2);
+  const row = q('shotQualityRow');
+  if (row) row.classList.toggle('hidden', shotOpts.format === 'png');
+
+  const plan = shotPlan();
+  const info = q('shotInfo');
+  if (info){
+    info.textContent = '输出 ' + plan.width + ' × ' + plan.height + ' px · ' + plan.ext.toUpperCase() +
+      ' · ' + (SHOT_BG_NAME[plan.bg] || plan.bg) +
+      (plan.format === 'png' ? '' : ' · 质量 ' + plan.quality.toFixed(2));
+  }
+
+  const img = q('shotPreview');
+  if (img && W && H){
+    try {
+      const pc = renderShotCanvas({
+        format:'png', mime:'image/png', ext:'png', quality:undefined,
+        grid: plan.grid, axes: plan.axes, bg: plan.bg, solid: plan.solid,
+        transparent: plan.transparent, palette: plan.palette,
+        scale: 1, width: W, height: H,
+      });
+      img.src = pc ? pc.toDataURL('image/png') : '';
+    } catch(e){ img.removeAttribute('src'); }
+  }
+}
+
+function openShot(){
+  if (!W || !H){ toast('画布还没准备好', 'error'); return; }
+  shotLastFocus = document.activeElement;
+  shotModal.classList.add('show');
+  syncShotUI();
+  const c = document.getElementById('shotClose');
+  if (c) requestAnimationFrame(() => c.focus());
+}
+function closeShot(){
+  if (!shotModal || !shotModal.classList.contains('show')) return;
+  shotModal.classList.remove('show');
+  if (shotLastFocus && shotLastFocus.focus) shotLastFocus.focus();
+}
+
+(function bindShot(){
+  if (!shotModal) return;
+  document.getElementById('shotClose').addEventListener('click', closeShot);
+  shotModal.addEventListener('click', e => { if (e.target === shotModal) closeShot(); });
+  document.getElementById('shotDownload').addEventListener('click', exportShot);
+
+  const preset = document.getElementById('shotPreset');
+  if (preset) preset.addEventListener('click', e => {
+    const b = e.target.closest ? e.target.closest('.seg-btn') : null;
+    if (b) shotPreset(b.dataset.preset);
+  });
+
+  const flip = (id, key) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const toggle = () => { shotOpts[key] = !shotOpts[key]; syncShotUI(); };
+    el.addEventListener('click', toggle);
+    el.addEventListener('keydown', e => {
+      if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); toggle(); }
+    });
+  };
+  flip('shotGrid', 'grid');
+  flip('shotAxes', 'axes');
+
+  const bg = document.getElementById('shotBg');
+  if (bg) bg.addEventListener('change', () => { shotOpts.bg = bg.value; syncShotUI(); });
+
+  document.querySelectorAll('#shotFormat .seg-btn').forEach(b =>
+    b.addEventListener('click', () => { shotOpts.format = b.dataset.format; syncShotUI(); }));
+  document.querySelectorAll('#shotScale .seg-btn').forEach(b =>
+    b.addEventListener('click', () => { shotOpts.scale = Number(b.dataset.scale); syncShotUI(); }));
+
+  const qual = document.getElementById('shotQuality');
+  if (qual) qual.addEventListener('input', () => {
+    shotOpts.quality = Math.min(1, Math.max(0.3, parseFloat(qual.value) || 0.92));
+    syncShotUI();
+  });
+})();
+
+/* ── 工具栏收起 / 展开 ── */
+const TOOLBAR_KEY = 'plot-toolbar';
+
+function setToolbarCollapsed(on, save){
+  const bar = document.getElementById('toolbar');
+  const btn = document.getElementById('toolbarToggle');
+  if (!bar) return;
+  bar.classList.toggle('collapsed', !!on);
+  if (btn){
+    btn.setAttribute('aria-expanded', String(!on));
+    btn.setAttribute('aria-label', on ? '展开工具栏' : '收起工具栏');
+    btn.title = on ? '展开工具栏' : '收起工具栏';
+  }
+  if (save !== false){
+    try { localStorage.setItem(TOOLBAR_KEY, on ? 'closed' : 'open'); } catch(e){}
+  }
+}
+
+(function initToolbar(){
+  const btn = document.getElementById('toolbarToggle');
+  const bar = document.getElementById('toolbar');
+  if (!btn || !bar) return;
+  let saved = null;
+  try { saved = localStorage.getItem(TOOLBAR_KEY); } catch(e){}
+  if (saved){
+    setToolbarCollapsed(saved === 'closed', false);
+  } else {
+    /* 没选过：窄屏、或者工具栏自己就溢出了（有些手机浏览器按桌面宽度渲染）→ 默认收起 */
+    const overflow = bar.scrollWidth > bar.clientWidth + 4;
+    setToolbarCollapsed(innerWidth <= 880 || overflow, false);
+  }
+  btn.addEventListener('click', () => {
+    setToolbarCollapsed(!bar.classList.contains('collapsed'));
+  });
+})();
+
+/* ═══════════════════════════════════════════════════
    17. 键盘
    ═══════════════════════════════════════════════════ */
 
@@ -6263,6 +6715,16 @@ window.addEventListener('keydown', e => {
       e.preventDefault();
       pickState = null; updatePickBadge(); requestRender();
       toast('已取消取点');
+      return;
+    }
+    if (shotModal && shotModal.classList.contains('show')){
+      e.preventDefault();
+      closeShot();
+      return;
+    }
+    if (toolsModal && toolsModal.classList.contains('show')){
+      e.preventDefault();
+      closeTools();
       return;
     }
     if (settingsModal.classList.contains('show')){
@@ -6286,6 +6748,13 @@ window.addEventListener('keydown', e => {
       updatePenBadge(); requestRender();
       toast('已取消起点');
     }
+    return;
+  }
+
+  if ((e.key === 'p' || e.key === 'P') && !e.metaKey && !e.ctrlKey && !e.altKey){
+    e.preventDefault();
+    if (shotModal && shotModal.classList.contains('show')) closeShot();
+    else openShot();
     return;
   }
 
