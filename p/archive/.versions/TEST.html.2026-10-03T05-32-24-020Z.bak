@@ -5,10 +5,10 @@
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="apple-touch-icon" href="../../apple-touch-icon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="TEST · 归档预渲染稿">
-<title>TEST · JinSuper</title>
+<meta name="description" content="测试文档 · 归档预渲染稿">
+<title>测试文档 · JinSuper</title>
 <!-- 由发布控制台预渲染：源 Markdown 在项目根 para\ 留底，这里是成品 -->
-<link rel="stylesheet" href="../docs-md.css">
+<link rel="stylesheet" href="../../docs-md.css">
 <style>
   /* 独立打开时的最小外壳：阅读器内联这份片段时用不到这些规则 */
   html,body{margin:0;background:#0E1214;color:#DCE0DE}
