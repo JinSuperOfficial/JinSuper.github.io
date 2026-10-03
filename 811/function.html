@@ -692,942 +692,8 @@
   .ipt-tooltip.show {
     opacity: 1;
   }
-</style>
-</head>
-<body>
-<div class="app">
-  <aside class="panel">
-    <div class="head">
-      <div class="mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 20L9 4l6 16L21 4"/>
-        </svg>
-      </div>
-      <div class="head-text">
-        <h1>Plot 图像计算器</h1>
-        <p>811 · 函数绘图与交互</p>
-      </div>
-      <button class="settings-btn" id="btnSettings" title="设置" aria-label="设置">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-        </svg>
-      </button>
-    </div>
 
-    <div>
-      <div class="label">函数表达式</div>
-      <div class="fn-list" id="fnList"></div>
-      <button class="add-btn" id="btnAdd">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        添加表达式
-      </button>
-    </div>
-
-    <div>
-      <button class="formula-btn" id="btnFormula">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 4h16M4 12h16M4 20h16"/>
-        </svg>
-        <span class="fb-text">常用公式库</span>
-        <kbd>⌘K</kbd>
-      </button>
-    </div>
-
-    <div id="pointsSection">
-      <div class="label">数据点</div>
-      <div class="pt-toolbar">
-        <button class="pt-swatch" id="ptSwatch" style="--c:#F97316" title="点颜色"></button>
-        <button class="pt-tool" id="btnPtAdd">+ 添加</button>
-        <button class="pt-tool" id="btnPtClear">清空</button>
-      </div>
-      <div class="pt-table-wrap">
-        <table class="pt-table" id="ptTable">
-          <thead><tr><th>#</th><th>X</th><th>Y</th><th></th></tr></thead>
-          <tbody id="ptBody"></tbody>
-        </table>
-        <div class="pt-empty" id="ptEmpty">暂无数据点</div>
-      </div>
-    </div>
-
-    <div>
-      <div class="label">画笔</div>
-      <div class="pen-panel">
-        <button class="pen-toggle" id="btnPen">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-          </svg>
-          自由绘制
-        </button>
-        <button class="pen-icon" id="btnPenFit" title="适配">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
-        </button>
-        <button class="pen-clear" id="btnPenClear">清除</button>
-      </div>
-      <div class="pen-row">
-        <span class="pen-row-label">颜色</span>
-        <div class="pen-colors" id="penColors"></div>
-      </div>
-      <div class="pen-row">
-        <span class="pen-row-label">粗细</span>
-        <input type="range" class="pen-size" id="penSize" min="1" max="8" value="2">
-      </div>
-    </div>
-
-    <div>
-      <div class="label">更多 811 工具</div>
-      <div class="data-tools">
-        <button class="data-btn" id="btn811Index" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-          </svg>
-          <span>811 工具索引</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="footnote">
-      表达式支持 <code>sin</code> <code>cos</code> <code>tan</code> <code>log</code> <code>ln</code> <code>sqrt</code> <code>abs</code> 等。
-      拖动平移 · 滚轮缩放 · 双击重置。
-    </div>
-  </aside>
-
-  <main class="stage">
-    <canvas id="cv"></canvas>
-    <div class="ipt-tooltip" id="iptTooltip"></div>
-    <div class="readout" id="readout">
-      <span>x <b id="rx">0</b></span>
-      <span>y <b id="ry">0</b></span>
-    </div>
-    <div class="ipt-badge" id="iptBadge">
-      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
-      </svg>
-      交点 <b id="iptCount">0</b>
-    </div>
-    <div class="zoombar">
-      <button id="zIn" title="放大">+</button>
-      <button id="zOut" title="缩小">−</button>
-      <button class="reset" id="zReset" title="重置视图">重置</button>
-    </div>
-    <div class="legend" id="legend"></div>
-  </main>
-</div>
-
-<script>
-/* ═══════════════════════════════════════════════════════════
-   Plot 图像计算器 · 811
-   ═══════════════════════════════════════════════════════════ */
-
-const ThemeMgr = (() => {
-  const KEY = 'plot-theme';
-  const VALID = ['swiss-light', 'swiss-dark', 'swiss-green'];
-  const mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-
-  function systemTheme() {
-    if (!mql) return 'swiss-dark';
-    return mql.matches ? 'swiss-dark' : 'swiss-light';
-  }
-  function get() {
-    try {
-      const s = localStorage.getItem(KEY);
-      return VALID.indexOf(s) >= 0 ? s : systemTheme();
-    } catch (e) { return systemTheme(); }
-  }
-  function set(t) {
-    if (VALID.indexOf(t) < 0) return;
-    document.documentElement.setAttribute('data-theme', t);
-    try { localStorage.setItem(KEY, t); } catch (e) {}
-    if (typeof Plot !== 'undefined') Plot.onThemeChange();
-  }
-  function reset() {
-    try { localStorage.removeItem(KEY); } catch (e) {}
-    document.documentElement.setAttribute('data-theme', systemTheme());
-    if (typeof Plot !== 'undefined') Plot.onThemeChange();
-  }
-  function isSystem() {
-    try { return VALID.indexOf(localStorage.getItem(KEY)) < 0; }
-    catch (e) { return true; }
-  }
-
-  if (mql) {
-    const onChange = () => {
-      if (!isSystem()) return;
-      document.documentElement.setAttribute('data-theme', systemTheme());
-      if (typeof Plot !== 'undefined') Plot.onThemeChange();
-    };
-    if (mql.addEventListener) mql.addEventListener('change', onChange);
-    else if (mql.addListener) mql.addListener(onChange);
-  }
-
-  return { get, set, reset, systemTheme, isSystem, VALID };
-})();
-
-
-/* ═══════════════════════════════════════════════════════════
-   交点求解器
-   ═══════════════════════════════════════════════════════════ */
-const Intersections = (() => {
-  const BASE_SAMPLES = 1400;
-  const MAX_POINTS   = 500;
-  const BISECT_ITER  = 64;
-  const TANGENT_ITER = 80;
-  const TAU = Math.PI * 2;
-
-  const isNum = v => typeof v === 'number' && Number.isFinite(v);
-
-  function ev(f, x) {
-    try {
-      const y = f(x);
-      return isNum(y) ? y : NaN;
-    } catch (e) { return NaN; }
-  }
-
-  function bisect(f1, f2, a, b, da) {
-    let lo = a, hi = b, dlo = da;
-    for (let i = 0; i < BISECT_ITER; i++) {
-      if (hi - lo < 1e-13 * Math.max(1, Math.abs(hi))) break;
-      const mid = (lo + hi) / 2;
-      const dm = ev(f1, mid) - ev(f2, mid);
-      if (!isNum(dm)) return null;
-      if (dm === 0) { lo = hi = mid; break; }
-      if ((dlo < 0) !== (dm < 0)) {
-        hi = mid;
-      } else {
-        lo = mid; dlo = dm;
-      }
-    }
-    const x = (lo + hi) / 2;
-    const y1 = ev(f1, x), y2 = ev(f2, x);
-    if (!isNum(y1) || !isNum(y2)) return null;
-    return { x, y: (y1 + y2) / 2 };
-  }
-
-  function minimize(f1, f2, a, b) {
-    let lo = a, hi = b;
-    for (let i = 0; i < TANGENT_ITER; i++) {
-      if (hi - lo < 1e-12 * Math.max(1, Math.abs(hi))) break;
-      const m1 = lo + (hi - lo) / 3;
-      const m2 = hi - (hi - lo) / 3;
-      const d1 = Math.abs(ev(f1, m1) - ev(f2, m1));
-      const d2 = Math.abs(ev(f1, m2) - ev(f2, m2));
-      if (!isNum(d1) || !isNum(d2)) return null;
-      if (d1 < d2) hi = m2; else lo = m1;
-    }
-    const x = (lo + hi) / 2;
-    const y1 = ev(f1, x), y2 = ev(f2, x);
-    if (!isNum(y1) || !isNum(y2)) return null;
-    return { x, y: (y1 + y2) / 2, d: Math.abs(y1 - y2) };
-  }
-
-  function between(f1, f2, xmin, xmax, yToPx, viewH) {
-    const out = [];
-    const n = BASE_SAMPLES;
-    const dx = (xmax - xmin) / n;
-    const jumpLimit = viewH * 1.2;
-
-    const xs = new Float64Array(n + 1);
-    const ds = new Float64Array(n + 1);
-
-    let px = xmin;
-    let p1 = ev(f1, px), p2 = ev(f2, px);
-    let pd = p1 - p2;
-    xs[0] = px; ds[0] = pd;
-
-    for (let i = 1; i <= n; i++) {
-      const x = xmin + dx * i;
-      const q1 = ev(f1, x), q2 = ev(f2, x);
-      const qd = q1 - q2;
-      xs[i] = x; ds[i] = qd;
-
-      if (isNum(pd) && isNum(qd)) {
-        const jump = Math.abs(yToPx(qd) - yToPx(pd));
-        const continuous = isNum(jump) && jump < jumpLimit;
-
-        if (continuous) {
-          // 修复：显式判断精确零点
-          if (pd === 0) {
-            out.push({ x: px, y: (p1 + p2) / 2 });
-          } else if (qd === 0) {
-            out.push({ x: x, y: (q1 + q2) / 2 });
-          } else if ((pd < 0) !== (qd < 0)) {
-            const r = bisect(f1, f2, px, x, pd);
-            if (r) out.push(r);
-          }
-        }
-      }
-
-      px = x; pd = qd; p1 = q1; p2 = q2;
-    }
-
-    for (let i = 1; i < n; i++) {
-      const a = ds[i - 1], b = ds[i], c = ds[i + 1];
-      if (!isNum(a) || !isNum(b) || !isNum(c)) continue;
-      if (Math.abs(b) <= Math.abs(a) && Math.abs(b) <= Math.abs(c)) {
-        const m = minimize(f1, f2, xs[i - 1], xs[i + 1]);
-        if (m && m.d < 1e-7 * (1 + Math.abs(m.y))) {
-          out.push({ x: m.x, y: m.y });
-        }
-      }
-    }
-
-    return out;
-  }
-
-  function solve(items, ctx) {
-    const pts = [];
-    if (!items || items.length < 2) return pts;
-    const { xmin, xmax, yToPx, viewH } = ctx;
-
-    outer:
-    for (let i = 0; i < items.length; i++) {
-      for (let j = i + 1; j < items.length; j++) {
-        const raw = between(items[i].fn, items[j].fn, xmin, xmax, yToPx, viewH);
-        for (let k = 0; k < raw.length; k++) {
-          raw[k].a = items[i].id;
-          raw[k].b = items[j].id;
-          pts.push(raw[k]);
-          if (pts.length >= MAX_POINTS) break outer;
-        }
-      }
-    }
-    return pts;
-  }
-
-  function merge(pts, xToPx, yToPx, minPx) {
-    if (!pts.length) return pts;
-    const out = [];
-    for (let i = 0; i < pts.length; i++) {
-      const p = pts[i];
-      const px = xToPx(p.x), py = yToPx(p.y);
-      let dup = false;
-      for (let k = 0; k < out.length; k++) {
-        const q = out[k];
-        const qx = xToPx(q.x), qy = yToPx(q.y);
-        if (Math.abs(px - qx) < minPx && Math.abs(py - qy) < minPx) {
-          dup = true;
-          break;
-        }
-      }
-      if (!dup) out.push(p);
-    }
-    return out;
-  }
-
-  function draw(c, pts, xToPx, yToPx, W, H, colors, hoverPt) {
-    if (!pts || !pts.length) return;
-    c.save();
-    for (let i = 0; i < pts.length; i++) {
-      const p = pts[i];
-      const X = xToPx(p.x), Y = yToPx(p.y);
-      if (!isNum(X) || !isNum(Y)) continue;
-      if (X < -10 || X > W + 10 || Y < -10 || Y > H + 10) continue;
-
-      const isHovered = (p === hoverPt);
-      const radius = isHovered ? 3.5 : 2.3;
-      const haloRadius = isHovered ? 8 : 5.4;
-
-      c.beginPath();
-      c.arc(X, Y, haloRadius, 0, TAU);
-      c.fillStyle = isHovered ? colors.haloStrong : colors.halo;
-      c.fill();
-
-      c.beginPath();
-      c.arc(X, Y, radius, 0, TAU);
-      c.fillStyle = colors.solid;
-      c.fill();
-
-      c.lineWidth = isHovered ? 2 : 1.2;
-      c.strokeStyle = colors.ring;
-      c.beginPath();
-      c.arc(X, Y, radius, 0, TAU);
-      c.stroke();
-    }
-    c.restore();
-  }
-
-  return { solve, merge, draw };
-})();
-
-
-/* ═══════════════════════════════════════════════════════════
-   绘图主程序
-   ═══════════════════════════════════════════════════════════ */
-const Plot = (() => {
-  const canvas = document.getElementById('cv');
-  const ctx = canvas.getContext('2d');
-  const readoutX = document.getElementById('rx');
-  const readoutY = document.getElementById('ry');
-  const iptBadge = document.getElementById('iptBadge');
-  const iptCount = document.getElementById('iptCount');
-  const legendEl = document.getElementById('legend');
-
-  const view = {
-    xmin: -10, xmax: 10,
-    ymin: -6, ymax: 6,
-    cx: 0, cy: 0,
-    scale: 1
-  };
-
-  let fns = [];
-  let fnSeq = 1;
-
-  let interPts = [];
-  let interDirty = true;
-  let interRaf = 0;
-  let hoverPt = null;
-  const HOVER_RADIUS = 12;
-
-  let W = 0, H = 0, DPR = 1;
-  let themeColors = null;
-
-  function readThemeColors() {
-    const cs = getComputedStyle(document.documentElement);
-    const rgb = cs.getPropertyValue('--accent-rgb').trim() || '249,115,22';
-    const solid = cs.getPropertyValue('--accent').trim() || '#F97316';
-    const paper = cs.getPropertyValue('--paper').trim() || '#0F1012';
-    return {
-      halo: `rgba(${rgb}, .22)`,
-      haloStrong: `rgba(${rgb}, .45)`,
-      solid: solid,
-      ring: paper,
-      label: cs.getPropertyValue('--ink-2').trim() || '#B4B7BE',
-      grid1: cs.getPropertyValue('--plot-grid-1').trim() || 'rgba(255,255,255,.05)',
-      grid2: cs.getPropertyValue('--plot-grid-2').trim() || 'rgba(255,255,255,.09)',
-      axis: cs.getPropertyValue('--plot-axis').trim() || 'rgba(255,255,255,.42)',
-      bg1: cs.getPropertyValue('--plot-bg-1').trim() || '#182026',
-      bg2: cs.getPropertyValue('--plot-bg-2').trim() || '#121819'
-    };
-  }
-
-  function onThemeChange() {
-    themeColors = readThemeColors();
-    draw();
-  }
-
-  function xToPx(x) { return (x - view.cx) * view.scale + W / 2; }
-  function yToPx(y) { return H / 2 - (y - view.cy) * view.scale; }
-  function pxToX(px) { return (px - W / 2) / view.scale + view.cx; }
-  function pxToY(py) { return (H / 2 - py) / view.scale + view.cy; }
-
-  function syncViewBounds() {
-    view.xmin = pxToX(0);
-    view.xmax = pxToX(W);
-    view.ymin = pxToY(H);
-    view.ymax = pxToY(0);
-  }
-
-  function resize() {
-    DPR = Math.min(window.devicePixelRatio || 1, 2);
-    const rect = canvas.parentElement.getBoundingClientRect();
-    W = Math.max(1, Math.floor(rect.width));
-    H = Math.max(1, Math.floor(rect.height));
-    canvas.width = Math.floor(W * DPR);
-    canvas.height = Math.floor(H * DPR);
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    syncViewBounds();
-    invalidateIntersections();
-    draw();
-  }
-
-  function compile(expr) {
-    if (!expr || !expr.trim()) return null;
-    let src = expr.trim();
-    // 修复：去掉 "y=", "f(x)=", "g(x)=" 等前缀
-    src = src.replace(/^\s*(y|f\(x\)|g\(x\)|[a-zA-Z]\w*)\s*=\s*/i, '');
-    if (!src) return null;
-    src = src
-      .replace(/\^/g, '**')
-      .replace(/\bpi\b/gi, 'Math.PI')
-      .replace(/\be\b/g, 'Math.E')
-      .replace(/\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|log|ln|exp|sqrt|abs|cbrt|floor|ceil|round|sign|min|max|pow)\b/g, (m) => {
-        if (m === 'ln') return 'Math.log';
-        if (m === 'log') return 'Math.log10';
-        return 'Math.' + m;
-      });
-    src = src.replace(/(\d)([a-zA-Z(])/g, '$1*$2');
-    src = src.replace(/\)(\w|\()/g, ')*$1');
-    src = src.replace(/(\w)\s*\(/g, (m, p1) => {
-      if (/^(Math|Math\.\w+)$/.test(p1)) return m;
-      return p1 + '*(';
-    });
-
-    try {
-      const f = new Function('x', 'with(Math){ return (' + src + '); }');
-      f(0.5);
-      return f;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  const PALETTE = ['#F97316', '#3B82F6', '#10B981', '#EF4444', '#A855F7', '#EAB308', '#EC4899', '#14B8A6'];
-  let colorIdx = 0;
-
-  function addFn(expr = '', color) {
-    const id = 'f' + (fnSeq++);
-    const fn = {
-      id, expr, color: color || PALETTE[colorIdx++ % PALETTE.length],
-      compiled: null, visible: true, el: null, input: null, row: null
-    };
-    fns.push(fn);
-    renderFnRow(fn);
-    if (expr) compileFn(fn);
-    invalidateIntersections();
-    draw();
-    return fn;
-  }
-
-  function renderFnRow(fn) {
-    const slot = document.createElement('div');
-    slot.className = 'fn-slot';
-    const row = document.createElement('div');
-    row.className = 'fn-row';
-    row.style.animation = 'row-in var(--dur-base) var(--ease-out)';
-
-    const swatch = document.createElement('button');
-    swatch.className = 'swatch';
-    swatch.style.setProperty('--c', fn.color);
-    swatch.title = '切换颜色';
-    swatch.addEventListener('click', () => {
-      const i = PALETTE.indexOf(fn.color);
-      fn.color = PALETTE[(i + 1) % PALETTE.length];
-      swatch.style.setProperty('--c', fn.color);
-      draw();
-    });
-
-    const badge = document.createElement('button');
-    badge.className = 'type-badge';
-    badge.textContent = 'f';
-    badge.title = '函数类型';
-
-    const input = document.createElement('input');
-    input.className = 'fn-input';
-    input.type = 'text';
-    input.placeholder = '例：sin(x) + 0.5*x';
-    input.value = fn.expr;
-    input.spellcheck = false;
-    input.autocomplete = 'off';
-
-    input.addEventListener('input', () => {
-      fn.expr = input.value;
-      compileFn(fn);
-      invalidateIntersections();
-      scheduleDraw();
-    });
-
-    const eye = document.createElement('button');
-    eye.className = 'icon-btn';
-    eye.title = '显示/隐藏';
-    eye.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
-    eye.addEventListener('click', () => {
-      fn.visible = !fn.visible;
-      eye.classList.toggle('off', !fn.visible);
-      invalidateIntersections();
-      draw();
-    });
-
-    const del = document.createElement('button');
-    del.className = 'icon-btn del';
-    del.title = '删除';
-    del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
-    del.addEventListener('click', () => {
-      slot.classList.add('closing');
-      setTimeout(() => {
-        slot.remove();
-        fns = fns.filter(f => f.id !== fn.id);
-        invalidateIntersections();
-        draw();
-      }, 240);
-    });
-
-    row.append(swatch, badge, input, eye, del);
-    slot.appendChild(row);
-    fn.el = slot; fn.input = input; fn.row = row;
-    document.getElementById('fnList').appendChild(slot);
-  }
-
-  function compileFn(fn) {
-    const f = compile(fn.expr);
-    fn.compiled = f;
-    if (fn.row) {
-      if (fn.expr.trim() && !f) fn.row.classList.add('error');
-      else fn.row.classList.remove('error');
-    }
-    return f;
-  }
-
-  let rafId = 0;
-  function scheduleDraw() {
-    if (rafId) return;
-    rafId = requestAnimationFrame(() => {
-      rafId = 0;
-      draw();
-    });
-  }
-
-  function drawGrid() {
-    const c = themeColors;
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, c.bg1);
-    g.addColorStop(1, c.bg2);
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-
-    const targetPx = 78;
-    const stepX = niceStep((view.xmax - view.xmin) / (W / targetPx));
-    const stepY = niceStep((view.ymax - view.ymin) / (H / targetPx));
-
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = c.grid1;
-    ctx.beginPath();
-    const subX = stepX / 5, subY = stepY / 5;
-    for (let x = Math.ceil(view.xmin / subX) * subX; x <= view.xmax; x += subX) {
-      const px = Math.round(xToPx(x)) + .5;
-      ctx.moveTo(px, 0); ctx.lineTo(px, H);
-    }
-    for (let y = Math.ceil(view.ymin / subY) * subY; y <= view.ymax; y += subY) {
-      const py = Math.round(yToPx(y)) + .5;
-      ctx.moveTo(0, py); ctx.lineTo(W, py);
-    }
-    ctx.stroke();
-
-    ctx.strokeStyle = c.grid2;
-    ctx.beginPath();
-    for (let x = Math.ceil(view.xmin / stepX) * stepX; x <= view.xmax; x += stepX) {
-      const px = Math.round(xToPx(x)) + .5;
-      ctx.moveTo(px, 0); ctx.lineTo(px, H);
-    }
-    for (let y = Math.ceil(view.ymin / stepY) * stepY; y <= view.ymax; y += stepY) {
-      const py = Math.round(yToPx(y)) + .5;
-      ctx.moveTo(0, py); ctx.lineTo(W, py);
-    }
-    ctx.stroke();
-
-    ctx.strokeStyle = c.axis;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    const ax = Math.round(xToPx(0)) + .5;
-    const ay = Math.round(yToPx(0)) + .5;
-    if (ay >= 0 && ay <= H) { ctx.moveTo(0, ay); ctx.lineTo(W, ay); }
-    if (ax >= 0 && ax <= W) { ctx.moveTo(ax, 0); ctx.lineTo(ax, H); }
-    ctx.stroke();
-
-    ctx.fillStyle = c.label;
-    ctx.font = '11px ui-monospace, Menlo, monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    for (let x = Math.ceil(view.xmin / stepX) * stepX; x <= view.xmax; x += stepX) {
-      if (Math.abs(x) < stepX * 0.01) continue;
-      const px = xToPx(x);
-      if (px < 20 || px > W - 20) continue;
-      const py = (ay >= 0 && ay <= H - 18) ? ay + 4 : H - 16;
-      ctx.fillText(formatNum(x), px, py);
-    }
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    for (let y = Math.ceil(view.ymin / stepY) * stepY; y <= view.ymax; y += stepY) {
-      if (Math.abs(y) < stepY * 0.01) continue;
-      const py = yToPx(y);
-      if (py < 12 || py > H - 12) continue;
-      const px = (ax >= 0 && ax <= W - 40) ? ax - 6 : W - 6;
-      ctx.fillText(formatNum(y), px, py);
-    }
-  }
-
-  function niceStep(raw) {
-    const pow = Math.pow(10, Math.floor(Math.log10(Math.abs(raw) || 1)));
-    const n = raw / pow;
-    let m;
-    if (n <= 1) m = 1;
-    else if (n <= 2) m = 2;
-    else if (n <= 5) m = 5;
-    else m = 10;
-    return m * pow;
-  }
-
-  function formatNum(v) {
-    if (Math.abs(v) < 1e-10) return '0';
-    const a = Math.abs(v);
-    if (a >= 1e5 || a < 1e-4) return v.toExponential(1);
-    return String(+v.toFixed(6));
-  }
-
-  function drawFunctions() {
-    const items = fns.filter(f => f.visible && f.compiled);
-    for (const fn of items) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(0, 0, W, H);
-      ctx.clip();
-
-      ctx.strokeStyle = fn.color;
-      ctx.lineWidth = 1.8;
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-
-      const step = 1;
-      let started = false;
-      let prevY = NaN;
-
-      for (let px = 0; px <= W; px += step) {
-        const x = pxToX(px);
-        let y;
-        try { y = fn.compiled(x); } catch (e) { y = NaN; }
-        if (!Number.isFinite(y)) { started = false; prevY = NaN; continue; }
-
-        const py = yToPx(y);
-        if (started && Number.isFinite(prevY) && Math.abs(py - prevY) > H * 1.5) {
-          started = false;
-        }
-        if (!started) {
-          ctx.moveTo(px, py);
-          started = true;
-        } else {
-          ctx.lineTo(px, py);
-        }
-        prevY = py;
-      }
-      ctx.stroke();
-      ctx.restore();
-    }
-  }
-
-  function invalidateIntersections() {
-    interDirty = true;
-    if (interRaf) return;
-    interRaf = requestAnimationFrame(() => {
-      interRaf = 0;
-      if (interDirty) {
-        interDirty = false;
-        recomputeIntersections();
-        draw();
-      }
-    });
-  }
-
-  function recomputeIntersections() {
-    const active = fns.filter(f => f.visible && f.compiled);
-    if (active.length < 2) {
-      interPts = [];
-      updateIptBadge(0);
-      return;
-    }
-    const items = active.map(f => ({
-      id: f.id,
-      fn: (x) => f.compiled(x)
-    }));
-    const raw = Intersections.solve(items, {
-      xmin: view.xmin,
-      xmax: view.xmax,
-      yToPx: yToPx,
-      viewH: H
-    });
-    interPts = Intersections.merge(raw, xToPx, yToPx, 7);
-    updateIptBadge(interPts.length);
-  }
-
-  function updateIptBadge(n) {
-    iptCount.textContent = n;
-    iptBadge.classList.toggle('show', n > 0);
-  }
-
-  function drawIntersections() {
-    if (!interPts.length) return;
-    Intersections.draw(ctx, interPts, xToPx, yToPx, W, H, themeColors, hoverPt);
-  }
-
-  function updateTooltip() {
-    const tooltip = document.getElementById('iptTooltip');
-    if (hoverPt) {
-      tooltip.textContent = `(${formatNum(hoverPt.x)}, ${formatNum(hoverPt.y)})`;
-      tooltip.style.left = (xToPx(hoverPt.x) + 12) + 'px';
-      tooltip.style.top = (yToPx(hoverPt.y) - 28) + 'px';
-      tooltip.classList.add('show');
-    } else {
-      tooltip.classList.remove('show');
-    }
-  }
-
-  function draw() {
-    if (!themeColors) themeColors = readThemeColors();
-    syncViewBounds();
-    drawGrid();
-    drawFunctions();
-    drawIntersections();
-    drawLegend();
-    updateTooltip();
-  }
-
-  function drawLegend() {
-    const items = fns.filter(f => f.visible && f.compiled);
-    if (!items.length) {
-      legendEl.classList.remove('show');
-      legendEl.innerHTML = '';
-      return;
-    }
-    legendEl.innerHTML = items.map(f => {
-      const i = interPts.filter(p => p.a === f.id || p.b === f.id).length;
-      return `<div class="lg-row"><i style="background:${f.color}"></i><span class="lg-eq">${escapeHtml(f.expr || 'y = ?')}</span><b>${i}</b></div>`;
-    }).join('');
-    legendEl.classList.add('show');
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, m => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    })[m]);
-  }
-
-  let dragging = false;
-  let lastX = 0, lastY = 0;
-
-  canvas.addEventListener('pointerdown', (e) => {
-    dragging = true;
-    lastX = e.clientX;
-    lastY = e.clientY;
-    canvas.setPointerCapture(e.pointerId);
-  });
-
-  canvas.addEventListener('pointermove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    readoutX.textContent = formatNum(pxToX(mx));
-    readoutY.textContent = formatNum(pxToY(my));
-
-    // 悬停检测
-    let found = null;
-    for (const p of interPts) {
-      const px = xToPx(p.x);
-      const py = yToPx(p.y);
-      if (Math.hypot(mx - px, my - py) < HOVER_RADIUS) {
-        found = p;
-        break;
-      }
-    }
-    if (found !== hoverPt) {
-      hoverPt = found;
-      draw();
-    }
-
-    if (dragging) {
-      const dx = e.clientX - lastX;
-      const dy = e.clientY - lastY;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      view.cx -= dx / view.scale;
-      view.cy += dy / view.scale;
-      invalidateIntersections();
-      scheduleDraw();
-    }
-  });
-
-  canvas.addEventListener('pointerup', (e) => {
-    dragging = false;
-    try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
-  });
-
-  canvas.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const wx = pxToX(mx), wy = pxToY(my);
-    const factor = Math.exp(-e.deltaY * 0.0012);
-    const next = Math.min(1e6, Math.max(1e-3, view.scale * factor));
-    view.scale = next;
-    view.cx = wx - (mx - W / 2) / view.scale;
-    view.cy = wy + (my - H / 2) / view.scale;
-    invalidateIntersections();
-    scheduleDraw();
-  }, { passive: false });
-
-  canvas.addEventListener('dblclick', () => resetView());
-
-  function resetView() {
-    view.cx = 0; view.cy = 0;
-    view.scale = Math.min(W / 20, H / 12) || 40;
-    invalidateIntersections();
-    draw();
-  }
-
-  document.getElementById('zIn').addEventListener('click', () => {
-    view.scale *= 1.25;
-    invalidateIntersections();
-    draw();
-  });
-  document.getElementById('zOut').addEventListener('click', () => {
-    view.scale /= 1.25;
-    invalidateIntersections();
-    draw();
-  });
-  document.getElementById('zReset').addEventListener('click', resetView);
-
-  function init() {
-    themeColors = readThemeColors();
-    addFn('sin(x)', '#F97316');
-    addFn('0.5*x', '#3B82F6');
-
-    document.getElementById('btnAdd').addEventListener('click', () => {
-      const fn = addFn('');
-      if (fn.input) fn.input.focus();
-    });
-
-    window.addEventListener('resize', resize);
-    resize();
-
-    const mo = new MutationObserver(() => {
-      themeColors = readThemeColors();
-      draw();
-    });
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
-    recomputeIntersections();
-    draw();
-  }
-
-  return {
-    init,
-    onThemeChange: () => {
-      themeColors = readThemeColors();
-      draw();
-    },
-    invalidateIntersections,
-    getView: () => view,
-    getFns: () => fns
-  };
-})();
-
-
-/* ═══════════════════════════════════════════════════════════
-   811 工具索引入口
-   ═══════════════════════════════════════════════════════════ */
-(function init811Index() {
-  const btn = document.getElementById('btn811Index');
-  if (!btn) return;
-  btn.addEventListener('click', () => {
-    // 注意：原需求中写作 index.hrml，实为 index.html
-    const url = '/811/index.html';
-    window.open(url, '_blank', 'noopener,noreferrer');
-  });
-})();
-
-
-/* ═══════════════════════════════════════════════════════════
-   启动
-   ═══════════════════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', () => {
-  Plot.init();
-});
-</script>
-</body>
-</html> .fn-sub{font-size:11px;color:var(--ink-3)}
+ .fn-sub{font-size:11px;color:var(--ink-3)}
   .formula-nav button.on .fn-sub{color:rgba(var(--accent-rgb),.72)}
 
   .formula-detail{
@@ -1918,6 +984,12 @@ document.addEventListener('DOMContentLoaded', () => {
   .tools-body .settings-group-label{margin-bottom:9px}
   .tools-body .data-tools{flex-wrap:wrap}
   .tools-body .data-btn{flex:1 1 130px}
+  .tools-index-link{
+    display:flex;align-items:center;justify-content:center;gap:7px;
+    width:100%;margin-bottom:10px;text-decoration:none;box-sizing:border-box;
+  }
+  .tools-index-link:hover{border-color:rgba(var(--accent-rgb),.55);color:var(--accent);
+                          background:rgba(var(--accent-rgb),.06)}
   #tvPointsTools .pt-tool{white-space:nowrap}
 
   /* ═══ 公式计算器：取点 + 标线 ═══ */
@@ -2028,6 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .readout{font-size:10.5px;gap:8px;padding:5px 8px}
     .pen-badge{padding:5px 8px;font-size:11px;max-width:60%}
   }
+
 </style>
 </head>
 <body>
@@ -2473,6 +1546,15 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
 
       <div class="settings-group-label" style="margin-top:18px">别的 811 工具</div>
+      <a class="data-btn tools-index-link" href="/811/index.html" id="toolsIndexLink"
+         target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+             stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+        </svg>
+        打开 811 工具索引
+      </a>
       <div class="tools-grid" id="toolsGrid"></div>
       <div class="tv-empty hidden" id="toolsEmpty">
         清单没读到 —— 用 http 打开（<code>部署.cmd serve</code>）才能读 <code>/811/tools.json</code>。
@@ -2500,10 +1582,11 @@ document.addEventListener('DOMContentLoaded', () => {
           <button class="seg-btn" type="button" data-theme="swiss-light" role="radio" aria-checked="true">亮色</button>
           <button class="seg-btn" type="button" data-theme="swiss-dark" role="radio" aria-checked="false" tabindex="-1">暗色</button>
           <button class="seg-btn" type="button" data-theme="swiss-green" role="radio" aria-checked="false" tabindex="-1">绿色</button>
+          <button class="seg-btn" type="button" data-theme="auto" role="radio" aria-checked="false" tabindex="-1">跟随系统</button>
         </div>
         <div class="settings-hint">
           瑞士国际主义：纸白底 + 克莱因蓝，暗色版是纸墨对调。<br>
-          画布网格、坐标轴、曲线颜色都跟着换。
+          默认<b>跟随系统</b>：系统深色就用暗色版；手动选了以后以你的选择为准，点「跟随系统」可以退回自动。
         </div>
       </div>
 
@@ -2530,6 +1613,18 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="settings-hint">
           开启画笔时会自动打开吸附，方便把点对齐到格点。<br>
           步长 <code>0.5</code> 表示吸附到 0.5 的整数倍。
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-label">交点</div>
+        <div class="setting-row">
+          <div class="switch on" id="swInter" role="switch" aria-checked="true" tabindex="0"></div>
+          <label for="swInter">自动标出所有交点</label>
+        </div>
+        <div class="settings-hint">
+          每两条可见曲线求一次交点，在图上画成小圆点；交点不多时还会标出坐标。<br>
+          想单独建一个交点对象（可以选中、拖动、进表格），用工具栏的「交点」工具。
         </div>
       </div>
 
@@ -2933,7 +2028,7 @@ const state = {
   view: { cx:0, cy:0, scale:56 },
   settings: {
     snap:false, snapStep:0.5, showGrid:true, showTicks:true,
-    axisX:'x', axisY:'y', gestures:isTouchDevice,
+    axisX:'x', axisY:'y', gestures:isTouchDevice, autoInter:true,
   },
   pointTable: {
     color: PT_COLORS[0],
@@ -3223,10 +2318,36 @@ function applyCurvePalette(name){
   }
 }
 
-function setTheme(name, silent){
+/* 系统偏好 → 主题名（取不到系统偏好时退回暗色） */
+function systemThemeName(){
+  try {
+    if (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) return 'swiss-dark';
+    if (window.matchMedia) return 'swiss-light';
+  } catch(e){}
+  return 'swiss-dark';
+}
+function savedTheme(){
+  try {
+    const v = localStorage.getItem('plot-theme');
+    return THEMES.includes(v) ? v : null;
+  } catch(e){ return null; }
+}
+
+/* setTheme(名字, silent, noSave)
+   noSave=true 表示「这次不是用户的手动选择」——不写 localStorage，
+   这样下次打开仍然跟着系统走（否则第一次访问就把主题焊死了）。 */
+function setTheme(name, silent, noSave){
+  if (name === 'auto'){                      /* 跟随系统：把手动选择清掉 */
+    try { localStorage.removeItem('plot-theme'); } catch(e){}
+    name = systemThemeName();
+    noSave = true;
+    silent = true;
+  }
   if (!THEMES.includes(name)) name = 'swiss-light';
   document.documentElement.setAttribute('data-theme', name);
-  try { localStorage.setItem('plot-theme', name); } catch(e){}
+  if (!noSave){
+    try { localStorage.setItem('plot-theme', name); } catch(e){}
+  }
 
   CV = readCanvasTheme();
   applyCurvePalette(name);
@@ -3236,15 +2357,16 @@ function setTheme(name, silent){
   syncThemeUI();
   requestRender();
   updateHUD();
-  if (!silent) toast('主题：' + (THEME_NAMES[name] || name));
+  if (!silent) toast('主题：' + (noSave ? '跟随系统 · ' : '') + (THEME_NAMES[name] || name));
 }
 
 function syncThemeUI(){
   const seg = document.getElementById('themeSeg');
   if (!seg) return;
   const cur = currentTheme();
+  const isAuto = !savedTheme();
   seg.querySelectorAll('.seg-btn').forEach(b => {
-    const on = b.dataset.theme === cur;
+    const on = b.dataset.theme === 'auto' ? isAuto : (!isAuto && b.dataset.theme === cur);
     b.setAttribute('aria-checked', String(on));
     b.setAttribute('tabindex', on ? '0' : '-1');
   });
@@ -3261,13 +2383,24 @@ function syncThemeUI(){
     const k = e.key;
     if (k !== 'ArrowLeft' && k !== 'ArrowRight') return;
     e.preventDefault();
-    const i = THEMES.indexOf(currentTheme());
-    const n = (i + (k === 'ArrowRight' ? 1 : THEMES.length - 1)) % THEMES.length;
-    setTheme(THEMES[n]);
-    const btn = seg.querySelector('.seg-btn[data-theme="' + THEMES[n] + '"]');
+    const list = THEMES.concat(['auto']);
+    const i = list.indexOf(savedTheme() ? currentTheme() : 'auto');
+    const n = (i + (k === 'ArrowRight' ? 1 : list.length - 1)) % list.length;
+    setTheme(list[n]);
+    const btn = seg.querySelector('.seg-btn[data-theme="' + list[n] + '"]');
     if (btn) btn.focus();
   });
 })();
+
+/* 系统主题变了、而用户没手动选过 → 跟着换（画布颜色也要跟着重读） */
+try {
+  if (window.matchMedia){
+    const mq = matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => { if (!savedTheme()) setTheme(systemThemeName(), true, true); };
+    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    else if (mq.addListener) mq.addListener(onChange);
+  }
+} catch(e){}
 
 let toastTimer = null;
 function toast(msg, kind){
@@ -3704,6 +2837,7 @@ bindSwitch(document.getElementById('swSnap'), 'snap');
 bindSwitch(document.getElementById('swGrid'), 'showGrid');
 bindSwitch(document.getElementById('swTicks'), 'showTicks');
 bindSwitch(document.getElementById('swGestures'), 'gestures', updatePenBadge);
+bindSwitch(document.getElementById('swInter'), 'autoInter');
 
 /* 坐标轴标签：随便写什么字符串，留空就不画 */
 function bindAxisLabel(input, key){
@@ -4718,10 +3852,64 @@ function draw(){
     if (f.measure) drawMeasure(f);
   }
 
+  /* 自动交点 */
+  drawAutoIntersections();
+
   /* 数值表标记 / 画笔预览 / 悬停 */
   drawVtHighlight();
   if (pen.active) drawPenPreview();
   else drawHover();
+}
+
+/* ── 自动交点：所有可见曲线两两求交，画成小圆点 ── */
+let interCache = { key: null, pts: [] };
+
+function autoIntersections(){
+  const curves = state.funcs.filter(f => f.visible && f.fn && f.type !== 'point' && f.type !== 'poly');
+  if (curves.length < 2) return [];
+  const v = state.view;
+  const key = curves.map(f => f.id + ':' + f.expr).join('|') + '#' + W + 'x' + H + '#' +
+    v.cx.toFixed(4) + ',' + v.cy.toFixed(4) + ',' + v.scale.toFixed(4);
+  if (interCache.key === key) return interCache.pts;
+
+  const out = [];
+  outer:
+  for (let i = 0; i < curves.length; i++){
+    for (let j = i + 1; j < curves.length; j++){
+      let pts = [];
+      try { pts = curveIntersections(curves[i], curves[j]); } catch(e){ continue; }
+      for (const p of pts){
+        if (out.some(q => Math.hypot(q.x - p.x, q.y - p.y) < 1e-9)) continue;
+        out.push(p);
+        if (out.length >= 30) break outer;
+      }
+    }
+  }
+  interCache = { key, pts: out };
+  return out;
+}
+
+function drawAutoIntersections(){
+  if (!state.settings.autoInter) return;
+  const pts = autoIntersections();
+  if (!pts.length) return;
+  const withLabel = pts.length <= 6;
+  for (const p of pts){
+    const sx = w2sX(p.x), sy = w2sY(p.y);
+    if (sx < -24 || sx > W + 24 || sy < -24 || sy > H + 24) continue;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 6.4, 0, Math.PI*2);
+    ctx.fillStyle = CV.chip;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(sx, sy, 3.3, 0, Math.PI*2);
+    ctx.fillStyle = CV.ink;
+    ctx.fill();
+    ctx.lineWidth = 1.3;
+    ctx.strokeStyle = CV.bg1;
+    ctx.stroke();
+    if (withLabel) tagLabel(sx + 6, sy - 6, '(' + fmtShort(p.x) + ', ' + fmtShort(p.y) + ')', CV.ink);
+  }
 }
 
 /* ── y = f(x) ── */
@@ -5562,6 +4750,7 @@ function exportJSON(){
       snapStep: state.settings.snapStep,
       showGrid: state.settings.showGrid,
       showTicks: state.settings.showTicks,
+      autoInter: !!state.settings.autoInter,
       axisX: state.settings.axisX,
       axisY: state.settings.axisY,
       gestures: !!state.settings.gestures,
@@ -5625,6 +4814,7 @@ function importJSON(file){
           state.settings.snapStep = Number(s.snapStep);
         if (typeof s.showGrid === 'boolean') state.settings.showGrid = s.showGrid;
         if (typeof s.showTicks === 'boolean') state.settings.showTicks = s.showTicks;
+        if (typeof s.autoInter === 'boolean') state.settings.autoInter = s.autoInter;
         if (typeof s.axisX === 'string') state.settings.axisX = s.axisX.slice(0, 16);
         if (typeof s.axisY === 'string') state.settings.axisY = s.axisY.slice(0, 16);
         if (typeof s.gestures === 'boolean') state.settings.gestures = s.gestures;
@@ -5700,6 +4890,11 @@ function syncSettingsUI(){
   const swG = document.getElementById('swGestures');
   swG.classList.toggle('on', !!state.settings.gestures);
   swG.setAttribute('aria-checked', String(!!state.settings.gestures));
+  const swI = document.getElementById('swInter');
+  if (swI){
+    swI.classList.toggle('on', state.settings.autoInter !== false);
+    swI.setAttribute('aria-checked', String(state.settings.autoInter !== false));
+  }
   axisLabelX.value = state.settings.axisX;
   axisLabelY.value = state.settings.axisY;
   snapStepInput.value = String(state.settings.snapStep);
@@ -7149,8 +6344,9 @@ window.addEventListener('keydown', e => {
    18. 启动
    ═══════════════════════════════════════════════════ */
 
-/* 首帧就按当前主题铺一遍（曲线/画笔/点的颜色也跟着映射） */
-setTheme(currentTheme(), true);
+/* 首帧就按当前主题铺一遍（曲线/画笔/点的颜色也跟着映射）
+   noSave：启动这次不算「手动选择」，别把跟随系统焊死 */
+setTheme(currentTheme(), true, true);
 setTool('move', true);
 setTvTab('points');
 /* 手机屏幕窄：表格区默认收起，把地方留给画布 */
