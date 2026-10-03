@@ -524,6 +524,9 @@ html[data-glass="acrylic"]{
 .main-title{
   flex:1;min-width:0;
   display:flex;align-items:baseline;gap:10px;
+  /* 标题区自己裁掉溢出的部分：里面都是 flex:none 的小块，
+     窄窗口下宁可截断，也不能顶出去压到右边的按钮上 */
+  overflow:hidden;
 }
 .main-title .name{
   font-size:14.5px;
@@ -531,11 +534,14 @@ html[data-glass="acrylic"]{
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   letter-spacing:-.005em;
   font-weight:600;
+  min-width:0;flex:0 1 auto;
 }
 .main-title .meta{
   font-family:var(--mono);font-size:11px;
   color:var(--faint);
-  flex:none;
+  /* 收缩因子给大：空间不够时先让它变成省略号（甚至消失），别去挤文档名 */
+  flex:0 20 auto;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 @media (max-width:640px){
   .main-title .meta{display:none}
@@ -962,6 +968,11 @@ input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4
 @media (prefers-reduced-motion:reduce){
   .load-dot{ animation:none;opacity:1 }
 }
+/* 窄屏只留状态点：省下的位置给文档名，状态文字进 title 提示 */
+@media (max-width:1000px){
+  .load-badge .lb-txt{ display:none }
+  .load-badge{ padding:4px 7px }
+}
 
 /* 打开文档时的加载态：弱化成一行细提示，不出现居中大块 */
 .content > .empty-main:has(.doc-loading-title){ place-items:start;padding:26px 40px 0;text-align:left }
@@ -1148,6 +1159,10 @@ html[data-outline="float"] .outline-head{margin-bottom:8px}
 }
 .doc-nav .next{text-align:right}
 .doc-nav .ghost{visibility:hidden}
+/* 只有一边有卡片（第一篇 / 最后一篇）时占满整行：
+   否则它会缩在半边，桌面和手机看起来是两种东西 */
+.doc-nav[data-single="true"] a{grid-column:1 / -1}
+.doc-nav[data-single="true"] .next{text-align:left}
 
 /* ═══════════ 返回顶部 ═══════════ */
 .totop{
@@ -1296,22 +1311,43 @@ html[data-outline="float"] .outline-head{margin-bottom:8px}
   .main-title{gap:8px}
   .main-title .name{font-size:14px}
   .mbtn{padding:6px 9px}
+
+  /* 右上角那颗「目录」胶囊是浮层，标题别钻到它底下去 */
+  .md{padding-top:44px}
 }
 
-/* 更小的屏：顶栏按钮只留图标 */
-@media (max-width:560px){
-  .main-bar{gap:6px}
+/* 顶栏开始吃紧的宽度：按钮只留图标。
+   （720–800px 这一段侧栏还占着 280px 的栏位，带文字的按钮放不下，
+     会把文档名挤没） */
+@media (max-width:800px){
   .mbtn .lbl{display:none}
   .mbtn{padding:7px 9px}
   .mbtn svg{width:13px;height:13px}
-  .md{padding:24px 16px 72px}
+}
+
+/* 更小的屏：按钮加大到 44px 触控目标，顶栏随之变高 */
+@media (max-width:560px){
+  :root{--bar-h:64px}
+  .main-bar{gap:6px;padding:10px 12px}
+  .mbtn .lbl{display:none}
+  /* 手机上按钮只剩图标（title 在触屏上不显示），
+     32px 的点按目标太小 —— iOS HIG 建议 44×44 */
+  .mbtn, .mbtn.icon-only{
+    padding:9px 10px;min-width:44px;min-height:44px;
+    justify-content:center;
+  }
+  .mbtn svg{width:15px;height:15px}
+  /* 状态点也让位给文档名：加载态在正文里本来就有提示，
+     「已归档」在正文区上方的 meta 里也有（这里空间实在不够） */
+  .load-badge, .load-badge.on{display:none}
+  .md{padding:44px 16px 72px}
   .md pre{padding:12px 14px;font-size:12.5px}
   .outline{padding:calc(var(--bar-h) + 14px) 12px 48px}
 }
 
 /* 超窄屏：进一步压 */
 @media (max-width:400px){
-  .md{font-size:14px;padding:20px 14px 64px}
+  .md{font-size:14px;padding:44px 14px 64px}
   .main-title .meta{display:none}
 }
 
@@ -1338,7 +1374,7 @@ html[data-outline="float"] .outline-head{margin-bottom:8px}
 <body>
 
 <noscript>
-<div class="noscript-wrap"><h1>文档 · JinSuper</h1><p>这个页面用 JavaScript 在现场排版 Markdown。下面先把预渲染好的正文列出来，其余资料给出原文件链接。</p><section><h2>启程</h2><ul><li><a href="../para/1SetUp.md">启程篇</a></li><li><a href="../archive/TEST.html">测试文档（归档）</a></li></ul></section><section><h2>811Studio</h2><ul><li><a href="../science.md">科技节活动方案</a></li><li><a href="../para/homework.md">作业</a></li></ul></section><section><h2>奇思妙想</h2><ul><li><a href="../idea/index.md">索引</a></li><li><a href="../idea/1.归途且慢.md">1.归途，且慢.</a></li></ul></section></div>
+<div class="noscript-wrap"><h1>文档 · JinSuper</h1><p>这个页面用 JavaScript 在现场排版 Markdown。下面先把预渲染好的正文列出来，其余资料给出原文件链接。</p><section><h2>启程</h2><ul><li><a href="../para/1SetUp.md">启程篇</a></li><li><a href="../archive/TEST.html">测试文档（归档）</a></li></ul></section><section><h2>811Studio</h2><ul><li><a href="../science.md">科技节活动方案</a></li><li><a href="../para/homework.md">作业</a></li></ul></section><section><h2>奇思妙想</h2><ul><li><a href="../idea/index.md">索引</a></li><li><a href="../idea/1.归途且慢.md">1.归途，且慢.</a></li><li><a href="../archive/2.ScreenOff.html">2.Screen Off,To the Real World</a></li></ul></section></div>
 </noscript>
 
 <div class="app">
@@ -1389,9 +1425,12 @@ html[data-outline="float"] .outline-head{margin-bottom:8px}
       <div class="main-title">
         <span class="name" id="docName">—</span>
         <span class="meta" id="docMeta"></span>
-        <span class="load-badge on" id="loadBadge" role="status" title="正文在构建期已预渲染，页面不请求任何接口">
-          <span class="load-dot" aria-hidden="true"></span>static</span>
       </div>
+      <!-- 状态徽标放在标题区**外面**：它是 flex:none 的小块，
+           留在标题里一旦宽度不够就会被顶出去、压住右边的按钮。
+           放在这一层由 .main-bar 统一分配空间，永远不会重叠。 -->
+      <span class="load-badge on" id="loadBadge" role="status" title="正文由本站自带的渲染器现场排版">
+        <span class="load-dot" aria-hidden="true"></span><span class="lb-txt">static</span></span>
       <div class="main-actions">
         <button class="mbtn" id="btnToggle" style="display:none" title="源码 / 渲染">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1566,7 +1605,7 @@ html[data-outline="float"] .outline-head{margin-bottom:8px}
 </button>
 
 <script>
-window.__SK__ = {"启程":{"启程篇":"para/1SetUp.md","测试文档（归档）":"archive/TEST.html"},"811Studio":{"科技节活动方案":"science.md","作业":"para/homework.md"},"奇思妙想":{"索引":"idea/index.md","1.归途，且慢.":"idea/1.归途且慢.md"}};
+window.__SK__ = {"启程":{"启程篇":"para/1SetUp.md","测试文档（归档）":"archive/TEST.html"},"811Studio":{"科技节活动方案":"science.md","作业":"para/homework.md"},"奇思妙想":{"索引":"idea/index.md","1.归途，且慢.":"idea/1.归途且慢.md","2.Screen Off,To the Real World":"archive/2.ScreenOff.html"}};
 window.__PRERENDERED__ = {};
 </script>
 <script src="./docs-card.js?v=3"></script>
@@ -1734,6 +1773,8 @@ var settings = {
 
 var activePath = null;
 var codeMode = false;
+/* 打开文档的序号：异步回调回来时判断自己有没有被后来的点击取代 */
+var openGen = 0;
 /* 侧栏分组（fillFromGroups 填）—— 深链接要找「目标在哪一组」时用它 */
 var groups = [];
 var collapsedGroups = {};
@@ -1826,6 +1867,25 @@ function syncFromHash(){
 var rawCache = {};
 var rawInflight = {};
 
+/* raw.php 用不了（404 / 没执行 PHP）就记住，本会话不再重试 ——
+   否则每换一篇文档都白跑一次，控制台一直刷 404。
+   存 sessionStorage：刷新页面也不用再踩一遍，关掉标签页就忘。 */
+var rawPhpDead = false;
+try { rawPhpDead = sessionStorage.getItem('docs.rawDead') === '1'; }catch(e){}
+
+/** 这个错误说明「raw.php 根本不在」而不是「这一篇读不到」 */
+function rawPhpMissing(err){
+  var m = /HTTP (\d{3})/.exec(String((err && err.message) || err));
+  if (!m) return true;                       /* 网络层就失败：多半是静态托管不执行 PHP */
+  var code = Number(m[1]);
+  return code === 404 || code === 405 || code === 501;
+}
+
+function killRawPhp(){
+  rawPhpDead = true;
+  try { sessionStorage.setItem('docs.rawDead', '1'); }catch(e){}
+}
+
 /**
  * 判断拿回来的是不是「平台渲染过的整页 HTML」
  */
@@ -1879,6 +1939,40 @@ function encodePath(p){
     if (seg === '..' || seg === '.' || seg === '') return seg;
     return encodeURIComponent(seg);
   }).join('/');
+}
+
+/**
+ * 把「相对 /p/ 的路径」换算成「相对站点根的路径」。
+ * ---------------------------------------------------
+ * 给 raw.php 用。raw.php 是站点根的云函数，它的 file_exists 用的是
+ * 进程工作目录（也就是站点根），传 para/x.md 会被当成
+ * 「站点根/para/x.md」→ 找不到文件 → 404，于是每次都白跑一趟、
+ * 在控制台刷一条 404。传 p/para/x.md 才对。
+ * 顺便把 .. 折掉：raw.php 明确拒绝路径里的 ..（防目录穿越）。
+ */
+function sitePath(root){
+  var segs = ('p/' + String(root || '')).split('/');
+  var out = [];
+  for (var i = 0; i < segs.length; i++){
+    var s = segs[i];
+    if (!s || s === '.') continue;
+    if (s === '..'){ out.pop(); continue; }
+    out.push(s);
+  }
+  return out.join('/');
+}
+
+/**
+ * 把「相对 /p/ 的路径」变成绝对地址。
+ * ---------------------------------------------------
+ * 给别的页面用（源码查看器在 /Skills/ 下）。两边的基准目录不同，
+ * 传相对路径必然错位：../para/x.md 在 /p/ 下是 /p/para/x.md，
+ * 到了 /Skills/ 就变成 /para/x.md —— 站点根，404。
+ * 绝对地址不依赖对方的部署位置，站点整体挪进子目录也照样对。
+ */
+function absURL(rel){
+  try { return new URL(String(rel), location.href).href; }
+  catch(e){ return ROOT_PREFIX + String(rel); }
 }
 
 /**
@@ -1947,27 +2041,33 @@ function loadText(doc, cb){
   }
   if (rawInflight[doc.path]){ rawInflight[doc.path].push(cb); return; }
   rawInflight[doc.path] = [cb];
-  offLoading(true);
+  markLoading(doc);
 
   var done = function(err, text, fromPlatform){
     var waiting = rawInflight[doc.path] || [];
     delete rawInflight[doc.path];
     if (!err && text != null) rawCache[doc.path] = { text: text, fromPlatform: !!fromPlatform };
-    offLoading(false, doc);
+    markLoaded(doc);
     waiting.forEach(function(f){ f(err, text, !!fromPlatform); });
   };
 
+  /* 直接取文件：相对当前页面（/p/），平台会把 md 渲染成 HTML */
   var encoded = encodePath(doc.root);
+  /* raw.php 在站点根、按站点根解析 f，所以要传 p/… 而不是 para/… */
+  var rawURL = './raw.php?f=' + encodePath(sitePath(doc.root));
 
   /* ① 先要原文。只有真原文才保得住 LaTeX 公式和代码围栏。
         但静态托管会让这个请求「成功却返回 PHP 源码」，所以必须分类。 */
-  fetchText('./raw.php?f=' + encoded)
-    .then(function(res){
-      if (classifyContent(res) !== 'raw') throw new Error('raw.php 没给出原文');
-      done(null, res.text, false);
-    })
-    .catch(function(e1){
-      /* ② 退回直接取文件。
+  var askRaw = rawPhpDead
+    ? Promise.reject(new Error('raw.php 本会话已判定不可用'))
+    : fetchText(rawURL).then(function(res){
+        if (classifyContent(res) !== 'raw') throw new Error('raw.php 没给出原文');
+        done(null, res.text, false);
+      });
+
+  askRaw.catch(function(e1){
+    if (!rawPhpDead && rawPhpMissing(e1)) killRawPhp();
+    /* ② 退回直接取文件。
             热铁盒会把 md 渲染成 HTML → 拆出正文当成品用（不能再渲染一遍）
             静态托管直接给 .md 原文 → 交给渲染器 */
       fetchText(encoded)
@@ -1985,28 +2085,76 @@ function loadText(doc, cb){
     });
 }
 
+/* ═══ 顶栏角标：加载中 / static / 已归档 ═══ */
+
+/* 正在等哪一篇的原文。只认「当前打开的这一篇」——
+   角标按它算，不按「还有几个请求在飞」。 */
+var loadingPath = null;
+var loadingWatchdog = null;
+
+/** 当前打开的那一篇（清单里的对象） */
+function activeDoc(){
+  for (var i = 0; i < ALL.length; i++){ if (ALL[i].path === activePath) return ALL[i]; }
+  return null;
+}
+
+/** 归档预渲染稿：sk.json 里有 archive/x.html 与 p/archive/x.html 两种写法 */
+function isArchivedDoc(doc){
+  return !!doc && doc.kind === 'html' && /^(?:p\/)?archive\//.test(String(doc.path));
+}
+
 /**
- * 顶栏那个角标：加载中 / static / 已归档
+ * 刷新顶栏角标。
  * ---------------------------------------------------
- * 归档文章（sk.json 指向 /p/archive/*.html 的那些）走的是预渲染稿，
- * 正文不经过浏览器端渲染器，所以角标如实写「已归档」——
- * 一眼能看出这一篇是成品还是现场渲染的。
+ * 判据是 loadingPath（当前这篇还缺不缺原文），不是在途请求数。
+ * 旧写法按请求数判断：某次请求收尾时看到别的请求还在飞就 return，
+ * 于是正文早渲染完了角标还停在「读取中」，快速连点时必现。
+ * 现在不管成功、失败还是被后来的点击取代，它都一定收敛到终态。
+ *
+ * 归档文章走的是预渲染稿，正文不经过浏览器端渲染器，
+ * 所以角标如实写「已归档」——一眼能看出这一篇是成品还是现场渲染。
  */
-function offLoading(on, doc){
+function updateBadge(doc){
   if (!loadBadgeEl) return;
-  if (on){
-    loadBadgeEl.textContent = '';
-    loadBadgeEl.innerHTML = '<span class="load-dot" aria-hidden="true"></span>读取中';
-    loadBadgeEl.classList.add('on');
-  } else {
-    var busy = Object.keys(rawInflight).length > 0;
-    if (busy) return;
-    var archived = !!(doc && doc.kind === 'html');
-    loadBadgeEl.innerHTML = '<span class="load-dot" aria-hidden="true"></span>' + (archived ? '已归档' : 'static');
-    loadBadgeEl.title = archived
+  var d = doc || activeDoc();
+  var waiting = !!(d && loadingPath === d.path);
+  var archived = isArchivedDoc(d);
+  var txt = waiting ? '读取中' : (archived ? '已归档' : 'static');
+
+  /* 窄屏只留状态点（.lb-txt 被 CSS 藏起来），但文字仍然要写对 */
+  var txtEl = loadBadgeEl.querySelector('.lb-txt');
+  if (txtEl) txtEl.textContent = txt;
+  else loadBadgeEl.innerHTML = '<span class="load-dot" aria-hidden="true"></span>' +
+    '<span class="lb-txt">' + esc(txt) + '</span>';
+
+  loadBadgeEl.classList.toggle('on', !!d);
+  loadBadgeEl.title = waiting
+    ? '正在读取这一篇的原文…'
+    : archived
       ? '这一篇是归档预渲染稿，正文直接读成品，不再现场渲染'
-      : '正文由本地渲染器现场渲染，页面不请求任何外部服务';
+      : '正文由本站自带的渲染器现场排版，不调用任何第三方接口';
+}
+
+/** 开始等某一篇的原文（只影响「就是当前这篇」时的角标） */
+function markLoading(doc){
+  if (!doc || doc.path !== activePath) return;
+  loadingPath = doc.path;
+  updateBadge(doc);
+  /* 兜底：请求万一悬着不回来（网络卡死、平台不给响应），
+     角标也不能一直转 —— 到点就按「没在等」算，正文那边会给出错误提示。 */
+  clearTimeout(loadingWatchdog);
+  loadingWatchdog = setTimeout(function(){
+    if (loadingPath === doc.path){ loadingPath = null; updateBadge(); }
+  }, 12000);
+}
+
+/** 这一篇有结果了（成功、失败、被后来的点击取代都算） */
+function markLoaded(doc){
+  if (doc && loadingPath === doc.path){
+    loadingPath = null;
+    clearTimeout(loadingWatchdog);
   }
+  updateBadge();
 }
 
 /* 兼容旧调用点 */
@@ -2136,6 +2284,11 @@ function openDoc(p, fromHash){
   for (var i = 0; i < ALL.length; i++){ if (ALL[i].path === p){ doc = ALL[i]; break; } }
   if (!doc) return;
 
+  /* 这次打开的序号。异步回调回来时拿它判断「我是不是已经被后来的点击取代了」——
+     否则连点两篇时，先发的那次请求后回来，会把正文覆盖成上一篇。 */
+  var gen = ++openGen;
+  function stale(){ return gen !== openGen; }
+
   activePath = p;
   if (!fromHash){
     try { history.pushState(null, '', '#' + encodeURIComponent(p)); } catch(e){}
@@ -2153,11 +2306,23 @@ function openDoc(p, fromHash){
   btnViewer.disabled = doc.kind === 'media';
   btnOpen.disabled = false;
   btnCopy.disabled = doc.kind === 'media';
+  /* 换篇就把角标切到这一篇的状态（归档 / static），别留着上一篇的 */
+  updateBadge(doc);
 
   btnViewer.onclick = function(){
-    /* viewer.html 在 /Skills/ 下，用相对路径而不是 /p/…
-       这样站点将来挪到子目录也不会断 */
-    window.open('../Skills/viewer.html?f=' + encodeURIComponent(ROOT_PREFIX + doc.root), '_blank', 'noopener');
+    /* viewer.html 在 /Skills/ 下，但传的 f 必须是**绝对地址**：
+       查看器按自己的位置解析相对路径，../para/x.md 在 /p/ 下是
+       /p/para/x.md，到 /Skills/ 就变成 /para/x.md（站点根）→ 404。
+       绝对地址不依赖对方的部署位置，站点挪进子目录也照样对。 */
+    var u = '../Skills/viewer.html?f=' + encodeURIComponent(absURL(doc.root));
+    /* 再带上 ?raw=：让查看器去 raw.php 取真原文。
+       不然平台会把 .md 渲染成整页 HTML（还挂着一张外链样式表），
+       查看器里看到的是一堆转义后的标签，不是源码。
+       raw.php 在本站用不了时就不传，省一次 404。 */
+    if (!rawPhpDead){
+      u += '&raw=' + encodeURIComponent(absURL('./raw.php?f=' + encodePath(sitePath(doc.root))));
+    }
+    window.open(u, '_blank', 'noopener');
   };
   btnOpen.onclick = function(){
     window.open(renderURL(doc.root), '_blank', 'noopener');
@@ -2208,6 +2373,7 @@ function openDoc(p, fromHash){
     if (cachedText == null && preHtml == null){
       showLoading(doc);
       loadText(doc, function(err, text, fromPlatform){
+        if (stale()) return;              /* 已经切到别的篇了，别拿旧正文盖上去 */
         if (codeMode) return;             /* 用户已经切到源码了 */
         if (err || text == null){ showLoadError(doc, err); return; }
         doRenderMarkdown(doc, text, null, fromPlatform);
@@ -2225,6 +2391,7 @@ function openDoc(p, fromHash){
       if (codeMode){
         if (rawCache[doc.path] != null){ showSource(); return; }
         loadText(doc, function(err, text){
+          if (stale()) return;
           if (codeMode && !err) renderCodeView(text);
           else if (codeMode) showNoSource(doc);
         });
@@ -2241,6 +2408,7 @@ function openDoc(p, fromHash){
     if (cachedText != null){ renderCodeView(cachedText); return; }
     showLoading(doc);
     loadText(doc, function(err, text){
+      if (stale()) return;
       if (err || text == null){ showLoadError(doc, err); return; }
       renderCodeView(text);
       docMetaEl.textContent = '纯文本';
@@ -2256,11 +2424,12 @@ function openDoc(p, fromHash){
    * 注释里同样不能出现反引号：整段住在 String.raw 模板里。
    */
   if (doc.kind === 'html'){
-    if (!/^archive\//.test(String(doc.path))){
+    if (!isArchivedDoc(doc)){
       btnToggle.style.display = 'none';
       if (cachedText != null){ renderCodeView(cachedText); return; }
       showLoading(doc);
       loadText(doc, function(err, text){
+        if (stale()) return;
         if (err || text == null){ showLoadError(doc, err); return; }
         renderCodeView(text);
         docMetaEl.textContent = 'HTML 源码';
@@ -2286,12 +2455,12 @@ function openDoc(p, fromHash){
       contentEl.scrollTop = 0;
       updateProgress();
       docMetaEl.textContent = 'HTML · 归档预渲染';
-      offLoading(false, doc);
     }
 
     if (cachedText != null){ showPrerendered(cachedText); return; }
     showLoading(doc);
     loadText(doc, function(err, text){
+      if (stale()) return;
       if (err || text == null){ showLoadError(doc, err); return; }
       showPrerendered(text);
     });
@@ -2739,6 +2908,38 @@ function fixChartBlocks(root){
 }
 
 /* ═══ 本页目录 ═══ */
+
+/**
+ * 还放得下「停靠」的目录吗。
+ * ---------------------------------------------------
+ * 停靠目录是 226px 的常驻栏位，侧栏又是 280px：窗口不够宽时
+ * 正文只剩一两百像素，英文单词都换行、中文一行几个字。
+ * 900px 是「正文还能舒服读」的下限（那时正文栏还有 ~310px）。
+ */
+function fitsDockedOutline(){
+  try { return matchMedia('(min-width: 901px)').matches; }
+  catch(e){ return true; }
+}
+
+/**
+ * 这次会话里目录该用哪种形态。
+ * ---------------------------------------------------
+ * 放不下停靠就用悬浮：它是浮层，不占正文的宽度。
+ * 这只影响本次会话的呈现，不动用户存下来的设置 ——
+ * 窗口拉宽回来还是他原来挑的那一种。
+ */
+function outlineMode(){
+  if (settings.outline === 'off') return 'off';
+  return fitsDockedOutline() ? settings.outline : 'float';
+}
+
+/* 悬浮形态默认收起：浮层展开着会压住正文标题（窄屏首屏就只剩它了）。
+   要看目录点右上角那颗「本页目录」胶囊。 */
+function syncOutlineOpen(){
+  if (outlineMode() === 'float') outlineEl.classList.add('hide');
+  else outlineEl.classList.remove('hide');
+}
+
 function buildOutline(){
   var heads = contentEl.querySelectorAll('.md h1, .md h2, .md h3, .md h4');
   var html = '';
@@ -2751,10 +2952,11 @@ function buildOutline(){
     html += '<li class="lv-' + lvl + '"><a href="#' + esc(h.id) + '" data-target="' + esc(h.id) + '">' + esc(label) + '</a></li>';
   }
   outlineListEl.innerHTML = html;
-  outlineEl.classList.remove('hide');
-  var has = heads.length > 1 && settings.outline !== 'off';
+  syncOutlineOpen();
+  var has = heads.length > 1 && outlineMode() !== 'off';
   outlineEl.classList.toggle('on', has);
   if (has) setupOutlineSpy();
+  updateOutlinePill();
 }
 
 var outlineSpyOff = null;
@@ -2812,12 +3014,12 @@ outlinePillEl.addEventListener('click', function(){
 function updateOutlinePill(){
   var has = outlineListEl.children.length > 1;
   outlinePillEl.classList.toggle('shown',
-    settings.outline === 'float' && has && outlineEl.classList.contains('hide'));
+    outlineMode() === 'float' && has && outlineEl.classList.contains('hide'));
 }
 
 function refreshOutline(){
-  outlineEl.classList.remove('hide');
-  var has = outlineListEl.children.length > 1 && settings.outline !== 'off';
+  syncOutlineOpen();
+  var has = outlineListEl.children.length > 1 && outlineMode() !== 'off';
   outlineEl.classList.toggle('on', has);
   updateOutlinePill();
 }
@@ -2843,9 +3045,22 @@ function appendDocNav(){
 
   var nav = document.createElement('nav');
   nav.className = 'doc-nav';
+
+  function card(d, isNext){
+    return '<a href="#" data-path="' + esc(d.path) + '"' + (isNext ? ' class="next"' : '') + '>' +
+      '<span class="dir">' + (isNext ? '下一篇 →' : '← 上一篇') + '</span>' +
+      '<span class="ttl">' + esc(d.name) + '</span></a>';
+  }
+
+  /* 目录是两列栅格。只有一边有卡片时（第一篇没有上一篇、最后一篇没有下一篇）
+     以前会留一个透明的占位，卡片缩在半边 —— 桌面上右移、手机上是整行，
+     两种宽度看着像两个东西。所以单边时干脆占满整行。 */
+  var both = !!(prev && next);
   nav.innerHTML =
-    (prev ? '<a href="#" data-path="' + esc(prev.path) + '"><span class="dir">← 上一篇</span><span class="ttl">' + esc(prev.name) + '</span></a>' : '<span class="ghost"></span>') +
-    (next ? '<a class="next" href="#" data-path="' + esc(next.path) + '"><span class="dir">下一篇 →</span><span class="ttl">' + esc(next.name) + '</span></a>' : '<span class="ghost"></span>');
+    (prev ? card(prev, false) : (both ? '<span class="ghost"></span>' : '')) +
+    (next ? card(next, true) : (both ? '<span class="ghost"></span>' : ''));
+  if (!both) nav.setAttribute('data-single', 'true');
+
   mdEl.appendChild(nav);
   nav.addEventListener('click', function(e){
     var a = e.target.closest('a[data-path]');
@@ -2913,7 +3128,7 @@ function applySettings(){
   var root = document.documentElement;
   root.setAttribute('data-theme', settings.theme);
   root.setAttribute('data-glass', settings.glass);
-  root.setAttribute('data-outline', settings.outline);
+  root.setAttribute('data-outline', outlineMode());
   root.style.setProperty('--bar-alpha', settings.barOpacity + '%');
   root.classList.toggle('side-collapsed', !!settings.sideCollapsed);
   btnSideToggle.setAttribute('aria-expanded', String(!settings.sideCollapsed));
@@ -3064,12 +3279,20 @@ if (sideScrimEl){
    从桌面拉窄 → 按手机端默认收起（别让常驻栏突然变遮罩挡屏）
    从手机拉宽 → 恢复桌面端上次的选择 */
 var lastNarrow = isNarrow();
+var lastDock = fitsDockedOutline();
 window.addEventListener('resize', function(){
   var now = isNarrow();
-  if (now === lastNarrow){ syncSideScrim(); return; }
-  lastNarrow = now;
-  if (now) setSideCollapsedEphemeral(true);
-  else setSideCollapsed(settings.sideCollapsed);
+  var nowDock = fitsDockedOutline();
+  if (now === lastNarrow && nowDock === lastDock){ syncSideScrim(); return; }
+
+  if (now !== lastNarrow){
+    lastNarrow = now;
+    if (now) setSideCollapsedEphemeral(true);
+    else setSideCollapsed(settings.sideCollapsed);
+  }
+  lastDock = nowDock;
+  /* 跨过断点要把目录形态重算一遍：位置不够就用悬浮（不占栏位） */
+  applySettings();
 });
 
 /* 手机端按 Esc 收起侧栏；侧栏展开时锁住背景滚动 */

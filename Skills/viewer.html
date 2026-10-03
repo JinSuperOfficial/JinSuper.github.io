@@ -1812,7 +1812,7 @@ function showState(kind, data){
       '<h2>所寻之处，一切皆空</h2>' +
       '<p>' + (data || '未知错误') + '<br><br>' +
       '发生了一些错误<br>' +
-      '这肯不是你的问题</p>';
+      '这可能不是你的问题</p>';
   }
   stateBox.innerHTML = '<div class="state-in">' + html + '</div>';
   stateBox.classList.toggle('is-err', kind === 'error');
@@ -1954,7 +1954,35 @@ function detectDir(){
   return p || '/';
 }
 
-async function loadFromURL(url, name){
+/* 拿回来的到底是不是「原文」。
+   · 静态托管（GitHub Pages 这类）不执行 .php，直接把脚本源码返回 —— 不是原文
+   · 文件名不像网页，却回来一整页 HTML —— 多半是平台的渲染包装或 404 页 */
+function notSource(text, name){
+  const head = String(text || '').slice(0, 2000);
+  if (/^\s*<\?php\b/i.test(head) || /^\s*<\?=/.test(head)) return true;
+  if (!/\.(?:x?html?|svg)$/i.test(String(name || '')) &&
+      /^\s*(?:<!doctype\s+html|<html[\s>])/i.test(head)) return true;
+  return false;
+}
+
+/* 取文本。优先 textURL（?raw=，能拿到 Markdown 真原文），不行再退回 url 本身。
+   平台会把 .md 渲染成整页 HTML，里面还挂着外链样式表；
+   直接当 md 显示就是一堆转义后的标签，所以真原文要优先。 */
+async function fetchSource(url, textURL, name){
+  if (textURL && textURL !== url){
+    try {
+      const r = await fetch(textURL, { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const t = await r.text();
+      if (!notSource(t, name)) return t;
+    } catch(e){ /* 落到 url 上再试一次 */ }
+  }
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + (res.statusText || ''));
+  return res.text();
+}
+
+async function loadFromURL(url, name, textURL){
   const info = typeOf(name);
 
   currentName = name;
@@ -1973,12 +2001,10 @@ async function loadFromURL(url, name){
   setActions(false);
 
   try {
-    const res = await fetch(url, { cache:'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + (res.statusText || ''));
-    const text = await res.text();
+    const text = await fetchSource(url, textURL, name);
     renderText(text, name, info);
   } catch(err){
-    fileMetaEl.textContent = 'Unkonwn error';
+    fileMetaEl.textContent = 'Unknown error';
     currentURL = '';
     setActions(false);
     showState('error', '请求 <code>' + esc(url) + '</code> 出错：' +
@@ -2348,6 +2374,9 @@ document.addEventListener('drop', function(e){
 
   const params = new URLSearchParams(location.search);
   const f = params.get('f') || params.get('file');
+  /* ?raw= 可选：正文去这个地址取（文档站用它在 raw.php 上拿 Markdown 真原文），
+     取不到就退回 f 本身 */
+  const raw = params.get('raw');
 
   if (!f){
     fileNameEl.textContent = '所寻之处，一切皆空';
@@ -2365,7 +2394,7 @@ document.addEventListener('drop', function(e){
     return;
   }
 
-  loadFromURL(resolveURL(f), name);
+  loadFromURL(resolveURL(f), name, raw ? resolveURL(raw) : null);
 })();
 
 })();
