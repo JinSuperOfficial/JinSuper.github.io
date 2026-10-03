@@ -325,6 +325,9 @@
     transition:all var(--dur-fast) var(--ease-out);
   }
   .chip:hover{color:var(--lime);border-color:var(--line-2);background:var(--surface-3);transform:translateY(-1px)}
+  .chip.on{color:var(--accent-on);background:var(--accent);border-color:var(--accent)}
+  .snap-chips{margin:8px 0 2px}
+  .setting-row.dim,.chips.dim{opacity:.45}
 
   .pen-panel{display:flex;gap:8px}
   .pen-toggle{
@@ -911,6 +914,9 @@
 
   .workspace{display:flex;flex:1;min-height:0}
   .workspace .panel{width:340px}
+  /* 侧栏收起：画布占满（输入栏在侧栏里，用顶栏那个按钮叫回来） */
+  .workspace.panel-collapsed .panel{display:none}
+  .tb-btn[aria-pressed="true"]{color:var(--accent);background:rgba(var(--accent-rgb),.10)}
 
   /* 表格区 */
   .tableview{
@@ -1005,6 +1011,24 @@
   }
   .tools-index-link:hover{border-color:rgba(var(--accent-rgb),.55);color:var(--accent);
                           background:rgba(var(--accent-rgb),.06)}
+
+  /* ═══ 帮助浮窗 ═══ */
+  .modal.help-modal{width:min(620px,100%)}
+  .help-body{padding-top:12px}
+  .help-sec{margin-bottom:16px}
+  .help-sec h3{
+    margin:0 0 7px;font-size:11.5px;font-weight:650;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
+  .help-tbl{width:100%;border-collapse:collapse}
+  .help-tbl td{padding:5px 8px 5px 0;vertical-align:top;font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+  .help-tbl td:first-child{width:44%;color:var(--ink)}
+  .help-tbl tr+tr td{border-top:1px solid var(--line)}
+  .help-p{margin:0 0 6px;font-size:12.5px;line-height:1.6;color:var(--ink-2)}
+  .help-body code,.help-tbl code{
+    font-family:var(--mono);font-size:11.5px;padding:1px 5px;border-radius:var(--r-xs);
+    background:rgba(var(--tint-rgb),.07);color:var(--ink);
+  }
 
   /* ═══ 导出图片：预览框（透明底用棋盘格衬出来） ═══ */
   .shot-preview-wrap{
@@ -1158,6 +1182,13 @@
       </div>
     </div>
     <span class="spacer"></span>
+    <button class="tb-btn" id="panelToggle" title="收起 / 展开左侧栏"
+            aria-pressed="false" aria-controls="panel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9 4v16"/>
+      </svg><span class="tb-label">侧栏</span>
+    </button>
     <button class="tb-btn" id="undoBtn" title="撤销画笔/上一步操作">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
            stroke-linecap="round" stroke-linejoin="round">
@@ -1218,6 +1249,12 @@
              stroke-linecap="round">
           <path d="M5.5 18.5 18.5 5.5"/><circle cx="5" cy="19" r="2.1"/><circle cx="19" cy="5" r="2.1"/>
         </svg><span>线段</span>
+      </button>
+      <button class="tool" data-tool="text" title="点一下放一段注释（内容、颜色、字体都能改）" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 6h14M12 6v13M9 19h6"/>
+        </svg><span>注释</span>
       </button>
     </div>
     <div class="tool-group">
@@ -1459,10 +1496,33 @@
         <span class="props-k">颜色</span>
         <div class="props-colors" id="propsColors"></div>
       </div>
-      <div class="props-row">
+      <div class="props-row" id="propsWidthRow">
         <span class="props-k">粗细</span>
         <input type="range" class="pen-size" id="propsWidth" min="1" max="6" step="0.5" value="2"
                aria-label="线条粗细">
+      </div>
+      <div class="props-row" id="propsTextRow" style="display:none">
+        <span class="props-k">字号</span>
+        <input type="range" class="pen-size" id="propsFontSize" min="8" max="48" step="1" value="15"
+               aria-label="注释字号">
+        <select class="pp-sel" id="propsFontFamily" aria-label="注释字体" style="max-width:110px">
+          <option value="sans">无衬线</option>
+          <option value="serif">衬线</option>
+          <option value="mono">等宽</option>
+        </select>
+      </div>
+      <div class="props-row" id="propsTextRow2" style="display:none">
+        <span class="props-k">样式</span>
+        <div class="seg" id="propsFontStyle" role="group" aria-label="字形">
+          <button class="seg-btn" type="button" data-style="bold" role="switch" aria-checked="false"><b>B</b></button>
+          <button class="seg-btn" type="button" data-style="italic" role="switch" aria-checked="false"><i>I</i></button>
+        </div>
+        <button class="pt-tool" id="propsTextColor" title="换个颜色">颜色…</button>
+      </div>
+      <div class="props-row" id="propsPosRow" style="display:none">
+        <span class="props-k">坐标</span>
+        <input class="num-input" id="propsX" type="number" step="0.1" aria-label="x 坐标">
+        <input class="num-input" id="propsY" type="number" step="0.1" aria-label="y 坐标">
       </div>
       <div class="props-row">
         <span class="props-k">显示</span>
@@ -1689,6 +1749,88 @@
   </div>
 </div>
 
+<!-- ═══ 帮助 / 语法速查（点击后弹出） ═══ -->
+<div class="modal-backdrop" id="helpModal">
+  <div class="modal help-modal" role="dialog" aria-modal="true" aria-labelledby="helpHeading">
+    <header class="modal-head">
+      <h2 id="helpHeading">帮助 / 语法速查</h2>
+      <span class="mh-sub">能输入什么、工具怎么用</span>
+      <span class="mh-spacer"></span>
+      <button class="icon-btn" id="helpClose" aria-label="关闭">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+    <div class="settings-body help-body">
+
+      <div class="help-sec">
+        <h3>能输入的东西</h3>
+        <table class="help-tbl">
+          <tr><td><code>f(x)=x^2/4-1</code></td><td>普通函数（字母随便当自变量，比如 <code>a=54b+cos(b)</code>）</td></tr>
+          <tr><td><code>y=sin(x)</code> · <code>x=0</code></td><td>显式函数 / 竖直线</td></tr>
+          <tr><td><code>x^2+y^2-4=0</code></td><td>隐式方程（圆、椭圆都行）</td></tr>
+          <tr><td><code>1+cos(t)</code></td><td>极坐标 r(t)</td></tr>
+          <tr><td><code>cos(t), sin(t)</code> · <code>Curve(cos(t),sin(t),t,0,2pi)</code></td><td>参数方程（可带范围）</td></tr>
+          <tr><td><code>x{0&lt;x&lt;1}</code> · <code>If(x&lt;0,-x,x)</code></td><td>只画一段 / 分段函数</td></tr>
+          <tr><td><code>(1, 2)</code></td><td>一个点</td></tr>
+          <tr><td><code>f(x)=x^2</code> 然后 <code>f'(x)</code></td><td>导数（数值）</td></tr>
+        </table>
+      </div>
+
+      <div class="help-sec">
+        <h3>函数与常量</h3>
+        <p class="help-p">
+          三角 <code>sin cos tan asin acos atan sinh cosh tanh</code> ·
+          对数指数 <code>ln log log2 log10 exp sqrt cbrt pow</code> ·
+          取整 <code>abs floor ceil round sign min max mod atan2</code>
+        </p>
+        <p class="help-p">常量 <code>pi</code> <code>e</code> <code>tau</code>；算符 <code>+ - * / ^</code>，比较 <code>&lt; &gt; &lt;= &gt;= == !=</code></p>
+      </div>
+
+      <div class="help-sec">
+        <h3>工具怎么用</h3>
+        <table class="help-tbl">
+          <tr><td>移动</td><td>拖画布平移；滚轮/双指缩放；点住了就选中对象</td></tr>
+          <tr><td>点 · 线段</td><td>点一下放点；点两下连线（点已有的点会自动接上去）</td></tr>
+          <tr><td>中点 · 交点 · 垂线 · 平行线</td><td>按提示点两个对象（曲线 / 点 / 线段都行）</td></tr>
+          <tr><td>多边形</td><td>依次点顶点，点回第一个点收口（End/回车也行）</td></tr>
+          <tr><td>距离 · 角度</td><td>点两个点量距离；点三个点量角度</td></tr>
+          <tr><td>注释</td><td>点一下画布放一段文字，选中后在右侧属性面板改内容/颜色/字体；写 <code>x^2</code>、<code>a_2</code>、<code>\frac{"{a}{b}"}</code> 会排版成公式</td></tr>
+          <tr><td>画笔</td><td><code>B</code> 开画笔，点两下定一条直线（默认吸网格）</td></tr>
+        </table>
+      </div>
+
+      <div class="help-sec">
+        <h3>鼠标与触屏</h3>
+        <table class="help-tbl">
+          <tr><td>拖点</td><td>直接拖画布上的点，连着的线段/中点会跟着动</td></tr>
+          <tr><td>右键</td><td>画布右键出菜单：显示网格/刻度、适应视图、坐标轴标签、导出图片</td></tr>
+          <tr><td>双指</td><td>捏合缩放、拖动平移、轻点一下撤回（手机上默认开）</td></tr>
+        </table>
+      </div>
+
+      <div class="help-sec">
+        <h3>键盘</h3>
+        <table class="help-tbl">
+          <tr><td><code>F</code> / <code>B</code> / <code>P</code></td><td>公式计算器 / 画笔 / 导出图片</td></tr>
+          <tr><td><code>Ctrl+Z</code> / <code>Ctrl+Y</code></td><td>撤销 / 重做</td></tr>
+          <tr><td><code>Delete</code></td><td>删掉选中的对象</td></tr>
+          <tr><td><code>Ctrl+0</code></td><td>视图归零（缩放回到默认）</td></tr>
+          <tr><td><code>Esc</code></td><td>关掉浮窗 / 取消取点</td></tr>
+        </table>
+      </div>
+
+      <div class="help-sec">
+        <h3>带走你的图</h3>
+        <p class="help-p">
+          <b>更多 811 工具</b> 里可以导出 JSON（存档，能再导入）、CSV、LaTeX 公式串；<b>导出图片</b>
+          能存透明底 / 纯白底的 PNG / JPG / WebP，只画图不含界面。
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ 设置弹窗 ═══ -->
 <div class="modal-backdrop" id="settingsModal">
   <div class="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsHeading">
@@ -1729,16 +1871,34 @@
       </div>
 
       <div class="settings-group">
-        <div class="settings-group-label">吸附</div>
+        <div class="settings-group-label">吸附 / 对齐</div>
         <div class="setting-row">
           <div class="switch" id="swSnap" role="switch" aria-checked="false" tabindex="0"></div>
-          <label for="swSnap">网格吸附</label>
-          <input class="num-input" id="snapStep" type="number" value="0.5" min="0.01" step="0.1"
+          <label for="swSnap">开启吸附</label>
+        </div>
+        <div class="setting-row" id="alignRow">
+          <label style="flex:none">对齐到</label>
+          <div class="seg" id="alignSeg" role="radiogroup" aria-label="对齐方式">
+            <button class="seg-btn on" type="button" data-align="grid" role="radio" aria-checked="true">网格</button>
+            <button class="seg-btn" type="button" data-align="pointer" role="radio" aria-checked="false" tabindex="-1">鼠标指针</button>
+          </div>
+        </div>
+        <div class="setting-row" id="snapStepRow">
+          <label for="snapStep" style="flex:none">步长</label>
+          <input class="num-input" id="snapStep" type="number" value="0.5" min="0.01" step="0.01"
                  aria-label="吸附步长">
         </div>
+        <div class="chips snap-chips" id="snapChips">
+          <button class="chip" type="button" data-step="0.1">0.1</button>
+          <button class="chip" type="button" data-step="0.25">0.25</button>
+          <button class="chip on" type="button" data-step="0.5">0.5</button>
+          <button class="chip" type="button" data-step="1">1</button>
+          <button class="chip" type="button" data-step="2">2</button>
+        </div>
         <div class="settings-hint">
-          开启画笔时会自动打开吸附，方便把点对齐到格点。<br>
-          步长 <code>0.5</code> 表示吸附到 0.5 的整数倍。
+          <b>网格</b>：吸附到步长的整数倍（步长可以填任意小数，最小 <code>0.01</code>，上面是快捷值）。<br>
+          <b>鼠标指针</b>：不取整，点精确落在指针位置 —— 想画得随意就用它。<br>
+          开启画笔时会自动打开吸附，方便把点对齐到格点。
         </div>
       </div>
 
@@ -1751,6 +1911,20 @@
         <div class="settings-hint">
           每两条可见曲线求一次交点，在图上画成小圆点；交点不多时还会标出坐标。<br>
           想单独建一个交点对象（可以选中、拖动、进表格），用工具栏的「交点」工具。
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-label">注释 / 公式</div>
+        <div class="setting-row">
+          <div class="switch on" id="swTex" role="switch" aria-checked="true" tabindex="0"></div>
+          <label for="swTex">注释里渲染公式（LaTeX 风格）</label>
+        </div>
+        <div class="settings-hint">
+          开：注释里写 <code>x^2</code> → x 的 2 次方，<code>a_2</code> → 下标，
+          <code>\frac{a}{b}</code> 分式，<code>\sqrt{x}</code> 根号，
+          <code>\times \pi \le \alpha</code> 之类的符号也会认。<br>
+          关：原样显示文字（<code>x^2</code> 就是 x^2）。
         </div>
       </div>
 
@@ -2120,7 +2294,233 @@ const TYPES = {
     vars:null, placeholder:'',
     hint:'由已有的点连成，拖顶点会跟着变',
   },
+  text: {
+    key:'text', label:'注释', icon:'T', sub:'文字 + 坐标',
+    vars:null, placeholder:'写点什么…',
+    hint:'用坐标记住位置，可以改颜色和字体；跟着 JSON 一起存档',
+  },
 };
+
+/* ── 轻量公式排版（可选）：^ 上标 · _ 下标 · \frac{}{} · \sqrt{} · 常用符号 ──
+   不引任何外部库（站点禁止 CDN）；只认这些标记，其余原样当文字画。 */
+const TEX_SYMBOLS = {
+  '\\times':'×', '\\cdot':'·', '\\div':'÷', '\\pm':'±', '\\mp':'∓',
+  '\\pi':'π', '\\theta':'θ', '\\alpha':'α', '\\beta':'β', '\\gamma':'γ', '\\delta':'δ',
+  '\\lambda':'λ', '\\mu':'μ', '\\sigma':'σ', '\\phi':'φ', '\\omega':'ω', '\\rho':'ρ',
+  '\\infty':'∞', '\\le':'≤', '\\leq':'≤', '\\ge':'≥', '\\geq':'≥', '\\ne':'≠', '\\neq':'≠',
+  '\\approx':'≈', '\\equiv':'≡', '\\to':'→', '\\rightarrow':'→', '\\Rightarrow':'⇒',
+  '\\sum':'∑', '\\prod':'∏', '\\int':'∫', '\\in':'∈', '\\notin':'∉', '\\subset':'⊂',
+  '\\cup':'∪', '\\cap':'∩', '\\angle':'∠', '\\perp':'⊥', '\\parallel':'∥', '\\degree':'°',
+};
+
+function hasTexMark(s){
+  return /[\^_]|\\[a-zA-Z]+/.test(String(s || ''));
+}
+
+/* 拆成 [{t:'base'|'sup'|'sub', s} | {t:'frac', a, b} | {t:'sqrt', s}] */
+function texParse(src){
+  const out = [];
+  let buf = '';
+  const push = () => { if (buf){ out.push({ t:'base', s: buf }); buf = ''; } };
+  const readGroup = (s, i) => {                     /* 读 {…} 或单个字符，返回 [内容, 新位置] */
+    if (s[i] === '{'){
+      let depth = 0, j = i;
+      for (; j < s.length; j++){
+        if (s[j] === '{') depth++;
+        else if (s[j] === '}'){ depth--; if (!depth) break; }
+      }
+      return [s.slice(i + 1, j), j + 1];
+    }
+    return [s[i] || '', i + 1];
+  };
+  for (let i = 0; i < src.length; i++){
+    const c = src[i];
+    if (c === '\\'){
+      const m = /^\\([a-zA-Z]+)/.exec(src.slice(i));
+      if (m && TEX_SYMBOLS['\\' + m[1]]){
+        buf += TEX_SYMBOLS['\\' + m[1]];
+        i += m[0].length - 1;
+        continue;
+      }
+      if (m && m[1] === 'frac'){
+        const [a, i2] = readGroup(src, i + m[0].length);
+        const [b, i3] = readGroup(src, i2);
+        push(); out.push({ t:'frac', a, b }); i = i3 - 1; continue;
+      }
+      if (m && m[1] === 'sqrt'){
+        const [a, i2] = readGroup(src, i + m[0].length);
+        push(); out.push({ t:'sqrt', s: a }); i = i2 - 1; continue;
+      }
+      buf += c; continue;
+    }
+    if (c === '^' || c === '_'){
+      const [g, i2] = readGroup(src, i + 1);
+      if (!g) continue;
+      push();
+      out.push({ t: c === '^' ? 'sup' : 'sub', s: g });
+      i = i2 - 1;
+      continue;
+    }
+    buf += c;
+  }
+  push();
+  return out;
+}
+
+/* 一行（可能带上下标/分式/根号）的宽度 */
+function texMeasure(runs, size){
+  let w = 0, maxW = 0;
+  for (const r of runs){
+    if (r.t === 'base')   w += ctx.measureText(r.s).width;
+    else if (r.t === 'sup' || r.t === 'sub'){
+      ctx.save(); ctx.font = ctx.font.replace(/(\d+(?:\.\d+)?)px/, (size * 0.7).toFixed(1) + 'px');
+      w += ctx.measureText(r.s).width; ctx.restore();
+    }
+    else if (r.t === 'frac'){
+      const a = ctx.measureText(r.a).width, b = ctx.measureText(r.b).width;
+      w += Math.max(a, b) + 6;
+    }
+    else if (r.t === 'sqrt'){ w += ctx.measureText(r.s).width + size * 0.75; }
+    maxW = Math.max(maxW, w);
+  }
+  return maxW;
+}
+
+/* 画一行，返回宽度。y 是基线 */
+function texDraw(runs, x, y, size, color){
+  const small = size * 0.7;
+  let cx = x;
+  ctx.fillStyle = color;
+  ctx.textAlign = 'left';
+  for (const r of runs){
+    if (r.t === 'base'){
+      ctx.fillText(r.s, cx, y);
+      cx += ctx.measureText(r.s).width;
+    } else if (r.t === 'sup' || r.t === 'sub'){
+      const dy = r.t === 'sup' ? -size * 0.42 : size * 0.26;
+      ctx.save();
+      ctx.font = ctx.font.replace(/(\d+(?:\.\d+)?)px/, small.toFixed(1) + 'px');
+      ctx.fillText(r.s, cx, y + dy);
+      cx += ctx.measureText(r.s).width;
+      ctx.restore();
+    } else if (r.t === 'frac'){
+      const a = ctx.measureText(r.a).width, b = ctx.measureText(r.b).width;
+      const w = Math.max(a, b) + 6;
+      ctx.save();
+      ctx.font = ctx.font.replace(/(\d+(?:\.\d+)?)px/, small.toFixed(1) + 'px');
+      ctx.fillText(r.a, cx + (w - a) / 2, y - size * 0.16);
+      ctx.fillText(r.b, cx + (w - b) / 2, y + size * 0.62);
+      ctx.restore();
+      ctx.save();
+      ctx.strokeStyle = color; ctx.lineWidth = Math.max(1, size * 0.06);
+      ctx.beginPath();
+      ctx.moveTo(cx + 2, y + size * 0.08);
+      ctx.lineTo(cx + w - 2, y + size * 0.08);
+      ctx.stroke();
+      ctx.restore();
+      cx += w;
+    } else if (r.t === 'sqrt'){
+      const w = ctx.measureText(r.s).width;
+      const h = size * 0.62;
+      ctx.save();
+      ctx.strokeStyle = color; ctx.lineWidth = Math.max(1, size * 0.07);
+      ctx.beginPath();
+      ctx.moveTo(cx, y - h * 0.45);
+      ctx.lineTo(cx + size * 0.22, y + 1);
+      ctx.lineTo(cx + size * 0.46, y - h);
+      ctx.lineTo(cx + size * 0.72 + w, y - h);
+      ctx.stroke();
+      ctx.restore();
+      ctx.fillText(r.s, cx + size * 0.5, y);
+      cx += w + size * 0.75;
+    }
+  }
+  return cx - x;
+}
+
+/* 一行文字要占多宽：开了排版且这行有标记就走排版 */
+function lineWidth(str, size){
+  const s = String(str == null ? '' : str);
+  if (state.settings.texRender !== false && hasTexMark(s)){
+    const runs = texParse(s);
+    return texMeasure(runs, size);
+  }
+  return ctx.measureText(s || ' ').width;
+}
+
+/* 注释的字体：族 + 字号 + 粗斜体 */
+const TEXT_FONTS = {
+  sans:  { name:'无衬线', css:'system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif' },
+  serif: { name:'衬线',   css:'Georgia, "Songti SC", "SimSun", serif' },
+  mono:  { name:'等宽',   css:'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' },
+};
+const TEXT_DEFAULT = { size:15, family:'sans', bold:false, italic:false };
+
+function textFontCss(font){
+  const f = Object.assign({}, TEXT_DEFAULT, font || {});
+  const fam = (TEXT_FONTS[f.family] || TEXT_FONTS.sans).css;
+  const size = Math.min(96, Math.max(8, Number(f.size) || TEXT_DEFAULT.size));
+  return (f.italic ? 'italic ' : '') + (f.bold ? '700 ' : '400 ') + size + 'px ' + fam;
+}
+/* 屏幕上的外框：hitTest / 拖动 / 选中框都用它 */
+function textBox(f){
+  const font = textFontCss(f.font);
+  ctx.save();
+  ctx.font = font;
+  const size = Math.min(96, Math.max(8, Number((f.font || {}).size) || TEXT_DEFAULT.size));
+  const lines = String(f.expr || '').split('\n');
+  let w = 0;
+  for (const ln of lines) w = Math.max(w, lineWidth(ln || ' ', size));
+  ctx.restore();
+  const pad = 5;
+  const x = w2sX(f.x), y = w2sY(f.y);
+  return {
+    x, y, w: w + pad * 2, h: lines.length * size * 1.25 + pad * 2,
+    lines, font, size, left: x - pad, top: y - size - pad,
+  };
+}
+
+function drawTextObj(f){
+  const box = textBox(f);
+  if (box.x < -box.w - 40 || box.x > W + 40 || box.y < -40 || box.y > H + box.h + 40) return;
+  ctx.save();
+  ctx.font = box.font;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  const lines = box.lines;
+  const lh = Math.min(96, Math.max(8, Number((f.font || {}).size) || TEXT_DEFAULT.size)) * 1.25;
+  /* 底色，保证压在曲线上也看得清 */
+  ctx.globalAlpha = 0.82 * (f.alpha == null ? 1 : f.alpha);
+  ctx.fillStyle = CV.chip;
+  ctx.beginPath();
+  const rr = 6;
+  const bx = box.left, by = box.top, bw = box.w, bh = box.h;
+  ctx.moveTo(bx + rr, by);
+  ctx.arcTo(bx + bw, by, bx + bw, by + bh, rr);
+  ctx.arcTo(bx + bw, by + bh, bx, by + bh, rr);
+  ctx.arcTo(bx, by + bh, bx, by, rr);
+  ctx.arcTo(bx, by, bx + bw, by, rr);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = f.alpha == null ? 1 : f.alpha;
+  lines.forEach((ln, i) => {
+    const yy = box.y + i * lh;
+    if (state.settings.texRender !== false && hasTexMark(ln)) texDraw(texParse(ln), box.x, yy, box.size, f.color);
+    else { ctx.fillStyle = f.color; ctx.fillText(ln, box.x, yy); }
+  });
+  ctx.restore();
+
+  /* 选中框也是界面，导出时不画 */
+  if (!renderOverride && f.id === selectedId){
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1.2;
+    ctx.globalAlpha = .75;
+    ctx.strokeStyle = CV.ink;
+    ctx.strokeRect(box.left, box.top, box.w, box.h);
+    ctx.restore();
+  }
+}
 
 /* ═══════════════════════════════════════════════════
    4. 状态
@@ -2153,8 +2553,8 @@ const state = {
   funcs: [],
   view: { cx:0, cy:0, scale:56 },
   settings: {
-    snap:false, snapStep:0.5, showGrid:true, showTicks:true,
-    axisX:'x', axisY:'y', gestures:isTouchDevice, autoInter:true,
+    snap:false, snapStep:0.5, alignMode:'grid', showGrid:true, showTicks:true,
+    axisX:'x', axisY:'y', gestures:isTouchDevice, autoInter:true, texRender:true,
   },
   pointTable: {
     color: PT_COLORS[0],
@@ -2185,6 +2585,7 @@ function labelText(f){
   const hasLHS = /^[A-Za-z]\s*=(?!=)/.test(e) || /^[A-Za-z]\s*\(/.test(e);
   if (f.type === 'point') return f.label || 'A';
   if (f.type === 'poly') return '';
+  if (f.type === 'text') return 'T:';
   if (hasLHS) return '';
   const name = f.label || '';
   if (!name) return '';
@@ -2245,6 +2646,8 @@ function recompile(f){
   f.fn = null; f.error = null; f.vertical = false; f.vars = [];
   const t = TYPES[f.type];
   if (!t){ f.error = '未知类型'; return; }
+  /* 注释不解析：内容是纯文字 */
+  if (f.type === 'text'){ f.fn = null; f.error = null; return; }
   /* 多边形没有表达式：顶点是点对象的引用，画的时候现取 */
   if (f.type === 'poly'){
     f.fn = null;
@@ -2960,11 +3363,73 @@ function bindSwitch(el, key, onChange){
   sync();
 }
 
-bindSwitch(document.getElementById('swSnap'), 'snap');
+bindSwitch(document.getElementById('swSnap'), 'snap', syncAlignUI);
 bindSwitch(document.getElementById('swGrid'), 'showGrid');
 bindSwitch(document.getElementById('swTicks'), 'showTicks');
 bindSwitch(document.getElementById('swGestures'), 'gestures', updatePenBadge);
 bindSwitch(document.getElementById('swInter'), 'autoInter');
+bindSwitch(document.getElementById('swTex'), 'texRender');
+
+/* 对齐方式（网格 / 鼠标指针）+ 步长微调 */
+function syncAlignUI(){
+  const seg = document.getElementById('alignSeg');
+  const on = state.settings.alignMode === 'pointer' ? 'pointer' : 'grid';
+  if (seg) seg.querySelectorAll('.seg-btn').forEach(b => {
+    const isOn = b.dataset.align === on;
+    b.classList.toggle('on', isOn);
+    b.setAttribute('aria-checked', String(isOn));
+    b.setAttribute('tabindex', isOn ? '0' : '-1');
+  });
+  const step = document.getElementById('snapStep');
+  if (step) step.value = String(state.settings.snapStep);
+  const chips = document.getElementById('snapChips');
+  if (chips) chips.querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('on', Math.abs(Number(c.dataset.step) - Number(state.settings.snapStep)) < 1e-9);
+  });
+  /* 对齐到指针时，步长没意义，淡化掉 */
+  const row = document.getElementById('snapStepRow');
+  if (row) row.classList.toggle('dim', state.settings.alignMode === 'pointer');
+  if (chips) chips.classList.toggle('dim', state.settings.alignMode === 'pointer');
+}
+
+function setAlignMode(mode){
+  state.settings.alignMode = mode === 'pointer' ? 'pointer' : 'grid';
+  syncAlignUI();
+  toast(state.settings.alignMode === 'pointer' ? '对齐：鼠标指针（不取整）' : '对齐：网格');
+}
+
+function setSnapStep(v){
+  const s = Math.max(0.01, Math.min(100, Number(v) || 0.5));
+  state.settings.snapStep = Math.round(s * 1000) / 1000;
+  syncAlignUI();
+}
+
+(function bindAlign(){
+  const seg = document.getElementById('alignSeg');
+  if (seg){
+    seg.addEventListener('click', e => {
+      const b = e.target.closest ? e.target.closest('.seg-btn') : null;
+      if (b) setAlignMode(b.dataset.align);
+    });
+    seg.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      const b = seg.querySelector('.seg-btn[data-align="' + (state.settings.alignMode === 'pointer' ? 'grid' : 'pointer') + '"]');
+      setAlignMode(state.settings.alignMode === 'pointer' ? 'grid' : 'pointer');
+      if (b) b.focus();
+    });
+  }
+  const step = document.getElementById('snapStep');
+  if (step){
+    step.addEventListener('input', () => setSnapStep(step.value));
+    step.addEventListener('change', () => { setSnapStep(step.value); step.value = String(state.settings.snapStep); });
+  }
+  const chips = document.getElementById('snapChips');
+  if (chips) chips.addEventListener('click', e => {
+    const c = e.target.closest ? e.target.closest('.chip') : null;
+    if (c) setSnapStep(c.dataset.step);
+  });
+})();
 
 /* 坐标轴标签：随便写什么字符串，留空就不画 */
 function bindAxisLabel(input, key){
@@ -2992,8 +3457,12 @@ snapStepInput.addEventListener('change', () => {
 });
 
 function snapPoint(p){
-  if (!state.settings.snap) return p;
-  const s = state.settings.snapStep;
+  const S = state.settings;
+  if (!S.snap) return p;
+  /* 鼠标指针对齐：不取整，精确落在指针位置 */
+  if (S.alignMode === 'pointer') return p;
+  const s = Number(S.snapStep);
+  if (!(s > 0)) return p;
   return { x: Math.round(p.x / s) * s, y: Math.round(p.y / s) * s };
 }
 
@@ -3973,13 +4442,15 @@ function draw(){
   /* 曲线 */
   for (const f of state.funcs){
     if (f.alpha <= 0.002 || !f.visible) continue;
-    if (f.type !== 'poly' && !f.fn) continue;
+    /* poly 顶点现取、text 没有 fn，都不受这个限制 */
+    if (f.type !== 'poly' && f.type !== 'text' && !f.fn) continue;
     switch(f.type){
       case 'y':          drawY(f);          break;
       case 'implicit':   drawImplicit(f);   break;
       case 'polar':      drawPolar(f);      break;
       case 'parametric': drawParametric(f); break;
       case 'point':      drawPoint(f);      break;
+      case 'text':       drawTextObj(f);    break;
       case 'poly':       drawPolygon(f);    break;
     }
   }
@@ -4712,10 +5183,10 @@ canvas.addEventListener('pointerdown', e => {
 
     if (touchPts.size === 1){
       touchConsumed = false;
-      if (pen.active || tool === 'point' || pickState) penTap = { mx, my };
+      if (pen.active || tool === 'point' || tool === 'text' || pickState) penTap = { mx, my };
       else {
         const hit = tool === 'move' ? hitTestObject(mx, my) : null;
-        if (hit && !hit.virtual && hit.type === 'point'){
+        if (hit && !hit.virtual && (hit.type === 'point' || hit.type === 'text')){
           selectObject(hit.id);
           beginPointDrag(hit);
         } else {
@@ -4732,12 +5203,12 @@ canvas.addEventListener('pointerdown', e => {
   canvas.setPointerCapture(e.pointerId);
   hover = { mx, my };
 
-  if (pen.active || tool === 'point' || pickState || construct){ handleCanvasClick(mx, my); return; }
+  if (pen.active || tool === 'point' || tool === 'text' || pickState || construct){ handleCanvasClick(mx, my); return; }
 
-  /* 点住一个点对象 → 拖着改坐标 */
+  /* 点住一个点对象 / 注释 → 拖着改坐标 */
   if (tool === 'move'){
     const hit = hitTestObject(mx, my);
-    if (hit && !hit.virtual && hit.type === 'point'){
+    if (hit && !hit.virtual && (hit.type === 'point' || hit.type === 'text')){
       selectObject(hit.id);
       beginPointDrag(hit);
       return;
@@ -4890,11 +5361,12 @@ function exportJSON(){
       scale: +state.view.scale.toFixed(4),
     },
     settings: {
-      snap: state.settings.snap,
-      snapStep: state.settings.snapStep,
       showGrid: state.settings.showGrid,
       showTicks: state.settings.showTicks,
       autoInter: !!state.settings.autoInter,
+      snap: !!state.settings.snap,
+      snapStep: state.settings.snapStep,
+      alignMode: state.settings.alignMode === 'pointer' ? 'pointer' : 'grid',
       axisX: state.settings.axisX,
       axisY: state.settings.axisY,
       gestures: !!state.settings.gestures,
@@ -4917,6 +5389,8 @@ function exportJSON(){
       measure: f.measure || null,
       visible: f.visible,
       source: f.source,
+      /* 注释：位置（坐标）和字体一起存档 */
+      ...(f.type === 'text' ? { x: f.x, y: f.y, font: Object.assign({}, TEXT_DEFAULT, f.font || {}) } : {}),
     })),
   };
 
@@ -4959,6 +5433,9 @@ function importJSON(file){
         if (typeof s.showGrid === 'boolean') state.settings.showGrid = s.showGrid;
         if (typeof s.showTicks === 'boolean') state.settings.showTicks = s.showTicks;
         if (typeof s.autoInter === 'boolean') state.settings.autoInter = s.autoInter;
+        if (typeof s.snap === 'boolean') state.settings.snap = s.snap;
+        if (s.snapStep > 0) state.settings.snapStep = s.snapStep;
+        if (s.alignMode === 'pointer' || s.alignMode === 'grid') state.settings.alignMode = s.alignMode;
         if (typeof s.axisX === 'string') state.settings.axisX = s.axisX.slice(0, 16);
         if (typeof s.axisY === 'string') state.settings.axisY = s.axisY.slice(0, 16);
         if (typeof s.gestures === 'boolean') state.settings.gestures = s.gestures;
@@ -5041,7 +5518,7 @@ function syncSettingsUI(){
   }
   axisLabelX.value = state.settings.axisX;
   axisLabelY.value = state.settings.axisY;
-  snapStepInput.value = String(state.settings.snapStep);
+  syncAlignUI();
 }
 
 document.getElementById('exportBtn').addEventListener('click', exportJSON);
@@ -5059,7 +5536,7 @@ fileInput.addEventListener('change', e => {
    ═══════════════════════════════════════════════════ */
 
 let tool = 'move';                 /* move | point | segment */
-const TOOL_NAMES = { move:'移动', point:'点', segment:'线段' };
+const TOOL_NAMES = { move:'移动', point:'点', segment:'线段', text:'注释' };
 
 function syncToolUI(){
   document.querySelectorAll('.tool[data-tool]').forEach(b => {
@@ -5085,21 +5562,22 @@ function syncToolUI(){
 }
 
 function setTool(name, quiet){
-  tool = (name === 'point' || name === 'segment') ? name : 'move';
+  tool = (name === 'point' || name === 'segment' || name === 'text') ? name : 'move';
   const wasSegment = pen.active;
   setPenActive(tool === 'segment');
   if (tool !== 'segment'){ pen.pending = null; pen.cursor = null; }
-  if (tool === 'point' && !state.settings.snap){
+  if ((tool === 'point' || tool === 'text') && !state.settings.snap){
     state.settings.snap = true;
     syncSettingsUI();
   }
-  canvas.style.cursor = tool === 'point' ? 'copy' : (tool === 'segment' ? 'cell' : 'crosshair');
+  canvas.style.cursor = tool === 'point' ? 'copy' : (tool === 'segment' ? 'cell' : (tool === 'text' ? 'text' : 'crosshair'));
   syncToolUI();
   updatePenBadge();
   requestRender();
   updateHUD();
   if (!quiet && tool !== 'move' && !(tool === 'segment' && wasSegment))
-    toast(TOOL_NAMES[tool] + '：' + (tool === 'point' ? '点一下放一个点' : '点两下画线段'));
+    toast(TOOL_NAMES[tool] + '：' + (tool === 'point' ? '点一下放一个点'
+        : tool === 'text' ? '点一下放一段注释' : '点两下画线段'));
 }
 
 /* 画布上的单击按当前工具分派 */
@@ -5112,6 +5590,7 @@ function handleCanvasClick(mx, my){
     return;
   }
   if (tool === 'point'){ placePointAt(mx, my); return; }
+  if (tool === 'text'){ placeTextAt(mx, my); return; }
   handlePenClick(mx, my);
 }
 
@@ -5122,6 +5601,34 @@ function placePointAt(mx, my){
   requestRender();
   updateHUD();
   toast('点（' + nf(w.x) + ', ' + nf(w.y) + '）');
+}
+
+/* ── 注释对象：文字 + 坐标 + 颜色 + 字体 ── */
+function addTextObj(x, y, text){
+  const f = {
+    id: ++uid,
+    label: '', type: 'text',
+    expr: text == null ? '注释' : String(text),
+    color: state.funcs.length ? (state.funcs[state.funcs.length - 1].color || PALETTE[0]) : PALETTE[0],
+    width: 2, visible: true, alpha: 1, source: 'manual',
+    x: Number(x) || 0, y: Number(y) || 0,
+    font: Object.assign({}, TEXT_DEFAULT),
+  };
+  state.funcs.push(f);
+  recompile(f);
+  return f;
+}
+
+function placeTextAt(mx, my){
+  const w = snapPoint(screenToWorld(mx, my));
+  const f = addTextObj(w.x, w.y);
+  renderList(f.id);
+  selectObject(f.id);
+  requestRender();
+  updateHUD();
+  const inp = document.querySelector('.fn-row[data-id="' + f.id + '"] .fn-input');
+  if (inp){ inp.focus(); inp.select(); }
+  toast('注释放在（' + nf(w.x) + ', ' + nf(w.y) + '）· 右边能改颜色和字体');
 }
 
 /* 适应视图：把点、点表格和当前窗口里的函数值都框进来 */
@@ -5302,16 +5809,55 @@ document.getElementById('toolTicks').addEventListener('click', () => {
   syncSettingsUI(); syncToolUI(); requestRender(); updateHUD();
 });
 
+/* ── 表格区收起 / 展开 ── */
+const TV_KEY = 'plot-table';
+
 (function bindTableView(){
   document.querySelectorAll('.tv-tab').forEach(b =>
     b.addEventListener('click', () => setTvTab(b.dataset.tab)));
   const tv = document.getElementById('tableView');
   const tg = document.getElementById('tvToggle');
-  if (tg) tg.addEventListener('click', () => {
-    const collapsed = tv.classList.toggle('collapsed');
+  if (!tv || !tg) return;
+
+  const apply = (collapsed, save) => {
+    tv.classList.toggle('collapsed', !!collapsed);
     tg.setAttribute('aria-expanded', String(!collapsed));
     tg.setAttribute('aria-label', collapsed ? '展开表格区' : '收起表格区');
+    if (save !== false){ try { localStorage.setItem(TV_KEY, collapsed ? 'closed' : 'open'); } catch(e){} }
     requestRender();
+  };
+  tg.addEventListener('click', () => apply(!tv.classList.contains('collapsed')));
+
+  let saved = null;
+  try { saved = localStorage.getItem(TV_KEY); } catch(e){}
+  /* 手机屏幕窄：没选过就默认收起，把地方留给画布 */
+  apply(saved ? saved === 'closed' : innerWidth <= 880, false);
+})();
+
+/* ── 左侧栏收起 / 展开 ── */
+const PANEL_KEY = 'plot-panel';
+
+function setPanelCollapsed(on, save){
+  const ws = document.querySelector('.workspace');
+  const btn = document.getElementById('panelToggle');
+  if (!ws) return;
+  ws.classList.toggle('panel-collapsed', !!on);
+  if (btn){
+    btn.setAttribute('aria-pressed', String(!!on));
+    btn.title = on ? '展开左侧栏' : '收起左侧栏';
+  }
+  if (save !== false){ try { localStorage.setItem(PANEL_KEY, on ? 'closed' : 'open'); } catch(e){} }
+}
+
+(function initPanel(){
+  const btn = document.getElementById('panelToggle');
+  if (!btn) return;
+  let saved = null;
+  try { saved = localStorage.getItem(PANEL_KEY); } catch(e){}
+  setPanelCollapsed(saved === 'closed', false);
+  btn.addEventListener('click', () => {
+    const on = !document.querySelector('.workspace').classList.contains('panel-collapsed');
+    setPanelCollapsed(on);
   });
 })();
 
@@ -5379,15 +5925,30 @@ function copyShareLink(){
 }
 
 function showHelp(){
-  const fn = document.querySelector('.footnote');
-  if (fn){
-    if (fn.scrollIntoView) fn.scrollIntoView({ block:'center', behavior: prefersReduced.matches ? 'auto' : 'smooth' });
-    fn.style.outline = '2px solid var(--accent)';
-    fn.style.outlineOffset = '4px';
-    setTimeout(() => { fn.style.outline = ''; fn.style.outlineOffset = ''; }, 1600);
-  }
-  toast('x=0 竖直线 · x{0<x<1} 条件 · 极坐标 1+cos(t) · 参数 cos(t),sin(t)');
+  openHelp();
 }
+
+/* ── 帮助浮窗 ── */
+const helpModal = document.getElementById('helpModal');
+let helpLastFocus = null;
+
+function openHelp(){
+  if (!helpModal) return;
+  helpLastFocus = document.activeElement;
+  helpModal.classList.add('show');
+  const c = document.getElementById('helpClose');
+  if (c) requestAnimationFrame(() => c.focus());
+}
+function closeHelp(){
+  if (!helpModal || !helpModal.classList.contains('show')) return;
+  helpModal.classList.remove('show');
+  if (helpLastFocus && helpLastFocus.focus) helpLastFocus.focus();
+}
+(function bindHelp(){
+  if (!helpModal) return;
+  document.getElementById('helpClose').addEventListener('click', closeHelp);
+  helpModal.addEventListener('click', e => { if (e.target === helpModal) closeHelp(); });
+})();
 
 /* ── 导出：CSV / LaTeX ── */
 function objectsForExport(){
@@ -5717,6 +6278,13 @@ function clearRowFlash(){
 
 function hitTestObject(mx, my){
   const tol = 10;
+  /* 注释的画在最上层，先测它 */
+  for (let i = state.funcs.length - 1; i >= 0; i--){
+    const f = state.funcs[i];
+    if (f.type !== 'text' || !f.visible) continue;
+    const b = textBox(f);
+    if (mx >= b.left && mx <= b.left + b.w && my >= b.top && my <= b.top + b.h) return f;
+  }
   for (let i = state.funcs.length - 1; i >= 0; i--){
     const f = state.funcs[i];
     if (!f.visible || !f.fn || f.type !== 'point') continue;
@@ -5860,6 +6428,27 @@ function syncSelectionUI(){
 
   const name = document.getElementById('propsName');
   if (name) name.textContent = displayExpr(f);
+  const isText = f.type === 'text';
+  const show = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; };
+  show('propsWidthRow', !isText);
+  show('propsTextRow', isText);
+  show('propsTextRow2', isText);
+  show('propsPosRow', isText);
+  if (isText){
+    const font = Object.assign({}, TEXT_DEFAULT, f.font || {});
+    const fs = document.getElementById('propsFontSize');
+    if (fs) fs.value = String(font.size);
+    const ff = document.getElementById('propsFontFamily');
+    if (ff) ff.value = font.family;
+    document.querySelectorAll('#propsFontStyle .seg-btn').forEach(b => {
+      const on = !!font[b.dataset.style];
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-checked', String(on));
+    });
+    const px = document.getElementById('propsX'), py = document.getElementById('propsY');
+    if (px && document.activeElement !== px) px.value = String(+Number(f.x).toFixed(4));
+    if (py && document.activeElement !== py) py.value = String(+Number(f.y).toFixed(4));
+  }
   const w = document.getElementById('propsWidth');
   if (w) w.value = String(f.width || 2);
   const v = document.getElementById('propsVis');
@@ -5895,11 +6484,17 @@ function updatePointDrag(mx, my){
   const f = findObj(dragPoint.id);
   if (!f) return;
   const w = snapPoint(screenToWorld(mx, my));
-  f.expr = nf(w.x) + ', ' + nf(w.y);
-  recompile(f);
+  if (f.type === 'text'){
+    /* 注释直接改坐标，不解析表达式 */
+    f.x = w.x; f.y = w.y;
+  } else {
+    f.expr = nf(w.x) + ', ' + nf(w.y);
+    recompile(f);
+  }
   const inp = document.querySelector('.fn-row[data-id="' + f.id + '"] .fn-input');
   if (inp && document.activeElement !== inp) inp.value = f.expr;
   refreshDerived();
+  syncSelectionUI();
   requestRender();
   updateHUD();
 }
@@ -6031,6 +6626,53 @@ function redo(){
   }
   const d = document.getElementById('propsDel');
   if (d) d.addEventListener('click', () => { if (selectedId != null) deleteObject(selectedId); });
+
+  /* ── 注释专用：字号 / 字体 / 粗斜体 / 坐标 ── */
+  const fs = document.getElementById('propsFontSize');
+  if (fs) fs.addEventListener('input', () => {
+    const f = findObj(selectedId);
+    if (!f || f.type !== 'text') return;
+    f.font = Object.assign({}, TEXT_DEFAULT, f.font || {}, { size: Math.min(96, Math.max(8, parseFloat(fs.value) || 15)) });
+    requestRender();
+  });
+  const ff = document.getElementById('propsFontFamily');
+  if (ff) ff.addEventListener('change', () => {
+    const f = findObj(selectedId);
+    if (!f || f.type !== 'text') return;
+    f.font = Object.assign({}, TEXT_DEFAULT, f.font || {}, { family: ff.value });
+    requestRender();
+  });
+  const fst = document.getElementById('propsFontStyle');
+  if (fst) fst.addEventListener('click', e => {
+    const b = e.target.closest ? e.target.closest('.seg-btn') : null;
+    const f = findObj(selectedId);
+    if (!b || !f || f.type !== 'text') return;
+    const key = b.dataset.style;
+    const cur = Object.assign({}, TEXT_DEFAULT, f.font || {});
+    cur[key] = !cur[key];
+    f.font = cur;
+    syncSelectionUI(); requestRender();
+  });
+  const tc = document.getElementById('propsTextColor');
+  if (tc) tc.addEventListener('click', () => {
+    const f = findObj(selectedId);
+    if (!f || f.type !== 'text') return;
+    const i = PALETTE.indexOf(f.color);
+    f.color = PALETTE[(i + 1) % PALETTE.length];
+    syncSelectionUI(); renderList(); requestRender();
+  });
+  ['propsX', 'propsY'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      const f = findObj(selectedId);
+      if (!f || f.type !== 'text') return;
+      const v = parseFloat(el.value);
+      if (!isFinite(v)) return;
+      if (i === 0) f.x = v; else f.y = v;
+      requestRender(); updateHUD();
+    });
+  });
   const c = document.getElementById('propsClose');
   if (c) c.addEventListener('click', () => selectObject(null));
 })();
@@ -6717,6 +7359,11 @@ window.addEventListener('keydown', e => {
       toast('已取消取点');
       return;
     }
+    if (helpModal && helpModal.classList.contains('show')){
+      e.preventDefault();
+      closeHelp();
+      return;
+    }
     if (shotModal && shotModal.classList.contains('show')){
       e.preventDefault();
       closeShot();
@@ -6818,16 +7465,6 @@ window.addEventListener('keydown', e => {
 setTheme(currentTheme(), true, true);
 setTool('move', true);
 setTvTab('points');
-/* 手机屏幕窄：表格区默认收起，把地方留给画布 */
-if (innerWidth <= 880){
-  const tv = document.getElementById('tableView');
-  const tg = document.getElementById('tvToggle');
-  if (tv && tg){
-    tv.classList.add('collapsed');
-    tg.setAttribute('aria-expanded', 'false');
-    tg.setAttribute('aria-label', '展开表格区');
-  }
-}
 syncSettingsUI();
 syncToolUI();
 syncSelectionUI();
